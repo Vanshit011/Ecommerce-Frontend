@@ -12,13 +12,13 @@ export default function ResetPassword() {
   const [confirm, setConfirm] = useState("");
 
   const submit = async (e) => {
-    e.preventDefault();
+    e.preventDefault();       
 
     if (password !== confirm) {
       alert("Passwords do not match");
       return;
     }
-
+         
     try {
       await resetPassword(state.email, otp, password);
       alert("Password reset successfully");
@@ -66,6 +66,12 @@ export default function ResetPassword() {
             Reset Password
           </button>
         </form>
+        <div className="login-footer">
+          Back To {" "}
+          <span onClick={() => navigate("/login")}>
+            Login
+          </span>
+        </div>
       </div>
     </div>
   );
