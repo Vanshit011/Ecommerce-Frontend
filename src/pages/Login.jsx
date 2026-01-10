@@ -20,18 +20,32 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!form.email || !form.password) {
+            return setError("Please fill in all fields");
+        }
+
         setIsLoading(true);
         setError("");
 
         try {
             const res = await loginUser(form);
-            localStorage.setItem("token", res.data.access_token);
-            alert("Login successful");
-            // navigate("/dashboard");
+
+            const token = res.data?.access_token ||
+                res.data?.token ||
+                res.data?.accessToken ||
+                res.data?.access;
+
+            if (token) {
+                localStorage.setItem("token", token);
+                navigate("/dashboard");
+            } else {
+                console.error("Payload received:", res.data);
+                setError("Token not found in server response. Check console.");
+            }
+
         } catch (err) {
-            setError(err.response?.data?.message || "Login failed");
-        } finally {
-            setIsLoading(false);
+            setError("Login failed");
         }
     };
 
