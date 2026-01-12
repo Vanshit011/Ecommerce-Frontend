@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerUser } from "../services/api";
-import '../styles/register.css'
+import '../styles/register.css';
 
 const Register = () => {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    email: "",
+    mobile: "",
+    password: "",
+  });
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -33,7 +37,8 @@ const Register = () => {
         <form onSubmit={handleSubmit}>
           <div className="register-field register-input">
             <label className="register-label">Email</label>
-            <input className="registe-input"
+            <input
+              className="register-input"
               name="email"
               type="email"
               value={form.email}
@@ -42,6 +47,21 @@ const Register = () => {
             />
           </div>
 
+          {/* MOBILE */}
+          <div className="register-field register-input">
+            <label className="register-label">Phone Number</label>
+            <input
+              className="register-input"
+              name="mobile"
+              type="tel"
+              value={form.mobile}
+              onChange={handleChange}
+              pattern="[6-9]{1}[0-9]{9}"
+              required
+            />
+          </div>
+
+          {/* PASSWORD */}
           <div className="register-field register-input">
             <label className="register-label">Password</label>
             <input className="register-input"

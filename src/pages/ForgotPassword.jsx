@@ -4,16 +4,35 @@ import { forgotPassword } from "../services/api";
 import "../styles/forgotpassword.css";
 
 export default function ForgotPassword() {
-    const [email, setEmail] = useState("");
+    const [value, setValue] = useState("");
+    const [error, setError] = useState("");
     const navigate = useNavigate();
 
     const submit = async (e) => {
         e.preventDefault();
+        setError("");
+
+        // 🔍 Detect email or mobile
+        const isEmail = value.includes("@");
+        const isValidMobile = /^[6-9]\d{9}$/.test(value);
+
+        if (!isEmail && !isValidMobile) {
+            setError("Enter a valid email or 10-digit mobile number");
+            return;
+        }
+
+        const payload = value.includes("@")
+            ? { email: value }
+            : { mobile: value };
+
+        await forgotPassword(payload);
+
+
         try {
-            await forgotPassword(email);
-            navigate("/reset-password", { state: { email } });
-        } catch (error) {
-            alert(error.response?.data?.message || "Failed to send OTP");
+            await forgotPassword(payload);
+            navigate("/reset-password");
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to send OTP");
         }
     };
 
@@ -22,29 +41,33 @@ export default function ForgotPassword() {
             <div className="forgot-card">
                 <h2 className="forgot-title">Forgot Password</h2>
                 <p className="forgot-subtitle">
-                    Enter your email to receive a password reset OTP
+                    Enter your email or mobile number to receive OTP
                 </p>
 
                 <form onSubmit={submit}>
                     <input
-                        type="email"
+                        type="text"
                         className="forgot-input"
+                        placeholder="Email or Mobile number"
+                        value={value}
+                        onChange={(e) => setValue(e.target.value.trim())}
                         required
-                        onChange={(e) => setEmail(e.target.value)}
                     />
+
+                    {error && <div className="forgot-error">{error}</div>}
 
                     <button type="submit" className="forgot-btn">
                         Send OTP
                     </button>
                 </form>
+
                 <div className="login-footer">
-                    Back To {" "}
+                    Back to{" "}
                     <span onClick={() => navigate("/login")}>
                         Login
                     </span>
                 </div>
             </div>
-
         </div>
     );
 }
