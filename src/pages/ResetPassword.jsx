@@ -1,30 +1,36 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { resetPassword } from "../services/api";
 import "../styles/resetpassword.css";
 
 export default function ResetPassword() {
-  const { state } = useLocation();
   const navigate = useNavigate();
 
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
 
   const submit = async (e) => {
-    e.preventDefault();       
+    e.preventDefault();
+    setError("");
 
     if (password !== confirm) {
-      alert("Passwords do not match");
+      setError("Passwords do not match");
       return;
     }
-         
+
+    if (otp.length !== 6) {
+      setError("OTP must be 6 digits");
+      return;
+    }
+
     try {
-      await resetPassword(state.email, otp, password);
+      await resetPassword(otp, password);
       alert("Password reset successfully");
       navigate("/login");
-    } catch (error) {
-      alert(error.response?.data?.message || "Reset failed");
+    } catch (err) {
+      setError(err.response?.data?.message || "Reset failed");
     }
   };
 
@@ -42,7 +48,8 @@ export default function ResetPassword() {
             maxLength="6"
             placeholder="Enter OTP"
             className="reset-input reset-otp"
-            onChange={(e) => setOtp(e.target.value)}
+            value={otp}
+            onChange={(e) => setOtp(e.target.value.trim())}
             required
           />
 
@@ -50,6 +57,7 @@ export default function ResetPassword() {
             type="password"
             placeholder="New Password"
             className="reset-input"
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
@@ -58,16 +66,20 @@ export default function ResetPassword() {
             type="password"
             placeholder="Confirm Password"
             className="reset-input"
+            value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             required
           />
+
+          {error && <div className="reset-error">{error}</div>}
 
           <button type="submit" className="reset-btn">
             Reset Password
           </button>
         </form>
+
         <div className="login-footer">
-          Back To {" "}
+          Back to{" "}
           <span onClick={() => navigate("/login")}>
             Login
           </span>

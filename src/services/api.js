@@ -9,10 +9,26 @@ const API = axios.create({
 export const registerUser = (data) => API.post("/auth/register", data);
 export const loginUser = (data) => API.post("/auth/login", data);
 
-export const forgotPassword = (email) =>
-  API.post("/auth/forgot-password", { email });
+API.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
 
-export const resetPassword = (email, otp, newPassword) =>
-  API.post("/auth/reset-password", { email, otp, newPassword });
+    console.log("Interceptor token:", token);
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+export const logout = () => API.post("/auth/logout");
+
+export const forgotPassword = (data) =>
+  API.post("/auth/forgot-password", data);
+
+export const resetPassword = (otp, newPassword) =>
+  API.post("/auth/reset-password", {  otp, newPassword });
 
 export default API;
