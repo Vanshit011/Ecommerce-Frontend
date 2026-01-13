@@ -10,11 +10,13 @@ export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
     setError("");
 
+    
     if (password !== confirm) {
       setError("Passwords do not match");
       return;
@@ -27,12 +29,17 @@ export default function ResetPassword() {
 
     try {
       await resetPassword(otp, password);
-      alert("Password reset successfully");
-      navigate("/login");
+
+      setSuccess(true); 
+
+      setTimeout(() => {
+        navigate("/login"); // redirect after 2 sec
+      }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || "Reset failed");
     }
   };
+
 
   return (
     <div className="reset-container">
@@ -43,6 +50,11 @@ export default function ResetPassword() {
         </p>
 
         <form onSubmit={submit}>
+          {success && (
+            <div className="reset-success">
+              ✅ Password reset successfully
+            </div>
+          )}
           <input
             type="text"
             maxLength="6"

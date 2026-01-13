@@ -6,13 +6,13 @@ import "../styles/forgotpassword.css";
 export default function ForgotPassword() {
     const [value, setValue] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const submit = async (e) => {
         e.preventDefault();
         setError("");
 
-        // 🔍 Detect email or mobile
         const isEmail = value.includes("@");
         const isValidMobile = /^[6-9]\d{9}$/.test(value);
 
@@ -21,20 +21,20 @@ export default function ForgotPassword() {
             return;
         }
 
-        const payload = value.includes("@")
+        const payload = isEmail
             ? { email: value }
             : { mobile: value };
-
-        await forgotPassword(payload);
-
 
         try {
             await forgotPassword(payload);
             navigate("/reset-password");
         } catch (err) {
             setError(err.response?.data?.message || "Failed to send OTP");
+        } finally {
+            setLoading(false);
         }
     };
+
 
     return (
         <div className="forgot-container">
@@ -56,8 +56,8 @@ export default function ForgotPassword() {
 
                     {error && <div className="forgot-error">{error}</div>}
 
-                    <button type="submit" className="forgot-btn">
-                        Send OTP
+                    <button type="submit" className="forgot-btn" disabled={loading}>
+                        {loading ? "Sending OTP..." : "Send OTP"}
                     </button>
                 </form>
 
