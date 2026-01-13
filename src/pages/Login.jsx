@@ -40,14 +40,21 @@ const Login = () => {
                 localStorage.setItem("token", token);
                 navigate("/dashboard");
             } else {
-                console.error("Payload received:", res.data);
-                setError("Token not found in server response. Check console.");
+                setError("Token not found in response");
             }
 
         } catch (err) {
-            setError("Login failed");
+            const apiMessage =
+                err?.response?.data?.message ||
+                "Invalid email or password";
+
+            setError(apiMessage);
+
+        } finally {
+            setIsLoading(false); 
         }
     };
+
 
     return (
         <div className="login-container">
@@ -97,6 +104,7 @@ const Login = () => {
                     >
                         {isLoading ? "Signing in..." : "Login"}
                     </button>
+
 
                     <div className="login-divider"></div>
 

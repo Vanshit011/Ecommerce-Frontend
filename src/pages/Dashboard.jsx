@@ -5,17 +5,17 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    console.log("Logout button clicked");
+    // console.log("Logout button clicked");
 
     try {
-      console.log("Calling logout API...");
+      // console.log("Calling logout API...");
       const res = await logout();
-      console.log("Logout API response:", res);
+      // console.log("Logout API response:", res);
     } catch (err) {
-      console.error("Logout API error:", err?.response?.data || err.message);
+      // console.error("Logout API error:", err?.response?.data || err.message);
     } finally {
       localStorage.removeItem("token");
-      console.log("Token after remove:", localStorage.getItem("token"));
+      // console.log("Token after remove:", localStorage.getItem("token"));
       navigate("/login");
     }
   };
