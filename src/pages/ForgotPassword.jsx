@@ -39,9 +39,10 @@ export default function ForgotPassword() {
     return (
         <div className="forgot-container">
             <div className="forgot-card">
-                <h2 className="forgot-title">Forgot Password</h2>
+                <h1 className="forgot-logo">SASTA STORE</h1>
+                <h2 className="forgot-title">Reset Access</h2>
                 <p className="forgot-subtitle">
-                    Enter your email or mobile number to receive OTP
+                    Enter your email or mobile to receive a secure OTP.
                 </p>
 
                 <form onSubmit={submit}>

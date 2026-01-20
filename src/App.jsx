@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -20,11 +21,20 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly={true}>
               <Dashboard />
             </ProtectedRoute>
           }
-        />       
+        />
+
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

@@ -1,0 +1,144 @@
+/* home.css */
+:root {
+    --primary: #6366f1;
+    --dark: #1e293b;
+    --grey-dark: #64748b;
+    --grey-light: #f8fafc;
+    --white: #ffffff;
+    --transition: 0.3s ease;
+}
+
+.home-page {
+    min-height: 100vh;
+    background-color: #f1f5f9;
+}
+
+/* Navbar matches Dashboard */
+.nav-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.admin-view-btn {
+    background: #475569;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+/* Content Area */
+.home-content {
+    padding: 2rem 5%;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--dark);
+    padding-bottom: 10px;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.item-count {
+    color: var(--grey-dark);
+    font-size: 0.9rem;
+}
+
+/* Grid Logic */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+/* Card Design */
+.product-card {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: var(--transition);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.product-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.product-image {
+    width: 100%;
+    height: 250px;
+    background: var(--grey-light);
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--transition);
+}
+
+.product-details {
+    padding: 1.5rem;
+}
+
+.product-details h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    color: var(--dark);
+}
+
+.product-desc {
+    font-size: 0.85rem;
+    color: var(--grey-dark);
+    height: 40px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.product-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.product-price {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #10b981;
+}
+
+.add-to-cart-btn {
+    background: var(--dark);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.add-to-cart-btn:hover {
+    background: var(--primary);
+}
+
+.loading {
+    text-align: center;
+    padding: 5rem;
+    font-size: 1.2rem;
+    color: var(--grey-dark);
+}

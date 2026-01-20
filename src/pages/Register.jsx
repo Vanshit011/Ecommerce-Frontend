@@ -31,8 +31,9 @@ const Register = () => {
   return (
     <div className="register-container">
       <div className="register-card">
+        <h1 className="register-logo">SASTA STORE</h1>
         <h2 className="register-title">Create Account</h2>
-        <p className="register-subtitle">Sign up to start shopping</p>
+        <p className="register-subtitle">Join us for a curate shopping experience.</p>
 
         <form onSubmit={handleSubmit}>
           <div className="register-field register-input">
