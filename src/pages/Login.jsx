@@ -38,7 +38,15 @@ const Login = () => {
 
             if (token) {
                 localStorage.setItem("token", token);
-                navigate("/dashboard");
+
+                const role = res.data?.user?.role || res.data?.role || "user";
+                localStorage.setItem("role", role);
+
+                if (role === "admin") {
+                    navigate("/dashboard");
+                } else {
+                    navigate("/home");
+                }
             } else {
                 setError("Token not found in response");
             }
@@ -51,7 +59,7 @@ const Login = () => {
             setError(apiMessage);
 
         } finally {
-            setIsLoading(false); 
+            setIsLoading(false);
         }
     };
 
@@ -59,9 +67,10 @@ const Login = () => {
     return (
         <div className="login-container">
             <div className="login-card">
-                <h2 className="login-title">Welcome Back</h2>
+                <h1 className="login-logo">SASTA STORE</h1>
+                <h2 className="login-title">Account Login</h2>
                 <p className="login-subtitle">
-                    Login to continue shopping
+                    Please enter your credentials to access your account.
                 </p>
 
                 <form onSubmit={handleSubmit}>

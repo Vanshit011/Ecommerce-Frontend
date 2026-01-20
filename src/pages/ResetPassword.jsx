@@ -16,7 +16,7 @@ export default function ResetPassword() {
     e.preventDefault();
     setError("");
 
-    
+
     if (password !== confirm) {
       setError("Passwords do not match");
       return;
@@ -30,7 +30,7 @@ export default function ResetPassword() {
     try {
       await resetPassword(otp, password);
 
-      setSuccess(true); 
+      setSuccess(true);
 
       setTimeout(() => {
         navigate("/login"); // redirect after 2 sec
@@ -44,9 +44,10 @@ export default function ResetPassword() {
   return (
     <div className="reset-container">
       <div className="reset-card">
+        <h1 className="reset-logo">SASTA STORE</h1>
         <h2 className="reset-title">Reset Password</h2>
         <p className="reset-subtitle">
-          Enter the OTP and your new password
+          Secure your account with a new password.
         </p>
 
         <form onSubmit={submit}>
