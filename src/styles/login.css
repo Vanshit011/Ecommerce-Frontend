@@ -1,133 +1,160 @@
-/* ===========================
-   LOGIN PAGE - CENTERED BLACK & WHITE
-=========================== */
 .login-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--primary-white);
-  padding: 2rem;
+  background: radial-gradient(circle at top left, #f8fafc, #e2e8f0);
+  padding: 20px;
 }
 
 .login-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  border-radius: 24px;
+  padding: 40px;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   text-align: center;
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .login-logo {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 800;
-  letter-spacing: 0.2em;
-  margin-bottom: 3rem;
+  letter-spacing: -0.05em;
+  color: var(--primary);
+  margin-bottom: 32px;
 }
 
 .login-title {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--text-main);
+  margin-bottom: 8px;
 }
 
 .login-subtitle {
+  color: var(--text-muted);
   font-size: 0.875rem;
-  color: var(--grey-dark);
-  margin-bottom: 2.5rem;
+  margin-bottom: 32px;
 }
 
 .login-field {
   text-align: left;
-  margin-bottom: 1.5rem;
+  margin-bottom: 20px;
 }
 
 .login-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 0.5rem;
+  color: var(--text-main);
+  margin-bottom: 8px;
 }
 
 .login-input input {
   width: 100%;
-  padding: 0.75rem 0;
-  border: none;
-  border-bottom: 1px solid var(--grey-mid);
-  background: transparent;
+  padding: 14px 16px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
   font-size: 1rem;
-  transition: var(--transition);
+  color: var(--text-main);
+  transition: all 0.2s ease;
+  outline: none;
 }
 
 .login-input input:focus {
-  outline: none;
-  border-bottom-color: var(--primary-black);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
 }
 
 .login-error {
-  color: #000;
-  background: var(--grey-light);
-  padding: 0.75rem;
-  font-size: 0.875rem;
-  margin-bottom: 1.5rem;
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 0.8125rem;
   font-weight: 500;
+  margin-bottom: 20px;
+  border: 1px solid #fecaca;
 }
 
 .login-footer {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 2rem;
+  margin-bottom: 24px;
+  font-size: 0.8125rem;
 }
 
 .login-footer span {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--text-muted);
   cursor: pointer;
-  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.login-footer span:hover {
+  color: var(--primary);
 }
 
 .login-btn {
   width: 100%;
-  padding: 1rem;
-  background: var(--primary-black);
-  color: var(--primary-white);
-  border: 1px solid var(--primary-black);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
+  padding: 14px;
+  background: var(--primary);
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.login-btn:hover:not(:disabled) {
-  background: var(--primary-white);
-  color: var(--primary-black);
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.login-btn:active {
+  transform: translateY(0);
 }
 
 .login-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.7;
   cursor: not-allowed;
+  transform: none;
 }
 
 .login-divider {
   height: 1px;
-  background: var(--grey-mid);
-  margin: 3rem 0;
+  background: var(--border);
+  margin: 32px 0;
 }
 
-.login-footer-bottom {
-  font-size: 0.875rem;
-  color: var(--grey-dark);
+.login-footer.centered {
+  justify-content: center;
+  margin-bottom: 0;
+  color: var(--text-muted);
 }
 
-.login-footer-bottom span {
-  color: var(--primary-black);
-  font-weight: 700;
-  text-decoration: underline;
-  cursor: pointer;
-  margin-left: 0.5rem;
+.login-footer.centered span {
+  color: var(--primary);
+  font-weight: 600;
+  margin-left: 4px;
 }
