@@ -117,7 +117,7 @@ const Login = () => {
 
                     <div className="login-divider"></div>
 
-                    <div className="login-footer">
+                    <div className="login-footer centered">
                         Don’t have an account?{" "}
                         <span onClick={() => navigate("/register")}>
                             Sign up here

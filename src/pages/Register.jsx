@@ -39,7 +39,6 @@ const Register = () => {
           <div className="register-field register-input">
             <label className="register-label">Email</label>
             <input
-              className="register-input"
               name="email"
               type="email"
               value={form.email}
@@ -48,11 +47,9 @@ const Register = () => {
             />
           </div>
 
-          {/* MOBILE */}
           <div className="register-field register-input">
             <label className="register-label">Phone Number</label>
             <input
-              className="register-input"
               name="mobile"
               type="tel"
               value={form.mobile}
@@ -62,10 +59,9 @@ const Register = () => {
             />
           </div>
 
-          {/* PASSWORD */}
           <div className="register-field register-input">
             <label className="register-label">Password</label>
-            <input className="register-input"
+            <input
               name="password"
               type="password"
               value={form.password}
