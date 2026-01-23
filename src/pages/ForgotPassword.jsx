@@ -27,7 +27,7 @@ export default function ForgotPassword() {
 
         try {
             await forgotPassword(payload);
-            navigate("/reset-password");
+            navigate("/verify-otp");
         } catch (err) {
             setError(err.response?.data?.message || "Failed to send OTP");
         } finally {

@@ -6,7 +6,6 @@ import "../styles/resetpassword.css";
 export default function ResetPassword() {
   const navigate = useNavigate();
 
-  const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
@@ -16,39 +15,29 @@ export default function ResetPassword() {
     e.preventDefault();
     setError("");
 
-
     if (password !== confirm) {
       setError("Passwords do not match");
       return;
     }
 
-    if (otp.length !== 6) {
-      setError("OTP must be 6 digits");
-      return;
-    }
-
     try {
-      await resetPassword(otp, password);
+      await resetPassword(password);
 
       setSuccess(true);
 
       setTimeout(() => {
-        navigate("/login"); // redirect after 2 sec
+        navigate("/login");
       }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || "Reset failed");
     }
   };
 
-
   return (
     <div className="reset-container">
       <div className="reset-card">
         <h1 className="reset-logo">SASTA STORE</h1>
         <h2 className="reset-title">Reset Password</h2>
-        <p className="reset-subtitle">
-          Secure your account with a new password.
-        </p>
 
         <form onSubmit={submit}>
           {success && (
@@ -56,15 +45,6 @@ export default function ResetPassword() {
               ✅ Password reset successfully
             </div>
           )}
-          <input
-            type="text"
-            maxLength="6"
-            placeholder="Enter OTP"
-            className="reset-input reset-otp"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value.trim())}
-            required
-          />
 
           <input
             type="password"
@@ -90,13 +70,6 @@ export default function ResetPassword() {
             Reset Password
           </button>
         </form>
-
-        <div className="login-footer">
-          Back to{" "}
-          <span onClick={() => navigate("/login")}>
-            Login
-          </span>
-        </div>
       </div>
     </div>
   );

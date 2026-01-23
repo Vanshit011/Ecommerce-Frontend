@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: "http://192.168.5.47:3000",
   withCredentials: true,
 });
 
@@ -28,8 +28,12 @@ export const logout = () => API.post("/auth/logout");
 export const forgotPassword = (data) =>
   API.post("/auth/forgot-password", data);
 
-export const resetPassword = (otp, newPassword) =>
-  API.post("/auth/reset-password", { otp, newPassword });
+export const verifyForgotOtp = (otp) =>
+  API.post("/auth/verify-forgot-otp", { otp });
+
+export const resetPassword = (newPassword) =>
+  API.post("/auth/reset-password", { newPassword });
+
 
 
 // products
