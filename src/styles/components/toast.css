@@ -14,10 +14,10 @@
 .toast {
   padding: 12px 24px;
   border-radius: 12px;
-  color: #ffffff;
+  color: #1b1010;
   font-weight: 600;
   font-size: 0.875rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(99, 90, 90, 0.1);
   animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: auto;
 }
@@ -37,6 +37,7 @@
     opacity: 0;
     transform: translateX(20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useToast } from "../../components/ToastContext";
+import { useToast } from "../../context/ToastContext";
 import {
     getCategories,
     createCategory,
@@ -7,7 +7,7 @@ import {
     deleteCategory,
     getMyProducts,
 } from "../../services/api";
-import "../../styles/adminCategories.css";
+import "../../styles/pages/admin/adminCategories.css";
 
 const AdminCategories = () => {
     const { showToast } = useToast();

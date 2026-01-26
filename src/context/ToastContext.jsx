@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import "../styles/toast.css";
+import "../styles/components/toast.css";
 
 const ToastContext = createContext();
 
@@ -21,7 +21,7 @@ export const ToastProvider = ({ children }) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
       }, duration);
     },
-    []
+    [],
   );
 
   return (
@@ -30,10 +30,7 @@ export const ToastProvider = ({ children }) => {
 
       <div className="toast-container">
         {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`toast toast-${toast.type}`}
-          >
+          <div key={toast.id} className={`toast toast-${toast.type}`}>
             {toast.message}
           </div>
         ))}
