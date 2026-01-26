@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getMyProducts, getCategories } from "../../services/api";
-import "../../styles/adminOverview.css";
+import "../../styles/pages/admin/adminOverview.css";
 
 const AdminOverview = () => {
   const [stats, setStats] = useState([

@@ -1,0 +1,206 @@
+/* ================================
+   FAVORITES PAGE – PREMIUM STYLE
+================================ */
+
+.fav-page {
+  min-height: 100vh;
+  background: var(--bg-main);
+  padding: 0px 0;
+}
+
+/* Inner Container */
+.fav-container {
+  width: 92%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Title */
+.fav-container h2 {
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--primary);
+  margin-bottom: 36px;
+}
+
+/* Empty State */
+.fav-empty {
+  background: white;
+  padding: 64px;
+  border-radius: 22px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+}
+
+.fav-empty p {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+  color: var(--text-muted);
+}
+
+.fav-empty button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 14px 26px;
+  border-radius: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.fav-empty button:hover {
+  background: var(--primary-light);
+  transform: translateY(-2px);
+}
+
+/* Grid */
+.fav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 36px;
+}
+
+/* Card */
+.fav-card {
+  background: white;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.35s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.fav-card:hover {
+  transform: translateY(-10px);
+  box-shadow: var(--shadow-premium);
+}
+
+/* Image */
+/* Image Box */
+.fav-image-box {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+}
+
+.fav-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.fav-card:hover img {
+  transform: scale(1.05);
+}
+
+/* Heart Button on Image */
+.fav-heart-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: white;
+  border: none;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-size: 1.1rem;
+  transition: all 0.2s;
+}
+
+.fav-heart-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Content */
+.fav-card-content {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.fav-card h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fav-price {
+  margin: 0 0 16px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #000;
+}
+
+/* Add to Bag Button */
+.fav-add-bag-btn {
+  width: 100%;
+  background: #000;
+  color: #fff;
+  border: 1px solid #000;
+  padding: 12px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.fav-add-bag-btn:hover {
+  background: #333;
+  border-color: #333;
+}
+
+/* Loading */
+.fav-loading {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .fav-container h2 {
+    font-size: 1.4rem;
+  }
+
+  .fav-grid {
+    gap: 22px;
+  }
+}
+
+
+/* =====================
+   LOADING
+===================== */
+
+.loading-overlay {
+  text-align: center;
+  padding: 120px 0;
+}
+
+.spinner {
+  width: 46px;
+  height: 46px;
+  position: relative;
+  margin-left: auto;
+  margin-right: auto;
+  border: 4px solid var(--border);
+  border-top: 4px solid var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import "../styles/sidebar.css";
+import "../../styles/components/sidebar.css";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -62,7 +62,7 @@ const Sidebar = () => {
       {/* FOOTER */}
       <div className="sidebar-footer">
         <button onClick={handleLogout} className="logout-btn">
-           [➜ Logout
+          [➜ Logout
         </button>
       </div>
     </aside>

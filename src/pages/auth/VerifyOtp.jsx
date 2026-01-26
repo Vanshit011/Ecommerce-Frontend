@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { verifyForgotOtp } from "../services/api";
-import "../styles/resetpassword.css";
+import { verifyForgotOtp } from "../../services/api";
+import "../../styles/pages/resetpassword.css";
 
 export default function VerifyOtp() {
   const navigate = useNavigate();
