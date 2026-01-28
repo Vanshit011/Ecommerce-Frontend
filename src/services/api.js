@@ -8,7 +8,7 @@ const API = axios.create({
   },
 });
 
-// auth 
+// auth
 export const registerUser = (data) => API.post("/auth/register", data);
 export const loginUser = (data) => API.post("/auth/login", data);
 
@@ -24,12 +24,11 @@ API.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 export const logout = () => API.post("/auth/logout");
 
-export const forgotPassword = (data) =>
-  API.post("/auth/forgot-password", data);
+export const forgotPassword = (data) => API.post("/auth/forgot-password", data);
 
 export const verifyForgotOtp = (otp) =>
   API.post("/auth/verify-forgot-otp", { otp });
@@ -66,7 +65,7 @@ export const deleteProduct = (id) => API.delete(`/products/${id}`);
 
 // get categories
 export const getCategories = () => API.get("/categories");
-//create category 
+//create category
 export const createCategory = (data) => API.post("/categories", data);
 //update category
 export const updateCategory = (id, data) => API.put(`/categories/${id}`, data);
@@ -84,17 +83,14 @@ export const removeFromFavorites = (productId) =>
   API.delete(`/favorites/${productId}`);
 
 // Get all favorites
-export const getFavorites = () =>
-  API.get("/favorites");
+export const getFavorites = () => API.get("/favorites");
 
 // profile  //
 
 // Get user profile
-export const getProfile = () =>
-  API.get("/profile");
+export const getProfile = () => API.get("/profile");
 //update user profile
-export const updateProfile = (data) =>
-  API.put("/profile", data);
+export const updateProfile = (data) => API.put("/profile", data);
 
 // Cart //
 
@@ -103,8 +99,30 @@ export const addToCart = (productId) => API.post(`/cart/${productId}`);
 // get cart
 export const getCart = () => API.get("/cart");
 // update qty
-export const updateCartQty = (productId, qty) => API.post(`/cart/${productId}/${qty}`);
+export const updateCartQty = (productId, qty) =>
+  API.post(`/cart/${productId}/${qty}`);
 // clear cart
 export const clearCart = () => API.delete("/cart");
+
+//address
+export const getAddresses = () => API.get("/address");
+
+export const createAddress = (data) => API.post("/address", data);
+
+export const updateAddress = (id, data) => API.put(`/address/${id}`, data);
+
+export const deleteAddress = (id) => API.delete(`/address/${id}`);
+
+export const setDefaultAddress = (id) => API.put(`/address/${id}/default`);
+
+//order
+
+export const createOrder = () => API.post("/orders");
+
+export const payOrder = (orderId) => API.post(`/orders/${orderId}/pay`);
+
+export const getOrderById = (id) => API.get(`/orders/${id}`);
+
+export const getMyOrders = () => API.get(`/orders/my`);
 
 export default API;
