@@ -10,11 +10,19 @@ import AdminLayout from "./components/layout/AdminLayout";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
-import Favorites from "./pages/shop/Favorites";
-import Products from "./pages/shop/Products";
-import Profile from "./pages/shop/Profile";
-import ProductDetails from "./pages/shop/ProductDetails";
-import Cart from "./pages/shop/Cart";
+// Product browsing
+import Favorites from "./pages/shop/products/Favorites";
+import Products from "./pages/shop/products/Products";
+import ProductDetails from "./pages/shop/products/ProductDetails";
+
+// Checkout flow
+import Cart from "./pages/shop/checkout/Cart";
+import Checkout from "./pages/shop/checkout/Checkout";
+import OrderSuccess from "./pages/shop/checkout/OrderSuccess";
+
+// User account
+import Profile from "./pages/shop/account/Profile";
+import MyOrders from "./pages/shop/account/MyOrders";
 
 import { ToastProvider } from "./context/ToastContext";
 
@@ -31,7 +39,6 @@ function App() {
           <Route path="/verify-otp" element={<VerifyOtp />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-
           {/* Admin Routes with Layout */}
           <Route
             path="/dashboard"
@@ -45,7 +52,6 @@ function App() {
             <Route path="products" element={<AdminProducts />} />
             <Route path="categories" element={<AdminCategories />} />
           </Route>
-
 
           {/* Public Routes */}
           <Route
@@ -65,32 +71,61 @@ function App() {
             }
           />
           <Route
+            path="/product/:id"
+            element={
+              <ProtectedRoute>
+                <ProductDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <Cart />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/favorites"
             element={
               <ProtectedRoute>
                 <Favorites />
-              </ProtectedRoute>}
+              </ProtectedRoute>
+            }
           />
-
-          <Route path="/profile"
+          <Route
+            path="/profile"
             element={
               <ProtectedRoute>
                 <Profile />
-              </ProtectedRoute>} />
-
-          <Route path="/product/:id"
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/checkout/:id"
             element={
               <ProtectedRoute>
-                <ProductDetails />
-              </ProtectedRoute>} />
-
-          <Route path="/cart"
+                <Checkout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/order-success/:id"
             element={
               <ProtectedRoute>
-                <Cart />
-              </ProtectedRoute>} />
-
-
+                <OrderSuccess />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-orders"
+            element={
+              <ProtectedRoute>
+                <MyOrders />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
