@@ -21,6 +21,8 @@ const Cart = () => {
   const [addresses, setAddresses] = useState([]);
   const [showAddressPicker, setShowAddressPicker] = useState(false);
 
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
   /* ================= CART ================= */
 
   const fetchCartItems = useCallback(async () => {
@@ -30,17 +32,16 @@ const Cart = () => {
       setCart(res.data);
     } catch (error) {
       console.error("Error fetching cart:", error);
+      showToast("Failed to load cart", "error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
-  /* Load cart only */
   useEffect(() => {
     fetchCartItems();
   }, [fetchCartItems]);
 
-  /* Load addresses ONLY if cart has items */
   useEffect(() => {
     if (cart?.items?.some((item) => item.quantity > 0)) {
       loadAddresses();
@@ -73,7 +74,7 @@ const Cart = () => {
         items: prev.items.map((item) =>
           item.product.id === productId
             ? { ...item, quantity: newQty }
-            : item,
+            : item
         ),
       }));
     } catch {
@@ -88,7 +89,7 @@ const Cart = () => {
       setCart((prev) => ({
         ...prev,
         items: prev.items.filter(
-          (item) => item.product.id !== productId,
+          (item) => item.product.id !== productId
         ),
       }));
 
@@ -111,6 +112,49 @@ const Cart = () => {
     }
   };
 
+  /* ================= CHECKOUT ================= */
+
+  const activeItems =
+    cart?.items?.filter((item) => item.quantity > 0) || [];
+
+  const handleProceedCheckout = async () => {
+    if (checkoutLoading) return;
+
+    if (!activeItems.length) {
+      showToast("Your cart is empty", "warning");
+      return;
+    }
+
+    if (!addresses.length) {
+      showToast("Please add a delivery address", "warning");
+      navigate("/profile");
+      return;
+    }
+
+    const hasDefault = addresses.some((a) => a.isdefault);
+
+    if (!hasDefault) {
+      showToast("Please select a default delivery address", "warning");
+      setShowAddressPicker(true);
+      return;
+    }
+
+    try {
+      setCheckoutLoading(true);
+
+      const res = await createOrder();
+
+      console.log("ORDER CREATED:", res.data);
+
+      navigate(`/checkout/${res.data.id}`);
+    } catch (err) {
+      console.error("CREATE ORDER ERROR:", err);
+      showToast("Failed to create order", "error");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
   /* ================= UI ================= */
 
   if (loading)
@@ -123,13 +167,9 @@ const Cart = () => {
       </div>
     );
 
-  const activeItems =
-    cart?.items?.filter((item) => item.quantity > 0) || [];
-
   const subtotal = activeItems.reduce(
-    (acc, item) =>
-      acc + item.product.price * item.quantity,
-    0,
+    (acc, item) => acc + item.product.price * item.quantity,
+    0
   );
 
   return (
@@ -137,19 +177,15 @@ const Cart = () => {
       <Header />
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-semibold mb-6">
-          Shopping Bag
-        </h1>
+        <h1 className="text-2xl font-semibold mb-6">Shopping Bag</h1>
 
-        {/* DELIVERY ADDRESS — ONLY IF CART HAS ITEMS */}
+        {/* DELIVERY ADDRESS */}
         {activeItems.length > 0 && defaultAddress && (
           <div className="bg-white rounded-lg shadow p-5 mb-6 flex justify-between">
             <div>
               <p className="text-sm text-gray-500">Deliver to</p>
 
-              <p className="font-medium">
-                {defaultAddress.fullname}
-              </p>
+              <p className="font-medium">{defaultAddress.fullname}</p>
 
               <p className="text-sm text-gray-600">
                 {defaultAddress.addressline1},{" "}
@@ -171,34 +207,28 @@ const Cart = () => {
         {/* EMPTY CART */}
         {activeItems.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-10 text-center">
-            <p className="mb-5 text-gray-600">
-              Your bag is currently empty.
-            </p>
+            <p className="mb-5 text-gray-600">Your bag is empty.</p>
             <button
               onClick={() => navigate("/products")}
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+              className="bg-blue-600 text-white px-6 py-2 rounded"
             >
               Continue Shopping
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-6">
-
             {/* CART ITEMS */}
             <div className="bg-white rounded-lg shadow divide-y">
-
               {activeItems.map((item) => (
                 <div
-                  key={item.product.id || item.product._id}
+                  key={item.product.id}
                   className="flex flex-col sm:flex-row gap-4 p-5"
                 >
                   <img
                     src={item.product.image}
                     alt={item.product.name}
                     onClick={() =>
-                      navigate(
-                        `/product/${item.product.id}`,
-                      )
+                      navigate(`/product/${item.product.id}`)
                     }
                     className="w-24 h-24 object-contain cursor-pointer bg-gray-50 rounded"
                   />
@@ -206,9 +236,7 @@ const Cart = () => {
                   <div className="flex-1">
                     <h3
                       onClick={() =>
-                        navigate(
-                          `/product/${item.product.id}`,
-                        )
+                        navigate(`/product/${item.product.id}`)
                       }
                       className="font-medium cursor-pointer hover:text-blue-600"
                     >
@@ -227,7 +255,7 @@ const Cart = () => {
                       onClick={() =>
                         handleUpdateQty(
                           item.product.id,
-                          item.quantity - 1,
+                          item.quantity - 1
                         )
                       }
                       className="border px-2 rounded disabled:opacity-40"
@@ -244,7 +272,7 @@ const Cart = () => {
                         if (val >= 1)
                           handleUpdateQty(
                             item.product.id,
-                            val,
+                            val
                           );
                       }}
                       className="w-14 border text-center rounded"
@@ -254,7 +282,7 @@ const Cart = () => {
                       onClick={() =>
                         handleUpdateQty(
                           item.product.id,
-                          item.quantity + 1,
+                          item.quantity + 1
                         )
                       }
                       className="border px-2 rounded"
@@ -311,7 +339,9 @@ const Cart = () => {
 
               <div className="flex justify-between text-sm mb-2">
                 <span>Subtotal</span>
-                <span>₹{subtotal.toLocaleString()}</span>
+                <span>
+                  ₹{subtotal.toLocaleString()}
+                </span>
               </div>
 
               <div className="flex justify-between text-sm mb-2">
@@ -323,24 +353,19 @@ const Cart = () => {
 
               <div className="flex justify-between font-semibold border-t pt-3">
                 <span>Estimated Total</span>
-                <span>₹{subtotal.toLocaleString()}</span>
+                <span>
+                  ₹{subtotal.toLocaleString()}
+                </span>
               </div>
 
               <button
-                className="mt-5 w-full bg-yellow-400 py-3 rounded font-semibold"
-                onClick={async () => {
-                  try {
-                    const res = await createOrder();
-                    navigate(`/checkout/${res.data.id}`);
-                  } catch {
-                    showToast(
-                      "Failed to create order",
-                      "error",
-                    );
-                  }
-                }}
+                disabled={checkoutLoading}
+                className="mt-5 w-full bg-yellow-400 py-3 rounded font-semibold disabled:opacity-60"
+                onClick={handleProceedCheckout}
               >
-                Proceed to Checkout
+                {checkoutLoading
+                  ? "Creating Order..."
+                  : "Proceed to Checkout"}
               </button>
             </div>
           </div>
@@ -356,20 +381,21 @@ const Cart = () => {
 
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {addresses.map((addr) => {
-                  const id = addr.id || addr._id;
+                  const id = addr.id;
 
                   return (
                     <div
                       key={id}
-                      className={`border rounded p-3 cursor-pointer ${addr.isdefault &&
+                      className={`border rounded p-3 cursor-pointer ${
+                        addr.isdefault &&
                         "border-blue-600"
-                        }`}
+                      }`}
                       onClick={async () => {
                         if (!addr.isdefault) {
                           await setDefaultAddress(id);
                           showToast(
                             "Default address updated",
-                            "success",
+                            "success"
                           );
                           await loadAddresses();
                         }
@@ -397,9 +423,7 @@ const Cart = () => {
 
               <div className="flex justify-between mt-5">
                 <button
-                  onClick={() =>
-                    navigate("/profile")
-                  }
+                  onClick={() => navigate("/profile")}
                   className="text-blue-600 text-sm"
                 >
                   + Add New Address
@@ -417,7 +441,6 @@ const Cart = () => {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
