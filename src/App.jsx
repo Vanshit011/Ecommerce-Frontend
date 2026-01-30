@@ -23,6 +23,7 @@ import OrderSuccess from "./pages/shop/checkout/OrderSuccess";
 // User account
 import Profile from "./pages/shop/account/Profile";
 import MyOrders from "./pages/shop/account/MyOrders";
+import MyPayments from "./pages/shop/account/MyPayments";
 
 import { ToastProvider } from "./context/ToastContext";
 
@@ -123,6 +124,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyOrders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-payments"
+            element={
+              <ProtectedRoute>
+                <MyPayments />
               </ProtectedRoute>
             }
           />

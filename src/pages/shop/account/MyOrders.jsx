@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getMyOrders } from "../../../services/api";
+import { getMyOrders, cancelMyOrder } from "../../../services/api";
 import Header from "../../../components/common/Header";
 import { useToast } from "../../../context/ToastContext";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ const MyOrders = () => {
   const navigate = useNavigate();
 
   const [orders, setOrders] = useState([]);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -22,6 +23,28 @@ const MyOrders = () => {
   const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
 
   const totalPages = Math.ceil(orders.length / ordersPerPage);
+
+  const handleCancelOrder = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      setCancelLoading(true);
+
+      await cancelMyOrder(selectedOrder.id);
+
+      showToast("Order cancelled successfully", "success");
+
+      closeModal();
+      loadOrders();
+    } catch (err) {
+      showToast(
+        err?.response?.data?.message || "Failed to cancel order",
+        "error",
+      );
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadOrders();
@@ -80,6 +103,15 @@ const MyOrders = () => {
             <li>
               <button className="text-blue-600 font-medium">My Orders</button>
             </li>
+
+            <li>
+              <button
+                onClick={() => navigate("/my-payments")}
+                className="text-gray-600 hover:text-blue-600"
+              >
+                My Payments
+              </button>
+            </li>
           </ul>
         </aside>
 
@@ -105,8 +137,7 @@ const MyOrders = () => {
                 </span>
 
                 <span
-                  className={`text-xs px-2 py-1 rounded-full font-semibold capitalize ${
-                    order.status === "pending"
+                  className={`text-xs px-2 py-1 rounded-full font-semibold capitalize ${order.status === "pending"
                       ? "bg-yellow-100 text-yellow-700"
                       : order.status === "confirmed"
                         ? "bg-blue-100 text-blue-700"
@@ -119,7 +150,7 @@ const MyOrders = () => {
                               : order.status === "failed"
                                 ? "bg-red-100 text-red-700"
                                 : "bg-slate-100 text-slate-700"
-                  }`}
+                    }`}
                 >
                   {order.status}
                 </span>
@@ -143,11 +174,10 @@ const MyOrders = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 border rounded ${
-                currentPage === i + 1
+              className={`px-3 py-1 border rounded ${currentPage === i + 1
                   ? "bg-blue-600 text-white"
                   : "hover:bg-gray-100"
-              }`}
+                }`}
             >
               {i + 1}
             </button>
@@ -188,9 +218,8 @@ const MyOrders = () => {
                   </p>
                 </div>
 
-               <span
-                  className={`text-xs px-2 py-1 rounded-full font-semibold capitalize ${
-                    selectedOrder.status === "pending"
+                <span
+                  className={`text-xs px-2 py-1 rounded-full font-semibold capitalize ${selectedOrder.status === "pending"
                       ? "bg-yellow-100 text-yellow-700"
                       : selectedOrder.status === "confirmed"
                         ? "bg-blue-100 text-blue-700"
@@ -203,7 +232,7 @@ const MyOrders = () => {
                               : selectedOrder.status === "failed"
                                 ? "bg-red-100 text-red-700"
                                 : "bg-slate-100 text-slate-700"
-                  }`}
+                    }`}
                 >
                   {selectedOrder.status}
                 </span>
@@ -255,9 +284,21 @@ const MyOrders = () => {
                   Total: ₹{Number(selectedOrder.totalAmount).toLocaleString()}
                 </span>
 
-                {selectedOrder.status === "PENDING" && (
-                  <button className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-                    Cancel Order
+                {selectedOrder.status === "confirmed" && (
+                  <button
+                    onClick={() => {
+                      const isConfirmed = window.confirm(
+                        "Are you sure you want to cancel this order?",
+                      );
+
+                      if (isConfirmed) {
+                        handleCancelOrder();
+                      }
+                    }}
+                    disabled={cancelLoading}
+                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {cancelLoading ? "Cancelling..." : "Cancel Order"}
                   </button>
                 )}
               </div>

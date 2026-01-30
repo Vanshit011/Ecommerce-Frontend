@@ -72,9 +72,7 @@ const Cart = () => {
       setCart((prev) => ({
         ...prev,
         items: prev.items.map((item) =>
-          item.product.id === productId
-            ? { ...item, quantity: newQty }
-            : item
+          item.product.id === productId ? { ...item, quantity: newQty } : item,
         ),
       }));
     } catch {
@@ -88,9 +86,7 @@ const Cart = () => {
 
       setCart((prev) => ({
         ...prev,
-        items: prev.items.filter(
-          (item) => item.product.id !== productId
-        ),
+        items: prev.items.filter((item) => item.product.id !== productId),
       }));
 
       showToast("Item removed from cart", "success");
@@ -114,8 +110,7 @@ const Cart = () => {
 
   /* ================= CHECKOUT ================= */
 
-  const activeItems =
-    cart?.items?.filter((item) => item.quantity > 0) || [];
+  const activeItems = cart?.items?.filter((item) => item.quantity > 0) || [];
 
   const handleProceedCheckout = async () => {
     if (checkoutLoading) return;
@@ -144,9 +139,9 @@ const Cart = () => {
 
       const res = await createOrder();
 
-      console.log("ORDER CREATED:", res.data);
+      const order = res.data?.data || res.data;
 
-      navigate(`/checkout/${res.data.id}`);
+      navigate(`/checkout/${order.id}`);
     } catch (err) {
       console.error("CREATE ORDER ERROR:", err);
       showToast("Failed to create order", "error");
@@ -169,7 +164,7 @@ const Cart = () => {
 
   const subtotal = activeItems.reduce(
     (acc, item) => acc + item.product.price * item.quantity,
-    0
+    0,
   );
 
   return (
@@ -188,10 +183,8 @@ const Cart = () => {
               <p className="font-medium">{defaultAddress.fullname}</p>
 
               <p className="text-sm text-gray-600">
-                {defaultAddress.addressline1},{" "}
-                {defaultAddress.city},{" "}
-                {defaultAddress.state} -{" "}
-                {defaultAddress.postalcode}
+                {defaultAddress.addressline1}, {defaultAddress.city},{" "}
+                {defaultAddress.state} - {defaultAddress.postalcode}
               </p>
             </div>
 
@@ -227,17 +220,13 @@ const Cart = () => {
                   <img
                     src={item.product.image}
                     alt={item.product.name}
-                    onClick={() =>
-                      navigate(`/product/${item.product.id}`)
-                    }
+                    onClick={() => navigate(`/product/${item.product.id}`)}
                     className="w-24 h-24 object-contain cursor-pointer bg-gray-50 rounded"
                   />
 
                   <div className="flex-1">
                     <h3
-                      onClick={() =>
-                        navigate(`/product/${item.product.id}`)
-                      }
+                      onClick={() => navigate(`/product/${item.product.id}`)}
                       className="font-medium cursor-pointer hover:text-blue-600"
                     >
                       {item.product.name}
@@ -253,10 +242,7 @@ const Cart = () => {
                     <button
                       disabled={item.quantity <= 1}
                       onClick={() =>
-                        handleUpdateQty(
-                          item.product.id,
-                          item.quantity - 1
-                        )
+                        handleUpdateQty(item.product.id, item.quantity - 1)
                       }
                       className="border px-2 rounded disabled:opacity-40"
                     >
@@ -269,21 +255,14 @@ const Cart = () => {
                       min="1"
                       onChange={(e) => {
                         const val = Number(e.target.value);
-                        if (val >= 1)
-                          handleUpdateQty(
-                            item.product.id,
-                            val
-                          );
+                        if (val >= 1) handleUpdateQty(item.product.id, val);
                       }}
                       className="w-14 border text-center rounded"
                     />
 
                     <button
                       onClick={() =>
-                        handleUpdateQty(
-                          item.product.id,
-                          item.quantity + 1
-                        )
+                        handleUpdateQty(item.product.id, item.quantity + 1)
                       }
                       className="border px-2 rounded"
                     >
@@ -294,17 +273,11 @@ const Cart = () => {
                   {/* TOTAL */}
                   <div className="flex items-center gap-4">
                     <span className="font-semibold">
-                      ₹
-                      {(
-                        item.product.price *
-                        item.quantity
-                      ).toLocaleString()}
+                      ₹{(item.product.price * item.quantity).toLocaleString()}
                     </span>
 
                     <button
-                      onClick={() =>
-                        handleRemoveItem(item.product.id)
-                      }
+                      onClick={() => handleRemoveItem(item.product.id)}
                       className="text-red-500"
                     >
                       🗑️
@@ -333,29 +306,21 @@ const Cart = () => {
 
             {/* SUMMARY */}
             <div className="bg-white rounded-lg shadow p-5 sticky top-24">
-              <h2 className="font-semibold text-lg mb-4">
-                Order Summary
-              </h2>
+              <h2 className="font-semibold text-lg mb-4">Order Summary</h2>
 
               <div className="flex justify-between text-sm mb-2">
                 <span>Subtotal</span>
-                <span>
-                  ₹{subtotal.toLocaleString()}
-                </span>
+                <span>₹{subtotal.toLocaleString()}</span>
               </div>
 
               <div className="flex justify-between text-sm mb-2">
                 <span>Shipping</span>
-                <span className="text-green-600">
-                  FREE
-                </span>
+                <span className="text-green-600">FREE</span>
               </div>
 
               <div className="flex justify-between font-semibold border-t pt-3">
                 <span>Estimated Total</span>
-                <span>
-                  ₹{subtotal.toLocaleString()}
-                </span>
+                <span>₹{subtotal.toLocaleString()}</span>
               </div>
 
               <button
@@ -363,9 +328,7 @@ const Cart = () => {
                 className="mt-5 w-full bg-yellow-400 py-3 rounded font-semibold disabled:opacity-60"
                 onClick={handleProceedCheckout}
               >
-                {checkoutLoading
-                  ? "Creating Order..."
-                  : "Proceed to Checkout"}
+                {checkoutLoading ? "Creating Order..." : "Proceed to Checkout"}
               </button>
             </div>
           </div>
@@ -375,9 +338,7 @@ const Cart = () => {
         {showAddressPicker && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
             <div className="bg-white max-w-lg w-full rounded-lg p-5">
-              <h3 className="font-semibold mb-4">
-                Select Delivery Address
-              </h3>
+              <h3 className="font-semibold mb-4">Select Delivery Address</h3>
 
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {addresses.map((addr) => {
@@ -387,34 +348,25 @@ const Cart = () => {
                     <div
                       key={id}
                       className={`border rounded p-3 cursor-pointer ${
-                        addr.isdefault &&
-                        "border-blue-600"
+                        addr.isdefault && "border-blue-600"
                       }`}
                       onClick={async () => {
                         if (!addr.isdefault) {
                           await setDefaultAddress(id);
-                          showToast(
-                            "Default address updated",
-                            "success"
-                          );
+                          showToast("Default address updated", "success");
                           await loadAddresses();
                         }
                         setShowAddressPicker(false);
                       }}
                     >
                       {addr.isdefault && (
-                        <span className="text-xs text-blue-600">
-                          DEFAULT
-                        </span>
+                        <span className="text-xs text-blue-600">DEFAULT</span>
                       )}
 
-                      <p className="font-medium">
-                        {addr.fullname}
-                      </p>
+                      <p className="font-medium">{addr.fullname}</p>
 
                       <p className="text-sm">
-                        {addr.addressline1},{" "}
-                        {addr.city}
+                        {addr.addressline1}, {addr.city}
                       </p>
                     </div>
                   );
@@ -430,9 +382,7 @@ const Cart = () => {
                 </button>
 
                 <button
-                  onClick={() =>
-                    setShowAddressPicker(false)
-                  }
+                  onClick={() => setShowAddressPicker(false)}
                   className="border px-4 py-1 rounded"
                 >
                   Close
