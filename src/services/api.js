@@ -67,6 +67,9 @@ export const deleteProduct = (id) => API.delete(`/products/${id}`);
 export const getCategories = () => API.get("/categories");
 //create category
 export const createCategory = (data) => API.post("/categories", data);
+//get children category
+export const getCategoryChildren = (id) =>
+  API.get(`/categories/${id}/children`);
 //update category
 export const updateCategory = (id, data) => API.put(`/categories/${id}`, data);
 // delete category
@@ -116,13 +119,18 @@ export const deleteAddress = (id) => API.delete(`/address/${id}`);
 export const setDefaultAddress = (id) => API.put(`/address/${id}/default`);
 
 //order
-
 export const createOrder = () => API.post("/orders");
-
-export const payOrder = (orderId) => API.post(`/orders/${orderId}/pay`);
 
 export const getOrderById = (id) => API.get(`/orders/${id}`);
 
 export const getMyOrders = () => API.get(`/orders/my`);
+
+export const cancelMyOrder = (orderId) =>
+  API.patch(`/orders/${orderId}/cancel`);
+
+// payments
+export const payOrder = (orderId) => API.post(`/payments/order/${orderId}`);
+
+export const getMyPayments = () => API.get('/payments/my');
 
 export default API;

@@ -200,6 +200,15 @@ const Profile = () => {
               </button>
             </li>
 
+            <li>
+              <button
+                onClick={() => navigate("/my-payments")}
+                className="text-gray-600 hover:text-blue-600"
+              >
+                My Payments
+              </button>
+            </li>
+
           </ul>
         </aside>
 
@@ -271,8 +280,8 @@ const Profile = () => {
                   <div
                     key={id}
                     className={`border rounded p-4 ${addr.isdefault
-                        ? "border-blue-600"
-                        : ""
+                      ? "border-blue-600"
+                      : ""
                       }`}
                   >
                     {addr.isdefault && (
@@ -305,8 +314,8 @@ const Profile = () => {
                         }
                         disabled={addr.isdefault}
                         className={`${addr.isdefault
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "text-blue-600"
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-blue-600"
                           }`}
                       >
                         Set Default

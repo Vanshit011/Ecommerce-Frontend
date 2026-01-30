@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import {
@@ -19,7 +19,7 @@ const stripePromise = loadStripe(
 // =======================
 // CHECKOUT FORM
 // =======================
-const CheckoutForm = ({ order, clientSecret }) => {
+const CheckoutForm = ({ order }) => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -30,11 +30,9 @@ const CheckoutForm = ({ order, clientSecret }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!stripe || !elements || !clientSecret) return;
+    if (!stripe || !elements) return;
 
     setLoading(true);
-
-    console.log("CONFIRM PAYMENT START");
 
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
@@ -43,8 +41,6 @@ const CheckoutForm = ({ order, clientSecret }) => {
       },
       redirect: "if_required",
     });
-
-    console.log("CONFIRM RESULT:", { error, paymentIntent });
 
     if (error) {
       showToast(error.message, "error");
@@ -84,53 +80,83 @@ const Checkout = () => {
   const [loading, setLoading] = useState(true);
   const [fatalError, setFatalError] = useState("");
 
-  console.log("CHECKOUT COMPONENT RENDERED");
+  const initialized = useRef(false);
 
   useEffect(() => {
-    console.log("USE EFFECT RUN");
-    loadCheckout();
+    if (!initialized.current) {
+      initialized.current = true;
+      loadCheckout();
+    }
   }, []);
 
   const loadCheckout = async () => {
     try {
-      console.log("LOAD CHECKOUT CALLED");
-      console.log("ORDER ID PARAM:", id);
-
       setLoading(true);
+      console.log("Loading checkout for order ID:", id);
 
-      const orderRes = await getOrderById(id);
-      console.log("ORDER API RESPONSE:", orderRes.data);
+      const response = await getOrderById(id);
+      console.log("Order response received:", response);
 
-      const orderData = orderRes.data;
+      // Handle both nested and direct response structures
+      const orderData = response.data || response;
+      console.log("Order data extracted:", orderData);
 
-      if (!orderData) {
+      if (!orderData || !orderData.id) {
         setFatalError("Order not found");
         return;
       }
 
-      if (orderData.status === "CONFIRMED") {
-        console.log("ORDER ALREADY CONFIRMED");
+      // Check if order is already confirmed
+      const orderStatus = orderData.status?.toUpperCase();
+
+      if (orderStatus === "CONFIRMED") {
+        console.log("Order already confirmed, redirecting to success page");
         navigate(`/order-success/${orderData.id}`);
         return;
       }
 
       setOrder(orderData);
 
-      if (orderData.status === "pending") {
-        console.log("CREATING PAYMENT INTENT");
+      // Only create payment intent if order is pending and we don't have a client secret
+      if (orderStatus === "PENDING" && !clientSecret) {
+        console.log("Creating payment intent for order:", orderData.id);
 
-        const payRes = await payOrder(id);
+        try {
+          const payRes = await payOrder(id);
+          console.log("Payment response:", payRes);
 
-        console.log("PAY ORDER RESPONSE:", payRes.data);
+          // Handle both nested and direct clientSecret
+          const secret = payRes.data?.clientSecret || payRes.clientSecret;
 
-        setClientSecret(payRes.data.clientSecret);
-      } else {
-        setFatalError("Order cannot be paid");
+          if (secret) {
+            setClientSecret(secret);
+            console.log("Client secret set successfully");
+          } else {
+            console.error("No client secret in payment response:", payRes);
+            setFatalError("Failed to initialize payment - no client secret received");
+          }
+        } catch (payError) {
+          console.error("Payment creation error:", payError);
+          const errorMsg = payError?.response?.data?.message ||
+            payError?.message ||
+            "Failed to create payment";
+          setFatalError(errorMsg);
+          showToast(errorMsg, "error");
+        }
       }
     } catch (err) {
       console.error("CHECKOUT LOAD ERROR:", err);
-      setFatalError("Failed to load checkout");
-      showToast("Failed to load checkout", "error");
+      console.error("Error details:", {
+        message: err?.message,
+        response: err?.response?.data,
+        status: err?.response?.status
+      });
+
+      const errorMsg = err?.response?.data?.message ||
+        err?.message ||
+        "Failed to load checkout";
+      setFatalError(errorMsg);
+      showToast(errorMsg, "error");
     } finally {
       setLoading(false);
     }
@@ -168,10 +194,7 @@ const Checkout = () => {
             appearance: { theme: "stripe" },
           }}
         >
-          <CheckoutForm
-            order={order}
-            clientSecret={clientSecret}
-          />
+          <CheckoutForm order={order} />
         </Elements>
       </div>
     </>
