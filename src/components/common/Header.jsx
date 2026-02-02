@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { getCart } from "../../services/api";
+import { getCart, getCategories } from "../../services/api";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -9,11 +9,14 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [cartCount, setCartCount] = useState(0);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [hoveredCategory, setHoveredCategory] = useState(null);
 
   const profileRef = useRef(null);
 
   useEffect(() => {
     loadCart();
+    loadCategories();
   }, [location.pathname]);
 
   useEffect(() => {
@@ -37,6 +40,53 @@ const Header = () => {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      const res = await getCategories();
+      const data =
+        res?.data?.data ||
+        res?.data?.categories ||
+        (Array.isArray(res?.data) ? res.data : []);
+
+      // Build category tree
+      const tree = buildCategoryTree(data);
+      setCategories(tree);
+    } catch (err) {
+      console.error("Failed to load categories:", err);
+    }
+  };
+
+  const buildCategoryTree = (cats) => {
+    const tree = cats.filter((cat) => {
+      const hasNoParent =
+        !cat.parentId &&
+        (!cat.parent ||
+          (typeof cat.parent === "object" &&
+            !cat.parent.id &&
+            !cat.parent._id));
+      return hasNoParent;
+    });
+
+    const attachChildren = (parent) => {
+      const children = cats.filter((cat) => {
+        const parentIdMatch = cat.parentId === (parent.id || parent._id);
+        const parentObjMatch =
+          cat.parent &&
+          typeof cat.parent === "object" &&
+          (cat.parent.id === (parent.id || parent._id) ||
+            cat.parent._id === (parent.id || parent._id));
+        return parentIdMatch || parentObjMatch;
+      });
+
+      if (children.length > 0) {
+        parent.children = children.map((child) => attachChildren({ ...child }));
+      }
+      return parent;
+    };
+
+    return tree.map((cat) => attachChildren({ ...cat }));
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -48,6 +98,11 @@ const Header = () => {
   const handleLogout = () => {
     localStorage.clear();
     navigate("/login");
+  };
+
+  const handleCategoryClick = (categoryId) => {
+    navigate(`/products?category=${categoryId}`);
+    setHoveredCategory(null);
   };
 
   return (
@@ -88,8 +143,8 @@ const Header = () => {
           <Link
             to="/home"
             className={`font-medium ${location.pathname === "/home"
-                ? "text-blue-600"
-                : "text-gray-700 hover:text-blue-600"
+              ? "text-blue-600"
+              : "text-gray-700 hover:text-blue-600"
               }`}
           >
             Home
@@ -97,8 +152,8 @@ const Header = () => {
           <Link
             to="/products"
             className={`font-medium ${location.pathname === "/products"
-                ? "text-blue-600"
-                : "text-gray-700 hover:text-blue-600"
+              ? "text-blue-600"
+              : "text-gray-700 hover:text-blue-600"
               }`}
           >
             Products
@@ -171,6 +226,55 @@ const Header = () => {
           </button>
         </div>
       </div>
+
+      {/* CATEGORY MEGA MENU */}
+      {categories.length > 0 && (
+        <div className="hidden md:block bg-gray-50 border-t border-gray-200">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center gap-1">
+              {categories.map((category) => {
+                const catId = category.id || category._id;
+                const hasChildren = category.children && category.children.length > 0;
+
+                return (
+                  <div
+                    key={catId}
+                    className="relative"
+                    onMouseEnter={() => hasChildren && setHoveredCategory(catId)}
+                    onMouseLeave={() => setHoveredCategory(null)}
+                  >
+                    <button
+                      onClick={() => handleCategoryClick(catId)}
+                      className="px-4 py-3 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-white transition-colors flex items-center gap-1"
+                    >
+                      {category.name}
+                      {hasChildren && <span className="text-xs">▼</span>}
+                    </button>
+
+                    {/* DROPDOWN */}
+                    {hasChildren && hoveredCategory === catId && (
+                      <div className="absolute left-0 top-full mt-0 bg-white shadow-lg border border-gray-200 rounded-b-lg min-w-[200px] py-2 z-50">
+                        {category.children.map((child) => {
+                          const childId = child.id || child._id;
+                          return (
+                            <button
+                              key={childId}
+                              onClick={() => handleCategoryClick(childId)}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            >
+                              {child.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MOBILE SEARCH */}
       <form onSubmit={handleSearch} className="md:hidden px-4 pb-3">
