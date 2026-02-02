@@ -7,8 +7,11 @@ const API = axios.create({
     indexes: null,
   },
 });
+// ------------------ //
+// API'S //
+// ------------------ //
 
-// auth
+// auth user & admin
 export const registerUser = (data) => API.post("/auth/register", data);
 export const loginUser = (data) => API.post("/auth/login", data);
 
@@ -30,84 +33,58 @@ export const logout = () => API.post("/auth/logout");
 
 export const forgotPassword = (data) => API.post("/auth/forgot-password", data);
 
-export const verifyForgotOtp = (otp) =>
-  API.post("/auth/verify-forgot-otp", { otp });
+export const verifyForgotOtp = (otp) => API.post("/auth/verify-forgot-otp", { otp });
 
-export const resetPassword = (newPassword) =>
-  API.post("/auth/reset-password", { newPassword });
+export const resetPassword = (newPassword) => API.post("/auth/reset-password", { newPassword });
 
-// products //
-
-// get all products
+//user products //
 export const getProducts = (params) => API.get("/products", { params });
-// get product details
+
 export const getProductDetails = (id) => API.get(`/products/${id}`);
-// get product images
+
 export const getProductImages = (id) => API.get(`/products/${id}/images`);
 
-// admin get personal products
-export const getMyProducts = () => API.get("/products/my-products");
+//admin products //
+export const getMyProducts = (params) => API.get("/products/my-products", { params });
 
-// create product
-export const createProduct = (formData) =>
-  API.post("/products", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-// update product
-export const updateProduct = (id, formData) =>
-  API.put(`/products/${id}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-//delete product
+export const createProduct = (formData) => API.post("/products", formData, { headers: { "Content-Type": "multipart/form-data" }, });
+
+export const updateProduct = (id, formData) => API.put(`/products/${id}`, formData, { headers: { "Content-Type": "multipart/form-data" }, });
+
 export const deleteProduct = (id) => API.delete(`/products/${id}`);
 
-// categories  //
-
-// get categories
+//user categories  //
 export const getCategories = () => API.get("/categories");
-//create category
+
+//admin categories  //
 export const createCategory = (data) => API.post("/categories", data);
-//get children category
-export const getCategoryChildren = (id) =>
-  API.get(`/categories/${id}/children`);
-//update category
+
 export const updateCategory = (id, data) => API.put(`/categories/${id}`, data);
-// delete category
+
 export const deleteCategory = (id) => API.delete(`/categories/${id}`);
 
-// favorites  //
+//user favorites  //
+export const addToFavorites = (productId) => API.post(`/favorites/${productId}`);
 
-// Add product to favorites
-export const addToFavorites = (productId) =>
-  API.post(`/favorites/${productId}`);
+export const removeFromFavorites = (productId) => API.delete(`/favorites/${productId}`);
 
-// Remove product from favorites
-export const removeFromFavorites = (productId) =>
-  API.delete(`/favorites/${productId}`);
-
-// Get all favorites
 export const getFavorites = () => API.get("/favorites");
 
-// profile  //
-
-// Get user profile
+//user profile  //
 export const getProfile = () => API.get("/profile");
-//update user profile
+
 export const updateProfile = (data) => API.put("/profile", data);
 
-// Cart //
-
-// add to cart
+//user Cart //
 export const addToCart = (productId) => API.post(`/cart/${productId}`);
-// get cart
+
 export const getCart = () => API.get("/cart");
-// update qty
-export const updateCartQty = (productId, qty) =>
-  API.post(`/cart/${productId}/${qty}`);
-// clear cart
+
+export const updateCartQty = (productId, qty) => API.post(`/cart/${productId}/${qty}`);
+
 export const clearCart = () => API.delete("/cart");
 
-//address
+//user address
 export const getAddresses = () => API.get("/address");
 
 export const createAddress = (data) => API.post("/address", data);
@@ -118,19 +95,18 @@ export const deleteAddress = (id) => API.delete(`/address/${id}`);
 
 export const setDefaultAddress = (id) => API.put(`/address/${id}/default`);
 
-//order
+//user order
 export const createOrder = () => API.post("/orders");
 
 export const getOrderById = (id) => API.get(`/orders/${id}`);
 
 export const getMyOrders = () => API.get(`/orders/my`);
 
-export const cancelMyOrder = (orderId) =>
-  API.patch(`/orders/${orderId}/cancel`);
+export const cancelMyOrder = (orderId) => API.patch(`/orders/${orderId}/cancel`);
 
-// payments
+//user payments
 export const payOrder = (orderId) => API.post(`/payments/order/${orderId}`);
 
-export const getMyPayments = () => API.get('/payments/my');
+export const getMyPayments = () => API.get("/payments/my");
 
 export default API;

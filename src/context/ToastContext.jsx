@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import "../styles/components/toast.css";
 
 const ToastContext = createContext();
 
@@ -28,9 +27,13 @@ export const ToastProvider = ({ children }) => {
     <ToastContext.Provider value={{ showToast }}>
       {children}
 
-      <div className="toast-container">
+      <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none">
         {toasts.map((toast) => (
-          <div key={toast.id} className={`toast toast-${toast.type}`}>
+          <div
+            key={toast.id}
+            className={`px-6 py-3 rounded-xl text-slate-900 font-semibold text-sm shadow-xl animate-[toastIn_0.3s_cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${toast.type === "success" ? "bg-green-500" : "bg-red-500"
+              }`}
+          >
             {toast.message}
           </div>
         ))}

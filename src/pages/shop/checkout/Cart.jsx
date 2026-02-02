@@ -72,7 +72,7 @@ const Cart = () => {
       setCart((prev) => ({
         ...prev,
         items: prev.items.map((item) =>
-          item.product.id === productId ? { ...item, quantity: newQty } : item,
+          item.product?.id === productId ? { ...item, quantity: newQty } : item,
         ),
       }));
     } catch {
@@ -86,7 +86,7 @@ const Cart = () => {
 
       setCart((prev) => ({
         ...prev,
-        items: prev.items.filter((item) => item.product.id !== productId),
+        items: prev.items.filter((item) => item.product?.id !== productId),
       }));
 
       showToast("Item removed from cart", "success");
@@ -110,7 +110,7 @@ const Cart = () => {
 
   /* ================= CHECKOUT ================= */
 
-  const activeItems = cart?.items?.filter((item) => item.quantity > 0) || [];
+  const activeItems = cart?.items?.filter((item) => item.product && item.quantity > 0) || [];
 
   const handleProceedCheckout = async () => {
     if (checkoutLoading) return;
@@ -347,9 +347,8 @@ const Cart = () => {
                   return (
                     <div
                       key={id}
-                      className={`border rounded p-3 cursor-pointer ${
-                        addr.isdefault && "border-blue-600"
-                      }`}
+                      className={`border rounded p-3 cursor-pointer ${addr.isdefault && "border-blue-600"
+                        }`}
                       onClick={async () => {
                         if (!addr.isdefault) {
                           await setDefaultAddress(id);

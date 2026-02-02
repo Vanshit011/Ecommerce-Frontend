@@ -83,7 +83,7 @@ const Home = () => {
               <div
                 key={cat.id || cat._id}
                 onClick={() =>
-                  navigate(`/products?category=${cat.name}`)
+                  navigate(`/products?category=${cat.id || cat._id}`)
                 }
                 className="min-w-[120px] cursor-pointer bg-white shadow rounded-lg p-4 flex flex-col items-center hover:shadow-lg hover:-translate-y-1 transition"
               >

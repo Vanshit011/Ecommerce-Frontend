@@ -11,74 +11,143 @@ import Header from "../../../components/common/Header";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useToast } from "../../../context/ToastContext";
 
+/* ================= CATEGORY TREE NODE ================= */
+
+const CategoryNode = ({
+  cat,
+  level = 0,
+  expandedCategories,
+  toggleExpand,
+  selectedCategories,
+  toggleCategoryTree,
+}) => {
+  const id = cat.id || cat._id;
+  const hasChildren = cat.children?.length > 0;
+  const isExpanded = expandedCategories.has(id);
+  const isChecked = selectedCategories.includes(id);
+
+  return (
+    <div style={{ marginLeft: level * 16 }}>
+      <div className="flex items-center gap-2 py-1">
+
+        {hasChildren && (
+          <button
+            onClick={() => toggleExpand(id)}
+            className="text-xs w-4 text-slate-600 hover:text-blue-600"
+          >
+            {isExpanded ? "▼" : "▶"}
+          </button>
+        )}
+
+        {!hasChildren && <span className="w-4" />}
+
+        <input
+          type="checkbox"
+          checked={isChecked}
+          onChange={() => toggleCategoryTree(cat)}
+          className="accent-blue-600"
+        />
+
+        <span className="text-sm">{cat.name}</span>
+      </div>
+
+      {isExpanded &&
+        hasChildren &&
+        cat.children.map((child) => (
+          <CategoryNode
+            key={child.id || child._id}
+            cat={child}
+            level={level + 1}
+            expandedCategories={expandedCategories}
+            toggleExpand={toggleExpand}
+            selectedCategories={selectedCategories}
+            toggleCategoryTree={toggleCategoryTree}
+          />
+        ))}
+    </div>
+  );
+};
+
+/* ================= MAIN COMPONENT ================= */
+
 const Products = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [expandedCategories, setExpandedCategories] = useState(new Set());
+  const [selectedCategories, setSelectedCategories] = useState(() => {
+    const cat = searchParams.get("category");
+    return cat ? cat.split(",") : [];
+  });
+
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState("");
 
-  const [search, setSearch] = useState("");
-  const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(100000);
-  const [sort, setSort] = useState("created_at_desc");
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+
+  const [minPrice, setMinPrice] = useState(Number(searchParams.get("minPrice")) || 0);
+  const [maxPrice, setMaxPrice] = useState(Number(searchParams.get("maxPrice")) || 100000);
+  const [debouncedPrice, setDebouncedPrice] = useState({
+    min: minPrice,
+    max: maxPrice,
+  });
+
+  const [sort, setSort] = useState(searchParams.get("sort") || "created_at_desc");
+  const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
   const [limit] = useState(9);
 
   const MIN_LIMIT = 0;
   const MAX_LIMIT = 100000;
 
   const [favoriteIds, setFavoriteIds] = useState([]);
-  const [searchParams] = useSearchParams();
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
+
+  /*  SYNC URL PARAMS  */
+  const updateURL = useCallback((params) => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === undefined || value === "" || value === 0 || (key === "page" && value === 1)) {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, value);
+      }
+    });
+    setSearchParams(newParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  /*  DEBOUNCE SEARCH  */
 
   useEffect(() => {
     const t = setTimeout(() => {
       setDebouncedSearch(search);
+      updateURL({ search });
     }, 300);
-
     return () => clearTimeout(t);
-  }, [search]);
-
-  const [debouncedPrice, setDebouncedPrice] = useState({
-    min: minPrice,
-    max: maxPrice,
-  });
+  }, [search, updateURL]);
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      setDebouncedPrice({
-        min: minPrice,
-        max: maxPrice,
-      });
-    }, 400);
-
+    const t = setTimeout(
+      () =>
+        setDebouncedPrice({
+          min: minPrice,
+          max: maxPrice,
+        }),
+      400,
+    );
     return () => clearTimeout(t);
   }, [minPrice, maxPrice]);
 
-  /* CATEGORY FROM URL */
-  useEffect(() => {
-    const catFromUrl = searchParams.get("category");
+  /*  FAVORITES  */
 
-    if (catFromUrl) {
-      setSelectedCategory(catFromUrl.toLowerCase());
-      setPage(1);
-    }
-  }, [searchParams]);
-
-  /* FAVORITES */
   useEffect(() => {
     const loadFavorites = async () => {
       try {
         const res = await getFavorites();
-        const ids = res.data.map((f) => f.id);
-        setFavoriteIds(ids);
-      } catch (err) {
-        console.error("Load favorites failed", err);
-      }
+        setFavoriteIds(res.data.map((f) => f.id || f._id));
+      } catch { }
     };
 
     loadFavorites();
@@ -96,12 +165,12 @@ const Products = () => {
           await addToFavorites(productId);
           setFavoriteIds((prev) => [...prev, productId]);
         }
-      } catch (err) {
-        console.error("Favorite toggle error:", err);
-      }
+      } catch { }
     },
     [favoriteIds],
   );
+
+  /*  CART  */
 
   const handleAddToCart = useCallback(
     async (productId) => {
@@ -109,7 +178,6 @@ const Products = () => {
         await addToCart(productId);
         showToast("Product added to bag!", "success");
       } catch (err) {
-        console.error("Add to cart error:", err);
         showToast(
           err.response?.data?.message || "Failed to add to bag",
           "error",
@@ -119,7 +187,8 @@ const Products = () => {
     [showToast],
   );
 
-  /* CATEGORIES */
+  /*  FETCH CATEGORIES  */
+
   useEffect(() => {
     const fetchCats = async () => {
       try {
@@ -130,28 +199,131 @@ const Products = () => {
           (Array.isArray(res?.data) ? res.data : []);
 
         setCategories(data);
-      } catch (err) {
-        console.error("Failed to fetch categories", err);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
       }
     };
 
     fetchCats();
   }, []);
 
-  /* PRODUCTS */
+  // Sync state from URL when it changes (e.g. clicking Header link)
+  useEffect(() => {
+    const searchParam = searchParams.get('search') || "";
+    const categoryParam = searchParams.get('category');
+    const pageParam = Number(searchParams.get('page')) || 1;
+    const sortParam = searchParams.get('sort') || "created_at_desc";
+
+    if (searchParam !== search) setSearch(searchParam);
+    if (searchParam !== debouncedSearch) setDebouncedSearch(searchParam);
+
+    if (categoryParam) {
+      const catIds = categoryParam.split(",");
+      if (JSON.stringify(catIds) !== JSON.stringify(selectedCategories)) {
+        setSelectedCategories(catIds);
+      }
+    } else if (selectedCategories.length > 0 && !searchParam) {
+      setSelectedCategories([]);
+    }
+
+    if (pageParam !== page) setPage(pageParam);
+    if (sortParam !== sort) setSort(sortParam);
+  }, [searchParams]); // Categories added to help find path, but not in dependency to avoid loops
+
+  const buildTree = (cats) =>
+    cats.filter((cat) => {
+      const hasNoParent =
+        !cat.parentId &&
+        (!cat.parent ||
+          (typeof cat.parent === "object" &&
+            !cat.parent.id &&
+            !cat.parent._id));
+
+      return hasNoParent;
+    });
+
+  const treeData = buildTree(categories);
+
+  /*  CATEGORY HELPERS  */
+
+  const toggleExpand = (id) => {
+    setExpandedCategories((prev) => {
+      const s = new Set(prev);
+      s.has(id) ? s.delete(id) : s.add(id);
+      return s;
+    });
+  };
+
+  const toggleCategoryTree = (cat) => {
+    const id = cat.id || cat._id;
+    const isSelected = selectedCategories.includes(id);
+    const next = isSelected
+      ? selectedCategories.filter((x) => x !== id)
+      : [...selectedCategories, id];
+
+    setSelectedCategories(next);
+    setPage(1);
+    updateURL({ category: next.join(","), page: 1 });
+  };
+
+  // Get all category IDs including children for API filtering
+  const getCategoryIdsForFilter = () => {
+    if (selectedCategories.length === 0) return [];
+
+    const allIds = new Set();
+
+    // Create a flat map of all categories
+    const categoryMap = new Map();
+    const flattenCategories = (cats) => {
+      cats.forEach(cat => {
+        const catId = cat.id || cat._id;
+        categoryMap.set(catId, cat);
+        if (cat.children && cat.children.length > 0) {
+          flattenCategories(cat.children);
+        }
+      });
+    };
+    flattenCategories(categories);
+
+    // For each selected category, add it and all its children
+    selectedCategories.forEach(selectedId => {
+      allIds.add(selectedId);
+
+      const category = categoryMap.get(selectedId);
+      if (category) {
+        const getChildIds = (cat) => {
+          if (cat.children && cat.children.length > 0) {
+            cat.children.forEach(child => {
+              const childId = child.id || child._id;
+              allIds.add(childId);
+              getChildIds(child);
+            });
+          }
+        };
+        getChildIds(category);
+      }
+    });
+
+    return Array.from(allIds);
+  };
+
+  /*  FETCH PRODUCTS  */
+
   useEffect(() => {
     const fetchProductsData = async () => {
       setLoading(true);
 
       try {
+        // Get all category IDs including children of selected categories
+        const categoryIdsToFilter = getCategoryIdsForFilter();
+
         const params = {
           page,
           limit,
-          search:
-            debouncedSearch && debouncedSearch.trim().length > 0
-              ? debouncedSearch.trim()
-              : undefined,
-          category: selectedCategory || undefined,
+          search: debouncedSearch || undefined,
+          category: categoryIdsToFilter.length
+            ? categoryIdsToFilter.join(",")
+            : undefined,
           minPrice: debouncedPrice.min,
           maxPrice: debouncedPrice.max,
           sort,
@@ -161,8 +333,7 @@ const Products = () => {
 
         setProducts(res?.data?.data || []);
         setMeta(res?.data?.meta || null);
-      } catch (error) {
-        console.error("Product fetch failed:", error);
+      } catch {
         setProducts([]);
         setMeta(null);
       } finally {
@@ -175,63 +346,54 @@ const Products = () => {
     page,
     limit,
     debouncedSearch,
-    selectedCategory,
-    debouncedPrice.min,
-    debouncedPrice.max,
+    selectedCategories,
+    debouncedPrice,
     sort,
+    categories,
   ]);
-
-  const toggleCategory = (catName) => {
-    const normalized = catName.toLowerCase();
-    setSelectedCategory((prev) => (prev === normalized ? "" : normalized));
-    setPage(1);
-  };
 
   const resetFilters = () => {
     setSearch("");
-    setSelectedCategory("");
+    setSelectedCategories([]);
+    setExpandedCategories(new Set());
     setMinPrice(MIN_LIMIT);
     setMaxPrice(MAX_LIMIT);
     setSort("created_at_desc");
     setPage(1);
+    setSearchParams({}); // Clear URL
   };
+
 
   return (
     <div className="bg-gray-100 min-h-screen">
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
-        {/* ================= SIDEBAR ================= */}
+
+        {/*  SIDEBAR  */}
         <aside className="bg-white rounded-lg shadow p-5 h-fit sticky top-20">
+
           <h3 className="font-semibold text-lg mb-4">Filters</h3>
 
-          {/* Categories */}
+          {/* CATEGORIES */}
           <div className="mb-6">
             <h4 className="font-medium mb-3">Categories</h4>
 
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {categories.map((cat) => {
-                const catId = cat.id || cat._id;
-
-                return (
-                  <label
-                    key={catId}
-                    className="flex items-center gap-2 text-sm cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedCategory === cat.name.toLowerCase()}
-                      onChange={() => toggleCategory(cat.name)}
-                      className="accent-blue-600"
-                    />
-                    {cat.name}
-                  </label>
-                );
-              })}
+            <div className="space-y-1 max-h-72 overflow-y-auto">
+              {treeData.map((cat) => (
+                <CategoryNode
+                  key={cat.id || cat._id}
+                  cat={cat}
+                  expandedCategories={expandedCategories}
+                  toggleExpand={toggleExpand}
+                  selectedCategories={selectedCategories}
+                  toggleCategoryTree={toggleCategoryTree}
+                />
+              ))}
             </div>
           </div>
 
-          {/* Price */}
+          {/* PRICE */}
           <div>
             <h4 className="font-medium mb-3">Price Range</h4>
 
@@ -242,8 +404,7 @@ const Products = () => {
               step="500"
               value={minPrice}
               onChange={(e) => {
-                const val = Math.min(Number(e.target.value), maxPrice - 5000);
-                setMinPrice(val);
+                setMinPrice(Number(e.target.value));
                 setPage(1);
               }}
               className="w-full"
@@ -256,8 +417,7 @@ const Products = () => {
               step="500"
               value={maxPrice}
               onChange={(e) => {
-                const val = Math.max(Number(e.target.value), minPrice + 5000);
-                setMaxPrice(val);
+                setMaxPrice(Number(e.target.value));
                 setPage(1);
               }}
               className="w-full mt-2"
@@ -277,15 +437,16 @@ const Products = () => {
           </div>
         </aside>
 
-        {/* ================= CONTENT ================= */}
+        {/*  MAIN  */}
         <main className="bg-white rounded-lg shadow p-5">
+
           {/* TOP BAR */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+          <div className="flex flex-col md:flex-row justify-between gap-4 mb-5">
             <span className="text-sm text-gray-600">
               {meta && `${meta.total} products`}
             </span>
 
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-3">
               <input
                 type="text"
                 placeholder="Search products..."
@@ -300,8 +461,10 @@ const Products = () => {
               <select
                 value={sort}
                 onChange={(e) => {
-                  setSort(e.target.value);
+                  const val = e.target.value;
+                  setSort(val);
                   setPage(1);
+                  updateURL({ sort: val, page: 1 });
                 }}
                 className="border rounded px-2 py-2 text-sm"
               >
@@ -337,16 +500,11 @@ const Products = () => {
                     key={product.id || product._id}
                     className="border rounded-lg overflow-hidden hover:shadow-xl transition group relative"
                   >
-                    {/* IMAGE */}
                     <div className="relative bg-gray-50 p-4">
                       <img
-                        loading="lazy"
                         src={product.image}
                         alt={product.name}
-                        className="h-44 mx-auto object-contain group-hover:scale-105 transition"
-                        onError={(e) =>
-                          (e.target.src = "https://via.placeholder.com/400")
-                        }
+                        className="h-44 mx-auto object-contain"
                       />
 
                       <span className="absolute top-3 left-3 bg-blue-600 text-white text-xs px-2 py-1 rounded">
@@ -354,18 +512,16 @@ const Products = () => {
                       </span>
 
                       <button
-                        onClick={() => toggleFavorite(product.id)}
-                        className={`absolute top-3 right-3 text-xl ${
-                          favoriteIds.includes(product.id)
-                            ? "text-red-500"
-                            : "text-gray-400"
-                        }`}
+                        onClick={() => toggleFavorite(product.id || product._id)}
+                        className={`absolute top-3 right-3 text-xl ${favoriteIds.includes(product.id || product._id)
+                          ? "text-red-500"
+                          : "text-gray-400"
+                          }`}
                       >
                         ♥
                       </button>
                     </div>
 
-                    {/* DETAILS */}
                     <div className="p-4">
                       <h3 className="font-medium truncate">{product.name}</h3>
 
@@ -380,11 +536,10 @@ const Products = () => {
 
                         <div className="flex gap-2">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddToCart(product.id || product._id);
-                            }}
-                            className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded hover:bg-blue-700"
+                            onClick={() =>
+                              handleAddToCart(product.id || product._id)
+                            }
+                            className="bg-blue-600 text-white text-sm px-3 py-1.5 rounded"
                           >
                             Add
                           </button>
@@ -393,7 +548,7 @@ const Products = () => {
                             onClick={() =>
                               navigate(`/product/${product.id || product._id}`)
                             }
-                            className="border text-sm px-3 py-1.5 rounded hover:bg-gray-100"
+                            className="border text-sm px-3 py-1.5 rounded"
                           >
                             View
                           </button>
@@ -407,27 +562,59 @@ const Products = () => {
           )}
 
           {/* PAGINATION */}
-          {!loading && meta && (
-            <div className="flex justify-center items-center gap-4 mt-8">
+          {meta && meta.totalPages > 1 && (
+            <div className="mt-10 flex flex-wrap justify-center items-center gap-2">
               <button
+                onClick={() => {
+                  const next = Math.max(1, page - 1);
+                  setPage(next);
+                  updateURL({ page: next });
+                }}
                 disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
-                className="border px-4 py-2 rounded disabled:opacity-40"
+                className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
               >
-                Prev
+                Previous
               </button>
 
-              <span className="text-sm">
-                Page {page} of{" "}
-                {meta.totalPages || Math.ceil(meta.total / limit)}
-              </span>
+              <div className="flex gap-1">
+                {[...Array(meta.totalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  // Only show current page, 1, last page, and 1 surrounding current page
+                  const isGap = pageNum !== 1 && pageNum !== meta.totalPages && Math.abs(pageNum - page) > 1;
+
+                  if (isGap) {
+                    if (pageNum === 2 || pageNum === meta.totalPages - 1) {
+                      return <span key={pageNum} className="px-2 self-end">...</span>;
+                    }
+                    return null;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => {
+                        setPage(pageNum);
+                        updateURL({ page: pageNum });
+                      }}
+                      className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-colors font-medium text-sm ${page === pageNum
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-white hover:bg-gray-100 border-gray-200"
+                        }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
 
               <button
-                disabled={
-                  page === (meta.totalPages || Math.ceil(meta.total / limit))
-                }
-                onClick={() => setPage((p) => p + 1)}
-                className="border px-4 py-2 rounded disabled:opacity-40"
+                onClick={() => {
+                  const next = Math.min(meta.totalPages, page + 1);
+                  setPage(next);
+                  updateURL({ page: next });
+                }}
+                disabled={page === meta.totalPages}
+                className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
               >
                 Next
               </button>
