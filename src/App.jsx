@@ -10,6 +10,7 @@ import AdminLayout from "./components/layout/AdminLayout";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
+import AdminOrders from "./pages/admin/AdminOrders";
 // Product browsing
 import Favorites from "./pages/shop/products/Favorites";
 import Products from "./pages/shop/products/Products";
@@ -52,6 +53,7 @@ function App() {
             <Route index element={<AdminOverview />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="categories" element={<AdminCategories />} />
+            <Route path="orders" element={<AdminOrders />} />
           </Route>
 
           {/* Public Routes */}

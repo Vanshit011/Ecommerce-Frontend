@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, setIsOpen }) => {
   const navigate = useNavigate();
   const [openProducts, setOpenProducts] = useState(true);
 
@@ -11,18 +11,27 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="w-64 h-screen bg-white border-r border-slate-200 flex flex-col fixed top-0 left-0 z-[100]">
-      {/* BRAND */}
+    <aside className={`w-64 h-screen bg-white border-r border-slate-200 flex flex-col fixed top-0 left-0 z-[100] transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      {/* BRAND & CLOSE */}
       <div
-        className="flex items-center gap-3 px-6 py-6 border-b border-slate-200 cursor-pointer"
-        onClick={() => navigate("/dashboard")}
+        className="flex items-center justify-between px-6 py-6 border-b border-slate-200"
       >
-        <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-xl flex items-center justify-center font-black text-lg">
-          S
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => { navigate("/dashboard"); setIsOpen(false); }}>
+          <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-xl flex items-center justify-center font-black text-lg">
+            S
+          </div>
+          <h1 className="text-lg font-bold text-slate-800 tracking-tight">
+            Sasta Store
+          </h1>
         </div>
-        <h1 className="text-lg font-bold text-slate-800 tracking-tight">
-          Sasta Store
-        </h1>
+        <button
+          onClick={() => setIsOpen(false)}
+          className="lg:hidden p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       {/* NAV */}
@@ -33,6 +42,7 @@ const Sidebar = () => {
             <NavLink
               to="/dashboard"
               end
+              onClick={() => setIsOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all ${isActive
                   ? "bg-blue-50 text-blue-700 font-semibold"
@@ -65,6 +75,7 @@ const Sidebar = () => {
                 <li>
                   <NavLink
                     to="/dashboard/products"
+                    onClick={() => setIsOpen(false)}
                     className={({ isActive }) =>
                       `block px-3 py-2 rounded-lg text-sm text-slate-600 transition-all ${isActive
                         ? "bg-blue-50 text-blue-700"
@@ -78,6 +89,7 @@ const Sidebar = () => {
                 <li>
                   <NavLink
                     to="/dashboard/categories"
+                    onClick={() => setIsOpen(false)}
                     className={({ isActive }) =>
                       `block px-3 py-2 rounded-lg text-sm text-slate-600 transition-all ${isActive
                         ? "bg-blue-50 text-blue-700"
@@ -90,6 +102,25 @@ const Sidebar = () => {
                 </li>
               </ul>
             )}
+          </li>
+
+          {/* ORDERS */}
+          <li>
+            <NavLink
+              to="/dashboard/orders"
+              onClick={() => setIsOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all ${isActive
+                  ? "bg-blue-50 text-blue-700 font-semibold"
+                  : "hover:bg-slate-100 hover:text-blue-600"
+                }`
+              }
+            >
+              <span className="flex items-center justify-center text-base">
+                🧾
+              </span>
+              <span className="text-base">Orders</span>
+            </NavLink>
           </li>
         </ul>
       </nav>

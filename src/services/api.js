@@ -37,45 +37,59 @@ export const verifyForgotOtp = (otp) => API.post("/auth/verify-forgot-otp", { ot
 
 export const resetPassword = (newPassword) => API.post("/auth/reset-password", { newPassword });
 
-//user products //
+// ------------------ //
+// CORE API CALLS
+// ------------------ //
+
+// User Products
 export const getProducts = (params) => API.get("/products", { params });
 
 export const getProductDetails = (id) => API.get(`/products/${id}`);
 
+export const prefetchProductDetails = (id) => {
+  // Fire and forget prefetch without caching logic
+  API.get(`/products/${id}`).catch(() => { });
+};
+
 export const getProductImages = (id) => API.get(`/products/${id}/images`);
 
-//admin products //
+// Admin Products
 export const getMyProducts = (params) => API.get("/products/my-products", { params });
 
-export const createProduct = (formData) => API.post("/products", formData, { headers: { "Content-Type": "multipart/form-data" }, });
+export const createProduct = (formData) => {
+  return API.post("/products", formData, { headers: { "Content-Type": "multipart/form-data" }, });
+};
 
-export const updateProduct = (id, formData) => API.put(`/products/${id}`, formData, { headers: { "Content-Type": "multipart/form-data" }, });
+export const updateProduct = (id, formData) => {
+  return API.put(`/products/${id}`, formData, { headers: { "Content-Type": "multipart/form-material" }, });
+};
 
 export const deleteProduct = (id) => API.delete(`/products/${id}`);
 
-//user categories  //
+// User Categories
+// No caching to ensure fresh data every time
 export const getCategories = () => API.get("/categories");
 
-//admin categories  //
+// Admin Categories
 export const createCategory = (data) => API.post("/categories", data);
 
 export const updateCategory = (id, data) => API.put(`/categories/${id}`, data);
 
 export const deleteCategory = (id) => API.delete(`/categories/${id}`);
 
-//user favorites  //
+// User Favorites
 export const addToFavorites = (productId) => API.post(`/favorites/${productId}`);
 
 export const removeFromFavorites = (productId) => API.delete(`/favorites/${productId}`);
 
 export const getFavorites = () => API.get("/favorites");
 
-//user profile  //
+// User Profile
 export const getProfile = () => API.get("/profile");
 
 export const updateProfile = (data) => API.put("/profile", data);
 
-//user Cart //
+// User Cart
 export const addToCart = (productId) => API.post(`/cart/${productId}`);
 
 export const getCart = () => API.get("/cart");
@@ -103,6 +117,11 @@ export const getOrderById = (id) => API.get(`/orders/${id}`);
 export const getMyOrders = () => API.get(`/orders/my`);
 
 export const cancelMyOrder = (orderId) => API.patch(`/orders/${orderId}/cancel`);
+
+// Admin Orders
+export const getAdminOrders = (params) => API.get("/orders/admin/orders", { params });
+
+export const updateOrderStatus = (id, status) => API.patch(`/orders/${id}/status`, { status });
 
 //user payments
 export const payOrder = (orderId) => API.post(`/payments/order/${orderId}`);

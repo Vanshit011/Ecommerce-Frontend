@@ -8,9 +8,14 @@ import {
     getMyProducts,
 } from "../../services/api";
 
+// Modular Components
+import CategoryForm from "../../components/admin/categories/CategoryForm";
+import CategoryTable from "../../components/admin/categories/CategoryTable";
+
 const AdminCategories = () => {
     const { showToast } = useToast();
 
+    // State Management
     const [categories, setCategories] = useState([]);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -20,11 +25,18 @@ const AdminCategories = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [expandedCategories, setExpandedCategories] = useState(new Set());
     const [viewProductsFor, setViewProductsFor] = useState(null);
+    const [openMenuId, setOpenMenuId] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
     useEffect(() => {
         fetchCategories();
+    }, []);
+
+    useEffect(() => {
+        const closeMenu = () => setOpenMenuId(null);
+        document.addEventListener("click", closeMenu);
+        return () => document.removeEventListener("click", closeMenu);
     }, []);
 
     const fetchCategories = async () => {
@@ -34,14 +46,15 @@ const AdminCategories = () => {
                 getMyProducts(),
             ]);
 
-            // Sort categories by latest first (assuming createdAt or _id for MongoDB)
-            const sortedCategories = (catRes.data || []).sort((a, b) => {
+            const rawCats = catRes?.data?.data || catRes?.data?.categories || (Array.isArray(catRes?.data) ? catRes.data : []);
+
+            const sortedCategories = rawCats.sort((a, b) => {
                 const dateA = new Date(a.created_at || a._id);
                 const dateB = new Date(b.created_at || b._id);
                 return dateB - dateA;
             });
             setCategories(sortedCategories);
-            setProducts(prodRes.data || []);
+            setProducts(prodRes.data?.data || prodRes.data || []);
         } catch {
             showToast("Failed to load categories", "error");
         } finally {
@@ -49,6 +62,7 @@ const AdminCategories = () => {
         }
     };
 
+    /*  HANDLERS  */
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!newCategory.trim()) return;
@@ -56,23 +70,41 @@ const AdminCategories = () => {
         setIsSubmitting(true);
         try {
             const payload = { name: newCategory };
-            if (parentId) {
-                payload.parentId = parentId;
-            }
+            if (parentId) payload.parentId = parentId;
+
+            let res;
 
             if (editId) {
+                // Optimistic Edit
+                setCategories(prev => prev.map(c => {
+                    const cId = c.id || c._id;
+                    if (cId === editId) return { ...c, ...payload };
+                    return c;
+                }));
+
                 await updateCategory(editId, payload);
                 showToast("Category updated successfully");
             } else {
-                await createCategory(payload);
+                res = await createCategory(payload);
                 showToast("Category added successfully");
+
+                // Optimistic Append if we have the data
+                const created = res.data?.data || res.data || res;
+                if (created && (created.id || created._id)) {
+                    setCategories(prev => [...prev, created]);
+                }
             }
+
             setNewCategory("");
             setParentId("");
             setEditId(null);
+
+            // Full sync
             fetchCategories();
-        } catch {
+        } catch (err) {
+            console.error("Save Category Error:", err);
             showToast("Failed to save category", "error");
+            fetchCategories(); // Revert/Sync on error
         } finally {
             setIsSubmitting(false);
         }
@@ -96,33 +128,29 @@ const AdminCategories = () => {
         );
 
         if (hasChildren) {
-            if (
-                !window.confirm(
-                    "This category has child categories. Deleting it may affect child categories. Continue?"
-                )
-            ) {
-                return;
-            }
+            if (!window.confirm("This category has child categories. Deleting it may affect child categories. Continue?")) return;
         } else {
             if (!window.confirm("Delete this category?")) return;
         }
+
+        // Optimistic Delete
+        setCategories(prev => prev.filter(c => (c.id || c._id) !== id));
 
         try {
             await deleteCategory(id);
             showToast("Category deleted successfully");
             fetchCategories();
-        } catch {
+        } catch (err) {
+            console.error("Delete Category Error:", err);
             showToast("Failed to delete category", "error");
+            fetchCategories(); // Revert/Sync
         }
     };
 
     const toggleExpand = (categoryId) => {
         const newExpanded = new Set(expandedCategories);
-        if (newExpanded.has(categoryId)) {
-            newExpanded.delete(categoryId);
-        } else {
-            newExpanded.add(categoryId);
-        }
+        if (newExpanded.has(categoryId)) newExpanded.delete(categoryId);
+        else newExpanded.add(categoryId);
         setExpandedCategories(newExpanded);
     };
 
@@ -130,11 +158,9 @@ const AdminCategories = () => {
         setViewProductsFor(viewProductsFor === categoryId ? null : categoryId);
     };
 
-    // Build tree structure - backend already provides children array
+    /*  HELPERS  */
     const buildTree = () => {
-        // Filter only root categories (those without parent or with empty parent)
         return categories.filter((cat) => {
-            // Check if category has no parent
             const hasNoParent = !cat.parentId &&
                 (!cat.parent ||
                     (typeof cat.parent === 'object' && !cat.parent.id && !cat.parent._id));
@@ -143,8 +169,6 @@ const AdminCategories = () => {
     };
 
     const treeData = buildTree();
-
-    // Pagination logic
     const totalPages = Math.ceil(treeData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -152,61 +176,37 @@ const AdminCategories = () => {
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
-        setExpandedCategories(new Set()); // Reset expanded state on page change
+        setExpandedCategories(new Set());
     };
 
     const getProductsForCategory = (categoryId, includeChildren = true) => {
-        // Get direct products for this category
         const directProducts = products.filter(
-            (p) =>
-                (p.categoryId ||
-                    p.category?.id ||
-                    p.category?._id ||
-                    p.category) === categoryId
+            (p) => (p.categoryId || p.category?.id || p.category?._id || p.category) === categoryId
         );
 
-        if (!includeChildren) {
-            return directProducts;
-        }
+        if (!includeChildren) return directProducts;
 
-        // Create a flat map of all categories for easy lookup (including nested children)
         const categoryMap = new Map();
         const flattenCategories = (cats) => {
             cats.forEach(cat => {
                 const catId = cat.id || cat._id;
                 categoryMap.set(catId, cat);
-                if (cat.children && cat.children.length > 0) {
-                    flattenCategories(cat.children);
-                }
+                if (cat.children?.length > 0) flattenCategories(cat.children);
             });
         };
         flattenCategories(categories);
 
-        // Get all category IDs including children recursively
         const getAllCategoryIds = (catId) => {
             const ids = [catId];
             const category = categoryMap.get(catId);
-
-
-            if (category && category.children && category.children.length > 0) {
-                category.children.forEach(child => {
-                    const childId = child.id || child._id;
-                    ids.push(...getAllCategoryIds(childId));
-                });
+            if (category?.children?.length > 0) {
+                category.children.forEach(child => ids.push(...getAllCategoryIds(child.id || child._id)));
             }
-
             return ids;
         };
 
         const allCategoryIds = getAllCategoryIds(categoryId);
-
-        // Get products for all category IDs (this category + all children)
-        return products.filter(
-            (p) => {
-                const productCatId = p.categoryId || p.category?.id || p.category?._id || p.category;
-                return allCategoryIds.includes(productCatId);
-            }
-        );
+        return products.filter((p) => allCategoryIds.includes(p.categoryId || p.category?.id || p.category?._id || p.category));
     };
 
     const renderCategoryRow = (cat, level = 0) => {
@@ -220,22 +220,14 @@ const AdminCategories = () => {
             <React.Fragment key={categoryId}>
                 <tr className="border-b border-slate-200 hover:bg-slate-50">
                     <td className="py-3 px-4">
-                        <div
-                            className="flex items-center gap-2"
-                            style={{ paddingLeft: `${level * 24}px` }}
-                        >
+                        <div className="flex items-center gap-2" style={{ paddingLeft: `${level * 24}px` }}>
                             {hasChildren && (
-                                <button
-                                    onClick={() => toggleExpand(categoryId)}
-                                    className="text-slate-600 hover:text-blue-600 transition-colors"
-                                >
+                                <button onClick={() => toggleExpand(categoryId)} className="text-slate-600 hover:text-blue-600 transition-colors">
                                     {isExpanded ? "▼" : "▶"}
                                 </button>
                             )}
                             {!hasChildren && <span className="w-4"></span>}
-                            <span className="font-medium text-slate-800">
-                                {cat.name}
-                            </span>
+                            <span className="font-medium text-slate-800">{cat.name}</span>
                             {hasChildren && (
                                 <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">
                                     {cat.children.length} {cat.children.length === 1 ? 'child' : 'children'}
@@ -243,56 +235,71 @@ const AdminCategories = () => {
                             )}
                         </div>
                     </td>
-
                     <td className="py-3 px-4">
-                        <button
-                            onClick={() => toggleViewProducts(categoryId)}
-                            className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-sm font-semibold hover:bg-blue-100 transition-colors"
-                        >
+                        <span className="text-xs font-semibold bg-slate-100 px-2 py-1 rounded-md text-slate-600 whitespace-nowrap">
                             {categoryProducts.length} Products
-                            {categoryProducts.length > 0 && (
-                                <span className="text-xs">
-                                    {showProducts ? "▲" : "▼"}
-                                </span>
-                            )}
-                        </button>
+                        </span>
                     </td>
-
                     <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
+                        <div className={`relative inline-block text-left ${openMenuId === categoryId ? 'z-50' : 'z-auto'}`}>
                             <button
-                                onClick={() => handleEditClick(cat)}
-                                className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenMenuId(openMenuId === categoryId ? null : categoryId);
+                                }}
+                                className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-1"
                             >
-                                ✏️ Edit
+                                Actions
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
                             </button>
-                            <button
-                                onClick={() => handleDelete(categoryId)}
-                                className="px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            >
-                                🗑 Delete
-                            </button>
+
+                            {openMenuId === categoryId && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 overflow-hidden">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleViewProducts(categoryId);
+                                            setOpenMenuId(null);
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                                    >
+                                        👁️ View Products
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleEditClick(cat);
+                                            setOpenMenuId(null);
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                                    >
+                                        ✏️ Edit Category
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(categoryId);
+                                            setOpenMenuId(null);
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-slate-100 flex items-center gap-2"
+                                    >
+                                        🗑 Delete
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </td>
                 </tr>
-
-                {/* Show products if expanded */}
                 {showProducts && categoryProducts.length > 0 && (
                     <tr className="bg-slate-50">
                         <td colSpan="3" className="py-3 px-4">
-                            <div
-                                className="ml-8 p-4 bg-white rounded-lg border border-slate-200"
-                                style={{ marginLeft: `${(level + 1) * 24}px` }}
-                            >
-                                <h4 className="text-sm font-semibold text-slate-700 mb-2">
-                                    Products in {cat.name}:
-                                </h4>
+                            <div className="ml-8 p-4 bg-white rounded-lg border border-slate-200" style={{ marginLeft: `${(level + 1) * 24}px` }}>
+                                <h4 className="text-sm font-semibold text-slate-700 mb-2">Products in {cat.name}:</h4>
                                 <div className="flex flex-wrap gap-2">
                                     {categoryProducts.map((product) => (
-                                        <span
-                                            key={product.id || product._id}
-                                            className="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm"
-                                        >
+                                        <span key={product.id || product._id} className="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm">
                                             {product.name || product.title}
                                         </span>
                                     ))}
@@ -301,41 +308,20 @@ const AdminCategories = () => {
                         </td>
                     </tr>
                 )}
-
-                {/* Render children if expanded */}
-                {isExpanded &&
-                    hasChildren &&
-                    cat.children.map((child) => renderCategoryRow(child, level + 1))}
+                {isExpanded && hasChildren && cat.children.map((child) => renderCategoryRow(child, level + 1))}
             </React.Fragment>
         );
     };
 
-    // Get all categories in a flat list with hierarchy indicators for dropdown
     const getAllCategoriesFlat = (cats = categories, level = 0, result = []) => {
         cats.forEach((cat) => {
             const catId = cat.id || cat._id;
-            // Don't include the category being edited
             if (catId !== editId) {
-                const hasChildren = cat.children && cat.children.length > 0;
+                const hasChildren = cat.children?.length > 0;
                 const indent = '  '.repeat(level);
-                let prefix = '';
-
-                if (level === 0) {
-                    prefix = hasChildren ? '▼ ' : '• ';
-                } else {
-                    prefix = hasChildren ? '└─▼ ' : '└─• ';
-                }
-
-                result.push({
-                    ...cat,
-                    displayName: indent + prefix + cat.name,
-                    level: level,
-                    hasChildren: hasChildren
-                });
-                // Recursively add children
-                if (hasChildren) {
-                    getAllCategoriesFlat(cat.children, level + 1, result);
-                }
+                const prefix = level === 0 ? (hasChildren ? '▼ ' : '• ') : (hasChildren ? '└─▼ ' : '└─• ');
+                result.push({ ...cat, displayName: indent + prefix + cat.name });
+                if (hasChildren) getAllCategoriesFlat(cat.children, level + 1, result);
             }
         });
         return result;
@@ -345,162 +331,35 @@ const AdminCategories = () => {
 
     return (
         <div className="p-5">
-            {/* HEADER */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-blue-600">
-                    Product Categories
-                </h1>
-                <p className="text-slate-600 mt-1">
-                    Manage your product groupings and classification.
-                </p>
+                <h1 className="text-2xl lg:text-3xl font-bold text-blue-600">Categories</h1>
+                <p className="text-slate-600 mt-1 text-sm lg:text-base">Organize your products with hierarchical categories.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* FORM */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                    <h3 className="text-lg font-semibold text-slate-800 mb-5">
-                        {editId ? "Edit Category" : "Add New Category"}
-                    </h3>
+                <CategoryForm
+                    editId={editId}
+                    newCategory={newCategory}
+                    setNewCategory={setNewCategory}
+                    parentId={parentId}
+                    setParentId={setParentId}
+                    handleSubmit={handleSubmit}
+                    isSubmitting={isSubmitting}
+                    handleCancelEdit={handleCancelEdit}
+                    flattenedCategories={flattenedCategories}
+                />
 
-                    <form onSubmit={handleSubmit}>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Category Name
-                        </label>
-                        <input
-                            type="text"
-                            value={newCategory}
-                            onChange={(e) => setNewCategory(e.target.value)}
-                            placeholder="e.g. Electronics"
-                            className="w-full px-3 py-3 rounded-lg border border-slate-300 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                            Parent Category (Optional)
-                        </label>
-                        <select
-                            value={parentId}
-                            onChange={(e) => setParentId(e.target.value)}
-                            className="w-full px-3 py-3 rounded-lg border border-slate-300 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            style={{ fontFamily: 'monospace' }}
-                        >
-                            <option value="">None (Root Category)</option>
-                            {flattenedCategories.map((cat) => (
-                                <option key={cat.id || cat._id} value={cat.id || cat._id}>
-                                    {cat.displayName}
-                                </option>
-                            ))}
-                        </select>
-
-                        <div className="flex gap-2">
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="flex-1 px-4 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {isSubmitting
-                                    ? "Processing..."
-                                    : editId
-                                        ? "Update Category"
-                                        : "Add Category"}
-                            </button>
-
-                            {editId && (
-                                <button
-                                    type="button"
-                                    onClick={handleCancelEdit}
-                                    className="px-4 py-3 rounded-lg bg-slate-100 text-slate-600 font-semibold hover:bg-slate-200 transition-colors border border-slate-300"
-                                >
-                                    Cancel
-                                </button>
-                            )}
-                        </div>
-                    </form>
-                </div>
-
-                {/* TABLE */}
-                <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                    {loading ? (
-                        <div className="h-60 flex flex-col items-center justify-center gap-3 text-slate-500">
-                            <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
-                            <p>Loading categories...</p>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full border-collapse">
-                                <thead>
-                                    <tr className="bg-slate-50 border-b border-slate-200">
-                                        <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                            Name
-                                        </th>
-                                        <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                            Products
-                                        </th>
-                                        <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {treeData.length === 0 ? (
-                                        <tr>
-                                            <td
-                                                colSpan="3"
-                                                className="text-center py-8 text-slate-500"
-                                            >
-                                                No categories found
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        paginatedTreeData.map((cat) => renderCategoryRow(cat))
-                                    )}
-                                </tbody>
-                            </table>
-
-                            {/* PAGINATION */}
-                            {totalPages > 1 && (
-                                <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
-                                    <p className="text-sm text-slate-600">
-                                        Showing {startIndex + 1} to {Math.min(endIndex, treeData.length)} of {treeData.length} categories
-                                    </p>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => handlePageChange(currentPage - 1)}
-                                            disabled={currentPage === 1}
-                                            className="px-3 py-1.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            Previous
-                                        </button>
-
-                                        {[...Array(totalPages)].map((_, index) => {
-                                            const page = index + 1;
-                                            return (
-                                                <button
-                                                    key={page}
-                                                    onClick={() => handlePageChange(page)}
-                                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === page
-                                                        ? "bg-blue-600 text-white"
-                                                        : "border border-slate-300 text-slate-700 hover:bg-slate-50"
-                                                        }`}
-                                                >
-                                                    {page}
-                                                </button>
-                                            );
-                                        })}
-
-                                        <button
-                                            onClick={() => handlePageChange(currentPage + 1)}
-                                            disabled={currentPage === totalPages}
-                                            className="px-3 py-1.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            Next
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+                <CategoryTable
+                    loading={loading}
+                    treeData={treeData}
+                    paginatedTreeData={paginatedTreeData}
+                    renderCategoryRow={renderCategoryRow}
+                    totalPages={totalPages}
+                    currentPage={currentPage}
+                    handlePageChange={handlePageChange}
+                    startIndex={startIndex}
+                    endIndex={endIndex}
+                />
             </div>
         </div>
     );
