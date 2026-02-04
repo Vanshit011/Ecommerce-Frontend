@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getCart, getCategories } from "../../services/api";
+import { useCart } from "../../context/CartContext";
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [cartCount, setCartCount] = useState(0);
+  const { cartCount } = useCart();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [categories, setCategories] = useState([]);
   const [hoveredCategory, setHoveredCategory] = useState(null);
@@ -19,10 +20,6 @@ const Header = () => {
   }, []); // Only once on mount
 
   useEffect(() => {
-    loadCart();
-  }, [location.pathname]); // Keep cart updated on navigation for badges
-
-  useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setShowProfileMenu(false);
@@ -32,16 +29,6 @@ const Header = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const loadCart = async () => {
-    try {
-      const res = await getCart();
-      const items = res.data?.items || [];
-      setCartCount(items.reduce((sum, item) => sum + item.quantity, 0));
-    } catch (err) {
-      console.error("Failed to load cart:", err);
-    }
-  };
 
   const loadCategories = async () => {
     try {
@@ -115,7 +102,7 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm transition-all duration-300">
+    <header className="relative z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-6">
         {/* LOGO */}
         <div

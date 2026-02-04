@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 const ProductDetailsModal = ({
     viewProduct,
@@ -7,7 +7,33 @@ const ProductDetailsModal = ({
     getCategoryPath,
     handleEditClick
 }) => {
+    const [selectedImage, setSelectedImage] = useState("");
+
+    useEffect(() => {
+        if (viewProduct) {
+            const mainImg = viewProduct.image ? getImageUrl(viewProduct) : "";
+            setSelectedImage(mainImg);
+        }
+    }, [viewProduct, getImageUrl]);
+
     if (!viewProduct) return null;
+
+    // Helper to get all images
+    const getAllImages = () => {
+        const gallery = [];
+        if (viewProduct.image) gallery.push(viewProduct.image);
+        if (viewProduct.images && Array.isArray(viewProduct.images)) {
+            viewProduct.images.forEach(img => {
+                const imgUrl = typeof img === 'string' ? img : img.url;
+                const exists = gallery.some(g => (typeof g === 'string' ? g : g.url) === imgUrl);
+                if (!exists) gallery.push(img);
+            });
+        }
+        return gallery;
+    };
+
+    const galleryImages = getAllImages();
+
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[999] backdrop-blur-sm p-4">
@@ -28,24 +54,80 @@ const ProductDetailsModal = ({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                        <img
-                            src={getImageUrl(viewProduct)}
-                            alt={viewProduct.name}
-                            className="w-full h-64 object-cover rounded-2xl border border-slate-200"
-                        />
-                        {viewProduct.images && viewProduct.images.length > 0 && (
-                            <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
-                                {viewProduct.images.map((img, i) => (
-                                    <img
-                                        key={i}
-                                        src={typeof img === 'string' ? img : img.url}
-                                        className="w-16 h-16 object-cover rounded-lg border border-slate-200 flex-shrink-0 cursor-pointer hover:border-blue-500"
-                                        alt=""
-                                    />
-                                ))}
+                    <div className="flex flex-col-reverse md:flex-row gap-4">
+                        {/* Thumbnails */}
+                        {galleryImages.length > 1 && (
+                            <div className="grid grid-cols-2 gap-2 content-start md:w-36 w-full flex-shrink-0 pr-1 py-1">
+                                {galleryImages.map((img, i) => {
+                                    const finalUrl = (typeof img === 'object' && img.url) ? img.url : img;
+
+                                    return (
+                                        <div
+                                            key={i}
+                                            onMouseEnter={() => setSelectedImage(finalUrl)}
+                                            onClick={() => setSelectedImage(finalUrl)}
+                                            className={`w-16 h-16 cursor-pointer rounded-xl border-2 transition-all p-0.5 bg-white flex-shrink-0 overflow-hidden ${selectedImage === finalUrl ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-100 hover:border-blue-300'
+                                                }`}
+                                        >
+                                            <img
+                                                src={finalUrl}
+                                                className="w-full h-full object-cover rounded-lg"
+                                                alt=""
+                                            />
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
+
+                        {/* Main Image */}
+                        <div className="flex-1 aspect-[4/3] relative group bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden flex items-center justify-center">
+                            <img
+                                src={selectedImage || getImageUrl(viewProduct)}
+                                alt={viewProduct.name}
+                                className="w-full h-full object-contain"
+                            />
+
+                            {/* Navigation */}
+                            {galleryImages.length > 1 && (
+                                <>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const currentIndex = galleryImages.findIndex(img => {
+                                                const url = (typeof img === 'object' && img.url) ? img.url : img;
+                                                return url === selectedImage;
+                                            });
+                                            const prevIndex = currentIndex > 0 ? currentIndex - 1 : galleryImages.length - 1;
+                                            const prevImg = galleryImages[prevIndex];
+                                            setSelectedImage((typeof prevImg === 'object' && prevImg.url) ? prevImg.url : prevImg);
+                                        }}
+                                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full shadow-md flex items-center justify-center text-slate-600 hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const currentIndex = galleryImages.findIndex(img => {
+                                                const url = (typeof img === 'object' && img.url) ? img.url : img;
+                                                return url === selectedImage;
+                                            });
+                                            const nextIndex = currentIndex < galleryImages.length - 1 ? currentIndex + 1 : 0;
+                                            const nextImg = galleryImages[nextIndex];
+                                            setSelectedImage((typeof nextImg === 'object' && nextImg.url) ? nextImg.url : nextImg);
+                                        }}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full shadow-md flex items-center justify-center text-slate-600 hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
 
                     <div className="space-y-4">
@@ -102,7 +184,7 @@ const ProductDetailsModal = ({
                             <ul className="text-sm space-y-1 text-slate-600">
                                 {viewProduct.weight && <li>Weight: {viewProduct.weight}kg</li>}
                                 {viewProduct.dimensions && (
-                                    <li>Size: {viewProduct.dimensions.length}x{viewProduct.dimensions.width}x{viewProduct.dimensions.height} cm</li>
+                                    <li>Dimensions: {viewProduct.dimensions.length}x{viewProduct.dimensions.width}x{viewProduct.dimensions.height} cm</li>
                                 )}
                             </ul>
                         </div>

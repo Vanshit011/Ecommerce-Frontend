@@ -90,11 +90,11 @@ export const getProfile = () => API.get("/profile");
 export const updateProfile = (data) => API.put("/profile", data);
 
 // User Cart
-export const addToCart = (productId) => API.post(`/cart/${productId}`);
+export const addToCart = (productId, data) => API.post(`/cart/${productId}`, data);
 
 export const getCart = () => API.get("/cart");
 
-export const updateCartQty = (productId, qty) => API.post(`/cart/${productId}/${qty}`);
+export const updateCartQty = (productId, qty, data) => API.post(`/cart/${productId}/${qty}`, data);
 
 export const clearCart = () => API.delete("/cart");
 

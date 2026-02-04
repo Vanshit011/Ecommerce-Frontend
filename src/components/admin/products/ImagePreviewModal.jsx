@@ -5,16 +5,18 @@ const ImagePreviewModal = ({ previewImage, setPreviewImage }) => {
 
     return (
         <div
-            className="fixed inset-0 bg-black/70 flex items-center justify-center z-[1000] backdrop-blur-sm"
+            className="fixed inset-0 bg-black/90 flex items-center justify-center z-[1000] backdrop-blur-sm p-4"
             onClick={() => setPreviewImage(null)}
         >
-            <div
-                className="relative bg-white rounded-2xl p-4 max-w-3xl max-h-[90vh] overflow-auto"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <img src={previewImage} alt="Preview" className="w-full h-auto rounded-lg" />
+            <div className="relative w-full h-full flex items-center justify-center">
+                <img
+                    src={previewImage}
+                    alt="Preview"
+                    className="max-w-full max-h-full object-contain drop-shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                />
                 <button
-                    className="absolute top-2 right-2 w-10 h-10 bg-red-500 text-white rounded-full flex items-center justify-center text-xl font-bold hover:bg-red-600 transition-colors"
+                    className="absolute top-4 right-4 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-2xl font-bold transition-colors backdrop-blur-md border border-white/20"
                     onClick={() => setPreviewImage(null)}
                 >
                     ✕

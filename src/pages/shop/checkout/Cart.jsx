@@ -2,12 +2,14 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getCart,
+  addToCart,
   updateCartQty,
   clearCart,
   getAddresses,
   setDefaultAddress,
   createOrder,
 } from "../../../services/api";
+import { useCart } from "../../../context/CartContext";
 import { useToast } from "../../../context/ToastContext";
 import Header from "../../../components/common/Header";
 import { getImageUrl } from "../../../utils/imageUtils";
@@ -16,9 +18,8 @@ import { CartSkeleton } from "../../../components/common/Skeleton";
 const Cart = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-
-  const [cart, setCart] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { cart, setCart, refreshCart, addToCart: globalAddToCart, updateQty: globalUpdateQty } = useCart();
+  const [loading, setLoading] = useState(false);
 
   const [addresses, setAddresses] = useState([]);
   const [showAddressPicker, setShowAddressPicker] = useState(false);
@@ -27,22 +28,9 @@ const Cart = () => {
 
   /* ================= CART ================= */
 
-  const fetchCartItems = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await getCart();
-      setCart(res.data);
-    } catch (error) {
-      console.error("Error fetching cart:", error);
-      showToast("Failed to load cart", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [showToast]);
-
   useEffect(() => {
-    fetchCartItems();
-  }, [fetchCartItems]);
+    refreshCart();
+  }, [refreshCart]);
 
   useEffect(() => {
     if (cart?.items?.some((item) => item.quantity > 0)) {
@@ -65,20 +53,26 @@ const Cart = () => {
 
   /* ================= CART HANDLERS ================= */
 
-  const handleUpdateQty = async (productId, newQty) => {
-    if (newQty < 1) return;
-
+  const handleUpdateItem = async (productId, updates) => {
     try {
-      await updateCartQty(productId, newQty);
+      await globalAddToCart(productId, updates);
+    } catch (err) {
+      console.error("Update item error:", err);
+      showToast(err.response?.data?.message || "Failed to update item", "error");
+    }
+  };
 
-      setCart((prev) => ({
-        ...prev,
-        items: prev.items.map((item) =>
-          item.product?.id === productId ? { ...item, quantity: newQty } : item,
-        ),
-      }));
-    } catch {
-      showToast("Failed to update quantity", "error");
+  const handleUpdateQty = async (product, newQty, currentItem) => {
+    if (newQty < 1) return;
+    const productId = product.id || product._id;
+    try {
+      await globalUpdateQty(productId, newQty, {
+        size: currentItem.size,
+        color: currentItem.color
+      });
+    } catch (err) {
+      console.error("Update qty error:", err);
+      showToast(err.response?.data?.message || "Failed to update quantity", "error");
     }
   };
 
@@ -88,7 +82,7 @@ const Cart = () => {
 
       setCart((prev) => ({
         ...prev,
-        items: prev.items.filter((item) => item.product?.id !== productId),
+        items: prev.items.filter((item) => (item.product?.id || item.product?._id) !== productId),
       }));
 
       showToast("Item removed from cart", "success");
@@ -169,7 +163,10 @@ const Cart = () => {
     );
 
   const subtotal = activeItems.reduce(
-    (acc, item) => acc + item.product.price * item.quantity,
+    (acc, item) => {
+      const price = item.product.salePrice > 0 ? item.product.salePrice : item.product.price;
+      return acc + price * item.quantity;
+    },
     0,
   );
 
@@ -244,16 +241,16 @@ const Cart = () => {
                 <div className="divide-y divide-slate-50">
                   {activeItems.map((item) => (
                     <div
-                      key={item.product.id}
+                      key={item.id || item.product?._id || item.product?.id}
                       className="flex flex-col sm:flex-row gap-6 p-8 group hover:bg-slate-50/50 transition-colors"
                     >
                       <div
-                        onClick={() => navigate(`/product/${item.product.id}`)}
+                        onClick={() => navigate(`/product/${item.product?.id || item.product?._id}`)}
                         className="w-28 h-28 bg-slate-50 rounded-3xl overflow-hidden p-3 border border-slate-100 flex-shrink-0 cursor-pointer group-hover:scale-105 transition-transform duration-500"
                       >
                         <img
                           src={getImageUrl(item.product?.images?.[0] || item.product?.image || item.product)}
-                          alt={item.product.name}
+                          alt={item.product?.name}
                           className="w-full h-full object-contain"
                         />
                       </div>
@@ -262,18 +259,65 @@ const Cart = () => {
                         <div className="flex justify-between items-start">
                           <div>
                             <h3
-                              onClick={() => navigate(`/product/${item.product.id}`)}
+                              onClick={() => navigate(`/product/${item.product?.id || item.product?._id}`)}
                               className="text-xl font-bold text-slate-800 cursor-pointer hover:text-blue-600 transition-colors"
                             >
-                              {item.product.name}
+                              {item.product?.name}
                             </h3>
                             <p className="text-sm text-slate-400 font-bold uppercase tracking-widest mt-1">
-                              {item.product.brand || "Premium"}
+                              {item.product?.brand || "Premium"}
                             </p>
+
+                            {/* Variants Selection */}
+                            <div className="flex flex-wrap gap-3 mt-4">
+                              {/* Quantity Control */}
+                              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                                <button
+                                  disabled={item.quantity <= 1}
+                                  onClick={() => handleUpdateQty(item.product, item.quantity - 1, item)}
+                                  className="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-white rounded-lg disabled:opacity-30 transition-all font-bold text-xs"
+                                >
+                                  −
+                                </button>
+                                <span className="w-8 text-center font-bold text-slate-800 text-xs">{item.quantity}</span>
+                                <button
+                                  onClick={() => handleUpdateQty(item.product, item.quantity + 1, item)}
+                                  className="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-white rounded-lg transition-all font-bold text-xs"
+                                >
+                                  +
+                                </button>
+                              </div>
+
+                              {item.product?.sizes?.length > 0 && (
+                                <select
+                                  value={item.size || ""}
+                                  onChange={(e) => handleUpdateItem(item.product.id || item.product._id, { size: e.target.value, color: item.color, quantity: item.quantity })}
+                                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-[10px] font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer"
+                                >
+                                  <option value="" disabled>Size</option>
+                                  {item.product.sizes.map((s) => (
+                                    <option key={s} value={s}>{s}</option>
+                                  ))}
+                                </select>
+                              )}
+
+                              {item.product?.colors?.length > 0 && (
+                                <select
+                                  value={item.color || ""}
+                                  onChange={(e) => handleUpdateItem(item.product.id || item.product._id, { color: e.target.value, size: item.size, quantity: item.quantity })}
+                                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-[10px] font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer"
+                                >
+                                  <option value="" disabled>Color</option>
+                                  {item.product.colors.map((c) => (
+                                    <option key={c} value={c}>{c}</option>
+                                  ))}
+                                </select>
+                              )}
+                            </div>
                           </div>
 
                           <button
-                            onClick={() => handleRemoveItem(item.product.id)}
+                            onClick={() => handleRemoveItem(item.product?.id || item.product?._id)}
                             className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
                             title="Remove item"
                           >
@@ -283,27 +327,17 @@ const Cart = () => {
                           </button>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-6 pt-4">
-                          <div className="flex items-center bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-                            <button
-                              disabled={item.quantity <= 1}
-                              onClick={() => handleUpdateQty(item.product.id, item.quantity - 1)}
-                              className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-white rounded-xl disabled:opacity-30 transition-all font-bold"
-                            >
-                              −
-                            </button>
-                            <span className="w-10 text-center font-bold text-slate-800">{item.quantity}</span>
-                            <button
-                              onClick={() => handleUpdateQty(item.product.id, item.quantity + 1)}
-                              className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-white rounded-xl transition-all font-bold"
-                            >
-                              +
-                            </button>
-                          </div>
-
-                          <div className="text-right">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Price</p>
-                            <p className="text-xl font-black text-slate-900">₹{(item.product.price * item.quantity).toLocaleString()}</p>
+                        <div className="flex flex-col items-end pt-4 border-t border-slate-50 mt-4">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Item Total</p>
+                          <div className="flex items-center gap-3">
+                            {item.product.salePrice > 0 && (
+                              <p className="text-sm font-bold text-slate-400 line-through">
+                                ₹{(item.product.price * item.quantity).toLocaleString()}
+                              </p>
+                            )}
+                            <p className="text-2xl font-black text-slate-900 tracking-tight">
+                              ₹{((item.product.salePrice > 0 ? item.product.salePrice : item.product.price) * item.quantity).toLocaleString()}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -320,7 +354,7 @@ const Cart = () => {
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between items-center text-slate-500 font-medium">
                   <span>Subtotal</span>
-                  <span className="text-slate-900">₹{subtotal.toLocaleString()}</span>
+                  <span className="text-slate-900 font-bold tracking-tight">₹{subtotal.toLocaleString()}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-slate-500 font-medium">
@@ -340,7 +374,7 @@ const Cart = () => {
 
               <button
                 disabled={checkoutLoading}
-                className={`w-full py-5 rounded-[1.75rem] font-black text-lg transition-all active:scale-95 shadow-2xl flex items-center justify-center gap-3 ${checkoutLoading
+                className={`w-full py-5 rounded-2xl font-black text-lg transition-all active:scale-95 shadow-2xl flex items-center justify-center gap-3 ${checkoutLoading
                   ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                   : "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200"
                   }`}

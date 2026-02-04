@@ -285,29 +285,12 @@ const Home = () => {
                         </span>
                       </div>
 
-                      <div className="flex gap-2">
-                        <button
-                          onClick={(e) => handleBuyNow(e, p)}
-                          className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
-                        >
-                          Buy
-                        </button>
-                        <button
-                          onClick={(e) => handleAddToCart(e, p.id || p._id)}
-                          disabled={addingToCartId === (p.id || p._id)}
-                          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all shadow-md ${addingToCartId === (p.id || p._id)
-                            ? "bg-slate-100 text-slate-400"
-                            : "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100 hover:scale-105"
-                            }`}
-                        >
-                          {addingToCartId === (p.id || p._id) ? (
-                            <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                          )}
-                        </button>
+                      {/* Clickable card replaces separate buttons for a cleaner UI */}
+                      <div className="flex items-center gap-1.5 text-blue-600 font-bold text-[10px] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity translate-x-1 group-hover:translate-x-0 duration-300">
+                        <span>Details</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
                       </div>
                     </div>
                   </div>
@@ -370,19 +353,11 @@ const Home = () => {
                           ₹{(p.salePrice || p.price).toLocaleString()}
                         </span>
 
-                        <button
-                          onClick={(e) => handleAddToCart(e, p.id || p._id)}
-                          disabled={addingToCartId === (p.id || p._id)}
-                          className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
-                        >
-                          {addingToCartId === (p.id || p._id) ? (
-                            <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                          )}
-                        </button>
+                        <div className="w-8 h-8 flex items-center justify-center text-slate-300 group-hover:text-blue-500 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
                       </div>
                     </div>
                   </div>

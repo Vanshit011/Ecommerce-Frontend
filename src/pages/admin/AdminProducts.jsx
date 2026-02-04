@@ -290,6 +290,7 @@ const AdminProducts = () => {
                     page={page}
                     setPage={setPage}
                     limit={limit}
+                    setLimit={setLimit}
                 />
             </div>
 

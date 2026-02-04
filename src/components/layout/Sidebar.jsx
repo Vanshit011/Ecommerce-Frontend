@@ -122,18 +122,28 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               <span className="text-base">Orders</span>
             </NavLink>
           </li>
+          {/* CUSTOMERS */}
+          <li>
+            <NavLink
+              to="/dashboard/customers"
+              onClick={() => setIsOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all ${isActive
+                  ? "bg-blue-50 text-blue-700 font-semibold"
+                  : "hover:bg-slate-100 hover:text-blue-600"
+                }`
+              }
+            >
+              <span className="flex items-center justify-center text-base">
+                👥
+              </span>
+              <span className="text-base">Customers</span>
+            </NavLink>
+          </li>
         </ul>
       </nav>
 
-      {/* FOOTER */}
-      <div className="px-4 py-4 border-t border-slate-200">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl bg-transparent border-none text-base font-semibold text-red-600 cursor-pointer transition-all hover:bg-red-50"
-        >
-          ➜ Logout
-        </button>
-      </div>
+      {/* FOOTER - Removed Logout */}
     </aside>
   );
 };

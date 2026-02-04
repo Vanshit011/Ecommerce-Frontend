@@ -101,7 +101,7 @@ const Products = () => {
 
   const [sort, setSort] = useState(searchParams.get("sort") || "created_at_desc");
   const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
-  const [limit] = useState(9);
+  const [limit, setLimit] = useState(Number(searchParams.get("limit")) || 9);
 
   const MIN_LIMIT = 0;
   const MAX_LIMIT = 100000;
@@ -112,7 +112,7 @@ const Products = () => {
   const updateURL = useCallback((params) => {
     const newParams = new URLSearchParams(searchParams);
     Object.entries(params).forEach(([key, value]) => {
-      if (value === undefined || value === "" || value === 0 || (key === "page" && value === 1)) {
+      if (value === undefined || value === "" || value === 0 || (key === "page" && value === 1) || (key === "limit" && value === 9)) {
         newParams.delete(key);
       } else {
         newParams.set(key, value);
@@ -633,10 +633,11 @@ const Products = () => {
                 <div
                   key={product.id || product._id}
                   onMouseEnter={() => prefetchProductDetails(product.id || product._id)}
-                  className="group bg-white rounded-3xl border border-slate-100 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 flex flex-col h-full animate-slide-up"
+                  onClick={() => navigate(`/product/${product.id || product._id}`)}
+                  className="group bg-white rounded-3xl border border-slate-100 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 flex flex-col h-full animate-slide-up cursor-pointer"
                 >
                   {/* Image Section */}
-                  <div className="relative aspect-[4/5] bg-slate-50 overflow-hidden p-6">
+                  <div className="relative aspect-square bg-slate-50 overflow-hidden">
                     <img
                       src={getImageUrl(product)}
                       alt={product.name}
@@ -652,6 +653,11 @@ const Products = () => {
                       {product.salePrice && (
                         <span className="px-3 py-1 bg-red-600 text-white text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg shadow-red-200 rotate-[-2deg]">
                           SALE
+                        </span>
+                      )}
+                      {product.stockQty > 0 && product.stockQty <= 5 && (
+                        <span className="px-3 py-1 bg-orange-500 text-white text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg shadow-orange-200 animate-pulse">
+                          ONLY {product.stockQty} LEFT
                         </span>
                       )}
                     </div>
@@ -694,46 +700,12 @@ const Products = () => {
                         </span>
                       </div>
 
-                      <div className="flex gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleBuyNow(product);
-                          }}
-                          className="flex-1 bg-blue-600 text-white py-2.5 px-3 rounded-2xl font-bold text-[10px] hover:bg-blue-700 transition-all active:scale-95 shadow-md shadow-blue-100"
-                        >
-                          Buy
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/product/${product.id || product._id}`);
-                          }}
-                          className="flex-1 bg-slate-900 text-white py-2.5 px-3 rounded-2xl font-bold text-[10px] hover:bg-slate-800 transition-all active:scale-95 shadow-md shadow-slate-200"
-                        >
-                          View
-                        </button>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddToCart(product.id || product._id);
-                          }}
-                          disabled={addingToCartId === (product.id || product._id)}
-                          className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-all shadow-lg flex-shrink-0 ${addingToCartId === (product.id || product._id)
-                            ? "bg-slate-100 text-slate-400"
-                            : "bg-blue-600 text-white hover:bg-blue-700 hover:rotate-12 shadow-blue-100"
-                            }`}
-                          title="Add to Cart"
-                        >
-                          {addingToCartId === (product.id || product._id) ? (
-                            <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
-                          )}
-                        </button>
+                      {/* Actions removed - user clicks card to view details & buy */}
+                      <div className="flex items-center gap-1.5 text-blue-600 font-bold text-[10px] uppercase tracking-wider group-hover:translate-x-1 transition-transform">
+                        <span>View Details</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
                       </div>
                     </div>
                   </div>
@@ -742,64 +714,87 @@ const Products = () => {
             )}
           </div >
 
-          {/* PAGINATION */}
           {
-            meta && meta.totalPages > 1 && (
-              <div className="mt-10 flex flex-wrap justify-center items-center gap-2">
-                <button
-                  onClick={() => {
-                    const next = Math.max(1, page - 1);
-                    setPage(next);
-                    updateURL({ page: next });
-                  }}
-                  disabled={page === 1}
-                  className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
-                >
-                  Previous
-                </button>
-
-                <div className="flex gap-1">
-                  {[...Array(meta.totalPages)].map((_, i) => {
-                    const pageNum = i + 1;
-                    // Only show current page, 1, last page, and 1 surrounding current page
-                    const isGap = pageNum !== 1 && pageNum !== meta.totalPages && Math.abs(pageNum - page) > 1;
-
-                    if (isGap) {
-                      if (pageNum === 2 || pageNum === meta.totalPages - 1) {
-                        return <span key={pageNum} className="px-2 self-end">...</span>;
-                      }
-                      return null;
-                    }
-
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => {
-                          setPage(pageNum);
-                          updateURL({ page: pageNum });
-                        }}
-                        className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-colors font-medium text-sm ${page === pageNum
-                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                          : "bg-white hover:bg-gray-100 border-gray-200"
-                          }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
+            meta && (
+              <div className="mt-10 flex flex-col sm:flex-row justify-between items-center gap-4">
+                {/* Rows Per Page */}
+                <div className="flex items-center gap-3 text-sm text-slate-600 bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-100">
+                  <span className="font-medium">Rows per page:</span>
+                  <select
+                    value={limit}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setLimit(val);
+                      setPage(1);
+                      updateURL({ limit: val, page: 1 });
+                    }}
+                    className="bg-transparent font-bold text-blue-600 outline-none cursor-pointer"
+                  >
+                    {[9, 12, 24, 48].map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
                 </div>
 
-                <button
-                  onClick={() => {
-                    const next = Math.min(meta.totalPages, page + 1);
-                    setPage(next);
-                    updateURL({ page: next });
-                  }}
-                  disabled={page === meta.totalPages}
-                  className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
-                >
-                  Next
-                </button>
+                {/* Pagination Controls */}
+                {meta.totalPages > 1 && (
+                  <div className="flex flex-wrap justify-center items-center gap-2">
+                    <button
+                      onClick={() => {
+                        const next = Math.max(1, page - 1);
+                        setPage(next);
+                        updateURL({ page: next });
+                      }}
+                      disabled={page === 1}
+                      className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                    >
+                      Previous
+                    </button>
+
+                    <div className="flex gap-1">
+                      {[...Array(meta.totalPages)].map((_, i) => {
+                        const pageNum = i + 1;
+                        // Only show current page, 1, last page, and 1 surrounding current page
+                        const isGap = pageNum !== 1 && pageNum !== meta.totalPages && Math.abs(pageNum - page) > 1;
+
+                        if (isGap) {
+                          if (pageNum === 2 || pageNum === meta.totalPages - 1) {
+                            return <span key={pageNum} className="px-2 self-end">...</span>;
+                          }
+                          return null;
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => {
+                              setPage(pageNum);
+                              updateURL({ page: pageNum });
+                            }}
+                            className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-colors font-medium text-sm ${page === pageNum
+                              ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                              : "bg-white hover:bg-gray-100 border-gray-200"
+                              }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const next = Math.min(meta.totalPages, page + 1);
+                        setPage(next);
+                        updateURL({ page: next });
+                      }}
+                      disabled={page === meta.totalPages}
+                      className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
               </div>
             )
           }

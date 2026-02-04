@@ -14,7 +14,8 @@ const ProductTable = ({
     meta,
     page,
     setPage,
-    limit
+    limit,
+    setLimit
 }) => {
     if (loading) {
         return (
@@ -112,7 +113,10 @@ const ProductTable = ({
                                         </button>
 
                                         {openMenuId === (p.id || p._id) && (
-                                            <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-10 overflow-hidden">
+                                            <div
+                                                className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-10 overflow-hidden"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
                                                 <button
                                                     className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
                                                     onClick={() => {
@@ -158,13 +162,31 @@ const ProductTable = ({
                 const calculatedPages = Math.ceil(totalItems / (limit || 10));
                 const totalPages = explicitPages || calculatedPages || (totalItems > 0 ? 1 : 0);
 
-                if (totalPages <= 1) return null;
+                // if (totalPages <= 1) return null; // Removed to always show pagination
 
                 return (
                     <div className="mt-8 flex items-center justify-between border-t border-slate-100 pt-6">
-                        <p className="text-sm text-slate-500">
-                            Showing <span className="font-semibold text-slate-800">{((page - 1) * limit) + 1}</span> to <span className="font-semibold text-slate-800">{Math.min(page * limit, totalItems)}</span> of <span className="font-semibold text-slate-800">{totalItems}</span> products
-                        </p>
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 text-sm text-slate-500">
+                                <span>Rows per page:</span>
+                                <select
+                                    value={limit}
+                                    onChange={(e) => {
+                                        setLimit(Number(e.target.value));
+                                        setPage(1);
+                                    }}
+                                    className="border border-slate-200 rounded-lg p-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    {[5, 10, 20, 50].map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <p className="text-sm text-slate-500">
+                                Showing <span className="font-semibold text-slate-800">{((page - 1) * limit) + 1}</span> to <span className="font-semibold text-slate-800">{Math.min(page * limit, totalItems)}</span> of <span className="font-semibold text-slate-800">{totalItems}</span> products
+                            </p>
+                        </div>
 
                         <div className="flex items-center gap-2">
                             <button
@@ -222,6 +244,7 @@ const ProductTable = ({
                     </div>
                 );
             })()}
+
         </div>
     );
 };

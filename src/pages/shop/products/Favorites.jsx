@@ -177,41 +177,11 @@ const Favorites = () => {
                       </span>
                     </div>
 
-                    <div className="flex gap-2">
-                      <button
-                        onClick={(e) => handleBuyNow(e, product.id || product._id)}
-                        className="flex-1 bg-blue-600 text-white py-2.5 px-3 rounded-1.5xl font-bold text-[10px] hover:bg-blue-700 transition-all active:scale-95 shadow-md shadow-blue-100"
-                      >
-                        Buy
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/product/${product.id || product._id}`);
-                        }}
-                        className="flex-1 bg-slate-900 text-white py-2.5 px-3 rounded-1.5xl font-bold text-[10px] hover:bg-slate-800 transition-all active:scale-95 shadow-sm"
-                      >
-                        View
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddToCart(e, product.id || product._id);
-                        }}
-                        disabled={addingToCartId === (product.id || product._id)}
-                        className={`w-10 h-10 flex items-center justify-center rounded-1.5xl transition-all shadow-lg flex-shrink-0 ${addingToCartId === (product.id || product._id)
-                          ? "bg-slate-100 text-slate-400"
-                          : "bg-blue-600 text-white hover:bg-blue-700 hover:rotate-12 shadow-blue-100"
-                          }`}
-                      >
-                        {addingToCartId === (product.id || product._id) ? (
-                          <div className="w-4 h-4 border-2 border-slate-200 border-t-red-500 rounded-full animate-spin" />
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                          </svg>
-                        )}
-                      </button>
+                    <div className="flex items-center gap-1 text-slate-400 font-bold text-[10px] uppercase tracking-widest group-hover:text-blue-600 transition-colors">
+                      View
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
                     </div>
                   </div>
                 </div>

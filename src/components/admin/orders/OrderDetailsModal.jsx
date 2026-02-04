@@ -4,14 +4,15 @@ import { useToast } from "../../../context/ToastContext";
 import { getImageUrl } from "../../../utils/imageUtils";
 
 const OrderDetailsModal = ({ viewOrder, setViewOrder, onOrderUpdated }) => {
-    const { addToast } = useToast();
+    const { showToast } = useToast();
     const [updating, setUpdating] = useState(false);
 
     if (!viewOrder) return null;
 
     // Normalize fields for robust display
     const id = viewOrder.id || viewOrder._id;
-    const status = viewOrder.status || viewOrder.orderStatus || viewOrder.order_status || 'PENDING';
+    const rawStatus = viewOrder.status || viewOrder.orderStatus || viewOrder.order_status || 'PENDING';
+    const status = String(rawStatus).toUpperCase();
 
     // Check for payment status in various locations, including the payments array
     let paymentStatusRaw = viewOrder.paymentStatus || viewOrder.payment_status || 'unpaid';
@@ -34,26 +35,29 @@ const OrderDetailsModal = ({ viewOrder, setViewOrder, onOrderUpdated }) => {
         try {
             setUpdating(true);
             const res = await updateOrderStatus(id, newStatus);
-            addToast("Order status updated successfully", "success");
-            if (onOrderUpdated) onOrderUpdated();
-
-            // Update local view
+            showToast("Order status updated successfully", "success");
+            // Update local view by MERGING to preserve items, address, and user info
             const newOrderData = res.data?.order || res.data;
             if (newOrderData) {
-                setViewOrder(newOrderData);
+                const mergedOrder = { ...viewOrder, ...newOrderData, status: (newOrderData.status || newOrderData.orderStatus || newStatus).toUpperCase() };
+                setViewOrder(mergedOrder);
+                if (onOrderUpdated) onOrderUpdated(mergedOrder);
             } else {
-                setViewOrder(prev => ({ ...prev, status: newStatus }));
+                const updatedObj = { ...viewOrder, status: newStatus.toUpperCase(), orderStatus: newStatus.toUpperCase() };
+                setViewOrder(updatedObj);
+                if (onOrderUpdated) onOrderUpdated(updatedObj);
             }
         } catch (error) {
             console.error("Failed to update status", error);
-            addToast(error.response?.data?.message || "Failed to update status", "error");
+            showToast(error.response?.data?.message || "Failed to update status", "error");
         } finally {
             setUpdating(false);
         }
     };
 
     const getStatusColor = (s) => {
-        switch (s) {
+        const statusKey = String(s || '').toUpperCase();
+        switch (statusKey) {
             case 'PENDING': return 'bg-amber-100 text-amber-700 border-amber-200';
             case 'CONFIRMED': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
             case 'SHIPPED': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
@@ -97,17 +101,17 @@ const OrderDetailsModal = ({ viewOrder, setViewOrder, onOrderUpdated }) => {
                                 <p className="text-xs text-slate-500">Change the current status of this order.</p>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                                {['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'FAILED'].map(s => (
+                                {['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'failed'].map(s => (
                                     <button
                                         key={s}
                                         onClick={() => handleStatusUpdate(s)}
-                                        disabled={updating || status === s}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${status === s
+                                        disabled={updating || status.toLowerCase() === s.toLowerCase()}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${status.toLowerCase() === s.toLowerCase()
                                             ? 'bg-slate-800 text-white cursor-default'
                                             : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600'
                                             }`}
                                     >
-                                        {s}
+                                        <span className="capitalize">{s}</span>
                                     </button>
                                 ))}
                             </div>
@@ -191,8 +195,20 @@ const OrderDetailsModal = ({ viewOrder, setViewOrder, onOrderUpdated }) => {
                                     </div>
                                     <div className="flex-1">
                                         <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{item.product?.name || "Unknown Product"}</h4>
-                                        <div className="flex gap-2 text-xs text-slate-500 mt-1">
-                                            <span>Qty: {item.quantity}</span>
+                                        <div className="flex flex-wrap gap-2 text-xs text-slate-500 mt-1 items-center">
+                                            <span className="font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                                Qty: {item.quantity}
+                                            </span>
+                                            {item.size && (
+                                                <span className="font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 uppercase">
+                                                    Size: {item.size}
+                                                </span>
+                                            )}
+                                            {item.color && (
+                                                <span className="font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 uppercase">
+                                                    Color: {item.color}
+                                                </span>
+                                            )}
                                             <span>•</span>
                                             <span>Price: ₹{item.price}</span>
                                         </div>

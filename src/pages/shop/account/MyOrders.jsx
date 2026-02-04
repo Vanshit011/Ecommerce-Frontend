@@ -370,9 +370,21 @@ const MyOrders = () => {
 
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-slate-800 truncate">{item.product?.name}</p>
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                        Qty: {item.quantity}
-                      </p>
+                      <div className="flex flex-wrap gap-2 mt-1.5">
+                        <span className="text-[10px] bg-slate-100 text-slate-600 font-black px-2 py-0.5 rounded-md border border-slate-200 uppercase tracking-wider">
+                          Qty: {item.quantity}
+                        </span>
+                        {item.size && (
+                          <span className="text-[10px] bg-blue-50 text-blue-600 font-black px-2 py-0.5 rounded-md border border-blue-100 uppercase tracking-wider">
+                            Size: {item.size}
+                          </span>
+                        )}
+                        {item.color && (
+                          <span className="text-[10px] bg-purple-50 text-purple-600 font-black px-2 py-0.5 rounded-md border border-purple-100 uppercase tracking-wider">
+                            Color: {item.color}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <p className="font-bold text-slate-900">

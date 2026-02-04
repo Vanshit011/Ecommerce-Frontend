@@ -2,22 +2,23 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   getProductDetails,
-  addToCart,
+  prefetchProductDetails,
   getFavorites,
   addToFavorites,
   removeFromFavorites,
-  createOrder,
-  getAddresses,
 } from "../../../services/api";
+import { useCart } from "../../../context/CartContext";
 import { useToast } from "../../../context/ToastContext";
 import Header from "../../../components/common/Header";
 import { getImageUrl } from "../../../utils/imageUtils";
 import { ProductDetailSkeleton } from "../../../components/common/Skeleton";
+import ImageMagnifier from "../../../components/common/ImageMagnifier";
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { addToCart: globalAddToCart } = useCart();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,6 +27,11 @@ const ProductDetails = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [buyingNow, setBuyingNow] = useState(false);
+
+  // New State for Options
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -54,7 +60,6 @@ const ProductDetails = () => {
       try {
         const res = await getFavorites();
         const favs = res.data || [];
-        // Loose comparison or string conversion for safety
         const found = favs.some((f) => String(f.product?.id || f.id || f.product?._id || f._id) === String(id));
         setIsFavorite(found);
       } catch (err) {
@@ -82,10 +87,28 @@ const ProductDetails = () => {
     }
   };
 
+  const validateSelection = () => {
+    if (product?.sizes?.length > 0 && !selectedSize) {
+      showToast("Please select a size", "error");
+      return false;
+    }
+    if (product?.colors?.length > 0 && !selectedColor) {
+      showToast("Please select a color", "error");
+      return false;
+    }
+    return true;
+  };
+
   const handleAddToCart = async () => {
+    if (!validateSelection()) return;
+
     try {
       setAddingToCart(true);
-      await addToCart(product.id || product._id);
+      await globalAddToCart(product.id || product._id, {
+        size: selectedSize,
+        color: selectedColor,
+        quantity: quantity
+      });
       showToast("Product added to cart!", "success");
     } catch (err) {
       console.error("Error adding to cart:", err);
@@ -96,9 +119,15 @@ const ProductDetails = () => {
   };
 
   const handleBuyNow = async () => {
+    if (!validateSelection()) return;
+
     try {
       setBuyingNow(true);
-      await addToCart(product.id || product._id);
+      await globalAddToCart(product.id || product._id, {
+        size: selectedSize,
+        color: selectedColor,
+        quantity: quantity
+      });
       showToast("Added to bag! Redirecting...", "success");
       navigate("/cart");
     } catch (err) {
@@ -159,28 +188,12 @@ const ProductDetails = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100">
+        <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
 
             {/* Left: Image Gallery */}
-            <div className="p-6 md:p-10 bg-white border-b lg:border-b-0 lg:border-r border-slate-100">
-              <div className="flex flex-col gap-6 sticky top-24">
-                <div className="aspect-square bg-slate-50 rounded-3xl overflow-hidden border border-slate-100 group relative">
-                  <img
-                    src={selectedImage}
-                    alt={product?.name}
-                    className="w-full h-full object-contain p-8 group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-6 right-6 h-14 w-14 flex items-center justify-center bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 group/fav active:scale-90 transition-all">
-                    <button
-                      onClick={toggleFavorite}
-                      className={`text-2xl transition-all duration-500 transform ${isFavorite ? "text-red-500 scale-125 drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]" : "text-slate-300 hover:text-slate-400"}`}
-                    >
-                      {isFavorite ? "♥" : "♡"}
-                    </button>
-                    <div className="absolute inset-0 bg-red-500/10 rounded-2xl opacity-0 group-hover/fav:opacity-100 transition-opacity" />
-                  </div>
-                </div>
+            <div className="p-6 md:p-10 bg-white border-b lg:border-b-0 lg:border-r border-slate-100 relative z-20 rounded-t-[2.5rem] lg:rounded-l-[2.5rem] lg:rounded-tr-none overflow-visible">
+              <div className="flex flex-col-reverse md:flex-row gap-4 h-full max-h-[600px] sticky top-24">
 
                 {/* Thumbnails */}
                 {(() => {
@@ -197,30 +210,93 @@ const ProductDetails = () => {
                   if (gallery.length === 0) return null;
 
                   return (
-                    <div className="flex gap-4 overflow-x-auto pb-4 -mb-4 px-1 scrollbar-hide">
+                    <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-y-auto md:w-16 flex-shrink-0 scrollbar-hide py-1">
                       {gallery.map((img, i) => {
                         const url = getImageUrl(img);
+                        const isSelected = selectedImage === url;
                         return (
-                          <button
+                          <div
                             key={i}
+                            onMouseEnter={() => setSelectedImage(url)}
                             onClick={() => setSelectedImage(url)}
-                            className={`w-20 h-20 flex-shrink-0 rounded-2xl border-2 transition-all p-2 bg-slate-50 ${selectedImage === url
-                              ? "border-blue-600 bg-white ring-4 ring-blue-50"
-                              : "border-slate-100 hover:border-slate-300"
+                            className={`relative w-16 h-16 md:w-full md:h-16 flex-shrink-0 rounded-xl border-2 transition-all cursor-pointer overflow-hidden ${isSelected
+                              ? "border-blue-600 ring-2 ring-blue-50"
+                              : "border-slate-100 hover:border-blue-300"
                               }`}
                           >
-                            <img src={url} alt="" className="w-full h-full object-contain" />
-                          </button>
+                            <img src={url} alt="" className="w-full h-full object-cover" />
+                            {isSelected && <div className="absolute inset-0 bg-blue-600/10" />}
+                          </div>
                         );
                       })}
                     </div>
                   );
                 })()}
+
+                {/* Main Image */}
+                <div className="flex-1 aspect-square md:aspect-[4/3] max-h-[350px] bg-slate-50 rounded-3xl overflow-visible border border-slate-100 group relative z-0">
+                  <div className="w-full h-full flex items-center justify-center p-6 md:p-10">
+                    <ImageMagnifier
+                      src={selectedImage}
+                      className="w-full h-full object-contain mix-blend-multiply"
+                    />
+                  </div>
+
+                  {/* Navigation Buttons */}
+                  {product?.images?.length > 0 && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const gallery = [];
+                          if (product?.image) gallery.push(getImageUrl(product.image));
+                          if (product?.images) product.images.forEach(img => gallery.push(getImageUrl(img)));
+
+                          const currentIndex = gallery.indexOf(selectedImage);
+                          const prevIndex = currentIndex > 0 ? currentIndex - 1 : gallery.length - 1;
+                          setSelectedImage(gallery[prevIndex]);
+                        }}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-md rounded-full shadow-lg border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-white hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const gallery = [];
+                          if (product?.image) gallery.push(getImageUrl(product.image));
+                          if (product?.images) product.images.forEach(img => gallery.push(getImageUrl(img)));
+
+                          const currentIndex = gallery.indexOf(selectedImage);
+                          const nextIndex = currentIndex < gallery.length - 1 ? currentIndex + 1 : 0;
+                          setSelectedImage(gallery[nextIndex]);
+                        }}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-md rounded-full shadow-lg border border-slate-100 flex items-center justify-center text-slate-700 hover:bg-white hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
+
+                  <div className="absolute top-6 right-6 h-14 w-14 flex items-center justify-center bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 group/fav active:scale-90 transition-all z-10">
+                    <button
+                      onClick={toggleFavorite}
+                      className={`text-2xl transition-all duration-500 transform ${isFavorite ? "text-red-500 scale-125 drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]" : "text-slate-300 hover:text-slate-400"}`}
+                    >
+                      {isFavorite ? "♥" : "♡"}
+                    </button>
+                    <div className="absolute inset-0 bg-red-500/10 rounded-2xl opacity-0 group-hover/fav:opacity-100 transition-opacity pointer-events-none" />
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Right: Product Info */}
-            <div className="p-8 md:p-12 lg:p-16 flex flex-col h-full bg-white">
+            <div className="p-8 md:p-12 lg:p-16 flex flex-col h-full bg-white relative z-10 rounded-b-[2.5rem] lg:rounded-r-[2.5rem] lg:rounded-bl-none">
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3 mb-6">
                   <span className="px-4 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-blue-100/50">
@@ -248,7 +324,7 @@ const ProductDetails = () => {
                   </div>
                 </div>
 
-                {/* PRICE SECTION - LUXURY DESIGN */}
+                {/* PRICE SECTION */}
                 <div className="relative mb-10 group/price">
                   <div className="absolute -inset-2 bg-gradient-to-r from-blue-600/5 to-purple-600/5 rounded-[2.5rem] blur-xl opacity-0 group-hover/price:opacity-100 transition-opacity duration-700" />
                   <div className="relative p-8 bg-slate-50/50 backdrop-blur-sm rounded-[2rem] border border-slate-100 flex items-center justify-between overflow-hidden">
@@ -307,33 +383,47 @@ const ProductDetails = () => {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                       </svg>
-                      <span className="text-[10px] font-black uppercase tracking-widest">Size</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">Dimensions</span>
                     </div>
-                    <span className="text-base font-black text-slate-900 line-clamp-1">{product?.dimensions || "One Size Fits All"}</span>
+                    <span className="text-base font-black text-slate-900 line-clamp-1">{product?.dimensions || "Compact Pack"}</span>
                   </div>
                 </div>
 
                 {/* OPTIONS */}
                 {(product?.colors?.length > 0 || product?.sizes?.length > 0) && (
-                  <div className="space-y-8 mb-12">
+                  <div className="space-y-8 mb-8">
                     {product.colors?.length > 0 && (
                       <div>
                         <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-4">Colorway</h3>
                         <div className="flex flex-wrap gap-2.5">
                           {product.colors.map((color, i) => (
-                            <span key={i} className="px-5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 shadow-sm first-letter:uppercase">
+                            <button
+                              key={i}
+                              onClick={() => setSelectedColor(color)}
+                              className={`px-5 py-2.5 rounded-2xl text-xs font-bold shadow-sm first-letter:uppercase transition-all ${selectedColor === color
+                                ? "bg-slate-900 text-white border border-slate-900"
+                                : "bg-slate-50 border border-slate-200 text-slate-800 hover:border-slate-300"
+                                }`}
+                            >
                               {color}
-                            </span>
+                            </button>
                           ))}
                         </div>
                       </div>
                     )}
                     {product.sizes?.length > 0 && (
                       <div>
-                        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-4">Select Dimension</h3>
+                        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-4">Select Size</h3>
                         <div className="flex flex-wrap gap-3">
                           {product.sizes.map((size, i) => (
-                            <button key={i} className="min-w-[60px] h-[60px] flex items-center justify-center bg-white border-2 border-slate-100 rounded-2xl text-sm font-black text-slate-800 hover:border-blue-600 hover:text-blue-600 transition-all shadow-sm active:scale-90">
+                            <button
+                              key={i}
+                              onClick={() => setSelectedSize(size)}
+                              className={`min-w-[60px] h-[60px] flex items-center justify-center border-2 rounded-2xl text-sm font-black transition-all shadow-sm active:scale-90 ${selectedSize === size
+                                ? "bg-slate-900 border-slate-900 text-white"
+                                : "bg-white border-slate-100 text-slate-800 hover:border-blue-600 hover:text-blue-600"
+                                }`}
+                            >
                               {size}
                             </button>
                           ))}
@@ -343,9 +433,34 @@ const ProductDetails = () => {
                   </div>
                 )}
 
+                {/* Quantity Selector */}
+                <div className="mb-10">
+                  <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-4">Quantity</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center bg-slate-50 p-1.5 rounded-2xl border border-slate-100 w-fit">
+                      <button
+                        onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                        className="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-white rounded-xl transition-all font-bold text-lg"
+                      >
+                        −
+                      </button>
+                      <span className="w-12 text-center font-bold text-slate-800 text-lg">{quantity}</span>
+                      <button
+                        onClick={() => setQuantity(q => q + 1)}
+                        className="w-10 h-10 flex items-center justify-center text-slate-600 hover:bg-white rounded-xl transition-all font-bold text-lg"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <div className="text-xs font-bold text-slate-400">
+                      {product?.stockQty} items available
+                    </div>
+                  </div>
+                </div>
+
                 {/* TAGS */}
                 {product?.tags?.length > 0 && (
-                  <div className="pt-6 border-t border-slate-50">
+                  <div className="pt-6 border-t border-slate-50 mb-8">
                     <div className="flex flex-wrap gap-2">
                       {product.tags.map((tag, i) => (
                         <span key={i} className="px-3 py-1 bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-100 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors cursor-pointer">
@@ -358,7 +473,7 @@ const ProductDetails = () => {
               </div>
 
               {/* ACTIONS AREA */}
-              <div className="mt-12 space-y-6">
+              <div className="mt-4 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_1fr] gap-4">
                   <button
                     onClick={handleBuyNow}

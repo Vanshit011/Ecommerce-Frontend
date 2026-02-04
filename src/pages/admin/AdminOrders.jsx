@@ -9,7 +9,7 @@ const AdminOrders = () => {
     const [filteredOrders, setFilteredOrders] = useState([]); // Orders to display (paginated)
     const [loading, setLoading] = useState(true);
     const [viewOrder, setViewOrder] = useState(null);
-    const { addToast } = useToast();
+    const { showToast } = useToast();
 
     // Pagination & Filter State
     const [page, setPage] = useState(1);
@@ -38,7 +38,7 @@ const AdminOrders = () => {
             setAllOrders(orderList);
         } catch (error) {
             console.error("Failed to fetch admin orders:", error);
-            addToast("Failed to load orders", "error");
+            showToast("Failed to load orders", "error");
         } finally {
             setLoading(false);
         }
@@ -82,8 +82,18 @@ const AdminOrders = () => {
     }, []);
 
     // Refresh list when an order is updated
-    const handleOrderUpdated = () => {
-        fetchOrders();
+    const handleOrderUpdated = (updatedOrder) => {
+        if (updatedOrder) {
+            // "Silent" update: Patch the local state directly to avoid a full re-fetch loading spinner
+            setAllOrders(prev => prev.map(o =>
+                (o.id === (updatedOrder.id || updatedOrder._id) || o._id === (updatedOrder.id || updatedOrder._id))
+                    ? { ...o, ...updatedOrder }
+                    : o
+            ));
+        } else {
+            // Fallback: Full refresh if no data provided
+            fetchOrders();
+        }
     };
 
     return (
