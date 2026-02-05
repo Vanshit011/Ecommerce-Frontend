@@ -27,8 +27,8 @@ import Profile from "./pages/shop/account/Profile";
 import MyOrders from "./pages/shop/account/MyOrders";
 import MyPayments from "./pages/shop/account/MyPayments";
 
-import { ToastProvider } from "./context/ToastContext";
-import { CartProvider } from "./context/CartContext";
+import ToastProvider from "./context/ToastContext";
+import CartProvider from "./context/CartContext";
 
 function App() {
   return (

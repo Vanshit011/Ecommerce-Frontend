@@ -1,14 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  getCart,
-  addToCart,
-  updateCartQty,
-  clearCart,
-  getAddresses,
-  setDefaultAddress,
-  createOrder,
-} from "../../../services/api";
+import { clearCart, getAddresses, setDefaultAddress, createOrder } from "../../../services/api";
 import { useCart } from "../../../context/CartContext";
 import { useToast } from "../../../context/ToastContext";
 import Header from "../../../components/common/Header";
@@ -18,9 +10,14 @@ import { CartSkeleton } from "../../../components/common/Skeleton";
 const Cart = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { cart, setCart, refreshCart, addToCart: globalAddToCart, updateQty: globalUpdateQty } = useCart();
-  const [loading, setLoading] = useState(false);
-
+  const {
+    cart,
+    setCart,
+    refreshCart,
+    addToCart: globalAddToCart,
+    updateQty: globalUpdateQty,
+  } = useCart();
+  const [loading] = useState(false);
   const [addresses, setAddresses] = useState([]);
   const [showAddressPicker, setShowAddressPicker] = useState(false);
 
@@ -28,28 +25,27 @@ const Cart = () => {
 
   /* ================= CART ================= */
 
-  useEffect(() => {
-    refreshCart();
-  }, [refreshCart]);
-
-  useEffect(() => {
-    if (cart?.items?.some((item) => item.quantity > 0)) {
-      loadAddresses();
-    }
-  }, [cart]);
-
   /* ================= ADDRESSES ================= */
-
-  const loadAddresses = async () => {
+  const loadAddresses = useCallback(async () => {
     try {
       const res = await getAddresses();
       setAddresses(res.data || []);
     } catch {
       showToast("Failed to load addresses", "error");
     }
-  };
+  }, [showToast]);
 
-  const defaultAddress = addresses.find((a) => a.isdefault);
+  useEffect(() => {
+    refreshCart();
+  }, [refreshCart]);
+
+  useEffect(() => {
+    if (cart?.items?.length > 0) {
+      loadAddresses();
+    }
+  }, [cart, loadAddresses]);
+
+  const defaultAddress = addresses.find((a) => a.is_default || a.isdefault);
 
   /* ================= CART HANDLERS ================= */
 
@@ -67,8 +63,8 @@ const Cart = () => {
     const productId = product.id || product._id;
     try {
       await globalUpdateQty(productId, newQty, {
-        size: currentItem.size,
-        color: currentItem.color
+        size: currentItem?.size,
+        color: currentItem?.color,
       });
     } catch (err) {
       console.error("Update qty error:", err);
@@ -76,17 +72,15 @@ const Cart = () => {
     }
   };
 
-  const handleRemoveItem = async (productId) => {
+  const handleRemoveItem = async (productId, item) => {
     try {
-      await updateCartQty(productId, 0);
-
-      setCart((prev) => ({
-        ...prev,
-        items: prev.items.filter((item) => (item.product?.id || item.product?._id) !== productId),
-      }));
-
+      await globalUpdateQty(productId, 0, {
+        size: item?.size,
+        color: item?.color,
+      });
       showToast("Item removed from cart", "success");
-    } catch {
+    } catch (err) {
+      console.error("Remove item error:", err);
       showToast("Failed to remove item", "error");
     }
   };
@@ -122,7 +116,7 @@ const Cart = () => {
       return;
     }
 
-    const hasDefault = addresses.some((a) => a.isdefault);
+    const hasDefault = addresses.some((a) => a.is_default || a.isdefault);
 
     if (!hasDefault) {
       showToast("Please select a default delivery address", "warning");
@@ -136,11 +130,17 @@ const Cart = () => {
       const res = await createOrder();
 
       const order = res.data?.data || res.data;
+      const orderId = order.id || order._id;
 
-      navigate(`/checkout/${order.id}`);
+      if (!orderId) {
+        throw new Error("Order ID missing from response");
+      }
+
+      navigate(`/checkout/${orderId}`);
     } catch (err) {
       console.error("CREATE ORDER ERROR:", err);
-      showToast("Failed to create order", "error");
+      const msg = err.response?.data?.message || err.message || "Failed to create order";
+      showToast(msg, "error");
     } finally {
       setCheckoutLoading(false);
     }
@@ -162,13 +162,10 @@ const Cart = () => {
       </div>
     );
 
-  const subtotal = activeItems.reduce(
-    (acc, item) => {
-      const price = item.product.salePrice > 0 ? item.product.salePrice : item.product.price;
-      return acc + price * item.quantity;
-    },
-    0,
-  );
+  const subtotal = activeItems.reduce((acc, item) => {
+    const price = item.product.salePrice > 0 ? item.product.salePrice : item.product.price;
+    return acc + price * item.quantity;
+  }, 0);
 
   return (
     <div className="bg-slate-50 min-h-screen animate-fade-in">
@@ -195,15 +192,27 @@ const Cart = () => {
             </div>
             <h2 className="text-3xl font-black text-slate-900 mb-4">Your bag is empty</h2>
             <p className="mb-10 text-slate-500 font-medium text-lg leading-relaxed">
-              Looks like you haven't added anything to your bag yet. Start exploring our premium collection!
+              Looks like you haven't added anything to your bag yet. Start exploring our premium
+              collection!
             </p>
             <button
               onClick={() => navigate("/products")}
               className="bg-slate-900 text-white px-10 py-5 rounded-[2rem] font-bold text-lg hover:bg-slate-800 shadow-2xl shadow-slate-200 transition-all active:scale-95 flex items-center gap-3 mx-auto"
             >
               Explore Products
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
               </svg>
             </button>
           </div>
@@ -220,10 +229,16 @@ const Cart = () => {
                       📍
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-blue-100 uppercase tracking-widest mb-1">Deliver to</p>
-                      <p className="text-xl font-bold">{defaultAddress.fullname}</p>
+                      <p className="text-sm font-bold text-blue-100 uppercase tracking-widest mb-1">
+                        Deliver to
+                      </p>
+                      <p className="text-xl font-bold">
+                        {defaultAddress.full_name || defaultAddress.fullname}
+                      </p>
                       <p className="text-sm text-blue-100/80 font-medium">
-                        {defaultAddress.addressline1}, {defaultAddress.city}, {defaultAddress.state} - {defaultAddress.postalcode}
+                        {defaultAddress.address_line_1 || defaultAddress.addressline1},{" "}
+                        {defaultAddress.city}, {defaultAddress.state} -{" "}
+                        {defaultAddress.postal_code || defaultAddress.postalcode}
                       </p>
                     </div>
                   </div>
@@ -245,11 +260,15 @@ const Cart = () => {
                       className="flex flex-col sm:flex-row gap-6 p-8 group hover:bg-slate-50/50 transition-colors"
                     >
                       <div
-                        onClick={() => navigate(`/product/${item.product?.id || item.product?._id}`)}
+                        onClick={() =>
+                          navigate(`/product/${item.product?.id || item.product?._id}`)
+                        }
                         className="w-28 h-28 bg-slate-50 rounded-3xl overflow-hidden p-3 border border-slate-100 flex-shrink-0 cursor-pointer group-hover:scale-105 transition-transform duration-500"
                       >
                         <img
-                          src={getImageUrl(item.product?.images?.[0] || item.product?.image || item.product)}
+                          src={getImageUrl(
+                            item.product?.images?.[0] || item.product?.image || item.product,
+                          )}
                           alt={item.product?.name}
                           className="w-full h-full object-contain"
                         />
@@ -259,7 +278,9 @@ const Cart = () => {
                         <div className="flex justify-between items-start">
                           <div>
                             <h3
-                              onClick={() => navigate(`/product/${item.product?.id || item.product?._id}`)}
+                              onClick={() =>
+                                navigate(`/product/${item.product?.id || item.product?._id}`)
+                              }
                               className="text-xl font-bold text-slate-800 cursor-pointer hover:text-blue-600 transition-colors"
                             >
                               {item.product?.name}
@@ -274,14 +295,20 @@ const Cart = () => {
                               <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
                                 <button
                                   disabled={item.quantity <= 1}
-                                  onClick={() => handleUpdateQty(item.product, item.quantity - 1, item)}
+                                  onClick={() =>
+                                    handleUpdateQty(item.product, item.quantity - 1, item)
+                                  }
                                   className="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-white rounded-lg disabled:opacity-30 transition-all font-bold text-xs"
                                 >
                                   −
                                 </button>
-                                <span className="w-8 text-center font-bold text-slate-800 text-xs">{item.quantity}</span>
+                                <span className="w-8 text-center font-bold text-slate-800 text-xs">
+                                  {item.quantity}
+                                </span>
                                 <button
-                                  onClick={() => handleUpdateQty(item.product, item.quantity + 1, item)}
+                                  onClick={() =>
+                                    handleUpdateQty(item.product, item.quantity + 1, item)
+                                  }
                                   className="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-white rounded-lg transition-all font-bold text-xs"
                                 >
                                   +
@@ -291,12 +318,22 @@ const Cart = () => {
                               {item.product?.sizes?.length > 0 && (
                                 <select
                                   value={item.size || ""}
-                                  onChange={(e) => handleUpdateItem(item.product.id || item.product._id, { size: e.target.value, color: item.color, quantity: item.quantity })}
+                                  onChange={(e) =>
+                                    handleUpdateItem(item.product.id || item.product._id, {
+                                      size: e.target.value,
+                                      color: item.color,
+                                      quantity: item.quantity,
+                                    })
+                                  }
                                   className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-[10px] font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer"
                                 >
-                                  <option value="" disabled>Size</option>
+                                  <option value="" disabled>
+                                    Size
+                                  </option>
                                   {item.product.sizes.map((s) => (
-                                    <option key={s} value={s}>{s}</option>
+                                    <option key={s} value={s}>
+                                      {s}
+                                    </option>
                                   ))}
                                 </select>
                               )}
@@ -304,12 +341,22 @@ const Cart = () => {
                               {item.product?.colors?.length > 0 && (
                                 <select
                                   value={item.color || ""}
-                                  onChange={(e) => handleUpdateItem(item.product.id || item.product._id, { color: e.target.value, size: item.size, quantity: item.quantity })}
+                                  onChange={(e) =>
+                                    handleUpdateItem(item.product.id || item.product._id, {
+                                      color: e.target.value,
+                                      size: item.size,
+                                      quantity: item.quantity,
+                                    })
+                                  }
                                   className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-[10px] font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer"
                                 >
-                                  <option value="" disabled>Color</option>
+                                  <option value="" disabled>
+                                    Color
+                                  </option>
                                   {item.product.colors.map((c) => (
-                                    <option key={c} value={c}>{c}</option>
+                                    <option key={c} value={c}>
+                                      {c}
+                                    </option>
                                   ))}
                                 </select>
                               )}
@@ -317,18 +364,33 @@ const Cart = () => {
                           </div>
 
                           <button
-                            onClick={() => handleRemoveItem(item.product?.id || item.product?._id)}
+                            onClick={() =>
+                              handleRemoveItem(item.product?.id || item.product?._id, item)
+                            }
                             className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
                             title="Remove item"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
                             </svg>
                           </button>
                         </div>
 
                         <div className="flex flex-col items-end pt-4 border-t border-slate-50 mt-4">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Item Total</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                            Item Total
+                          </p>
                           <div className="flex items-center gap-3">
                             {item.product.salePrice > 0 && (
                               <p className="text-sm font-bold text-slate-400 line-through">
@@ -336,7 +398,12 @@ const Cart = () => {
                               </p>
                             )}
                             <p className="text-2xl font-black text-slate-900 tracking-tight">
-                              ₹{((item.product.salePrice > 0 ? item.product.salePrice : item.product.price) * item.quantity).toLocaleString()}
+                              ₹
+                              {(
+                                (item.product.salePrice > 0
+                                  ? item.product.salePrice
+                                  : item.product.price) * item.quantity
+                              ).toLocaleString()}
                             </p>
                           </div>
                         </div>
@@ -349,35 +416,46 @@ const Cart = () => {
 
             {/* SUMMARY */}
             <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 p-8 border border-slate-100 sticky top-28">
-              <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">Order Summary</h2>
+              <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">
+                Order Summary
+              </h2>
 
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between items-center text-slate-500 font-medium">
                   <span>Subtotal</span>
-                  <span className="text-slate-900 font-bold tracking-tight">₹{subtotal.toLocaleString()}</span>
+                  <span className="text-slate-900 font-bold tracking-tight">
+                    ₹{subtotal.toLocaleString()}
+                  </span>
                 </div>
 
                 <div className="flex justify-between items-center text-slate-500 font-medium">
                   <span>Shipping</span>
-                  <span className="text-emerald-500 font-bold uppercase text-xs tracking-widest">Free</span>
+                  <span className="text-emerald-500 font-bold uppercase text-xs tracking-widest">
+                    Free
+                  </span>
                 </div>
 
                 <div className="h-px bg-slate-50 my-4" />
 
                 <div className="flex justify-between items-end">
                   <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total Amount</p>
-                    <p className="text-3xl font-black text-slate-900 tracking-tighter">₹{subtotal.toLocaleString()}</p>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
+                      Total Amount
+                    </p>
+                    <p className="text-3xl font-black text-slate-900 tracking-tighter">
+                      ₹{subtotal.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </div>
 
               <button
                 disabled={checkoutLoading}
-                className={`w-full py-5 rounded-2xl font-black text-lg transition-all active:scale-95 shadow-2xl flex items-center justify-center gap-3 ${checkoutLoading
-                  ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200"
-                  }`}
+                className={`w-full py-5 rounded-2xl font-black text-lg transition-all active:scale-95 shadow-2xl flex items-center justify-center gap-3 ${
+                  checkoutLoading
+                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200"
+                }`}
                 onClick={handleProceedCheckout}
               >
                 {checkoutLoading ? (
@@ -388,8 +466,19 @@ const Cart = () => {
                 ) : (
                   <>
                     Checkout Now
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 8l4 4m0 0l-4 4m4-4H3"
+                      />
                     </svg>
                   </>
                 )}
@@ -407,7 +496,9 @@ const Cart = () => {
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
             <div className="bg-white max-w-lg w-full rounded-[2.5rem] p-8 shadow-2xl border border-slate-100">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Select Address</h3>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight">
+                  Select Address
+                </h3>
                 <button
                   onClick={() => setShowAddressPicker(false)}
                   className="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-slate-50 transition-colors text-slate-400"
@@ -423,12 +514,13 @@ const Cart = () => {
                   return (
                     <div
                       key={id}
-                      className={`group border-2 rounded-3xl p-6 cursor-pointer transition-all ${addr.isdefault
-                        ? "border-blue-600 bg-blue-50/50 ring-4 ring-blue-50"
-                        : "border-slate-100 hover:border-blue-200 hover:bg-slate-50"
-                        }`}
+                      className={`group border-2 rounded-3xl p-6 cursor-pointer transition-all ${
+                        addr.is_default || addr.isdefault
+                          ? "border-blue-600 bg-blue-50/50 ring-4 ring-blue-50"
+                          : "border-slate-100 hover:border-blue-200 hover:bg-slate-50"
+                      }`}
                       onClick={async () => {
-                        if (!addr.isdefault) {
+                        if (!(addr.is_default || addr.isdefault)) {
                           await setDefaultAddress(id);
                           showToast("Default address updated", "success");
                           await loadAddresses();
@@ -437,8 +529,10 @@ const Cart = () => {
                       }}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <p className="font-bold text-slate-800 text-lg">{addr.fullname}</p>
-                        {addr.isdefault && (
+                        <p className="font-bold text-slate-800 text-lg">
+                          {addr.full_name || addr.fullname}
+                        </p>
+                        {(addr.is_default || addr.isdefault) && (
                           <span className="px-2 py-1 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg">
                             Active
                           </span>

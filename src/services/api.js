@@ -48,7 +48,7 @@ export const getProductDetails = (id) => API.get(`/products/${id}`);
 
 export const prefetchProductDetails = (id) => {
   // Fire and forget prefetch without caching logic
-  API.get(`/products/${id}`).catch(() => { });
+  API.get(`/products/${id}`).catch(() => {});
 };
 
 export const getProductImages = (id) => API.get(`/products/${id}/images`);
@@ -57,11 +57,13 @@ export const getProductImages = (id) => API.get(`/products/${id}/images`);
 export const getMyProducts = (params) => API.get("/products/my-products", { params });
 
 export const createProduct = (formData) => {
-  return API.post("/products", formData, { headers: { "Content-Type": "multipart/form-data" }, });
+  return API.post("/products", formData, { headers: { "Content-Type": "multipart/form-data" } });
 };
 
 export const updateProduct = (id, formData) => {
-  return API.put(`/products/${id}`, formData, { headers: { "Content-Type": "multipart/form-material" }, });
+  return API.put(`/products/${id}`, formData, {
+    headers: { "Content-Type": "multipart/form-material" },
+  });
 };
 
 export const deleteProduct = (id) => API.delete(`/products/${id}`);

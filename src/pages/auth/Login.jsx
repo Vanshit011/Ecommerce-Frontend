@@ -57,10 +57,7 @@ const Login = () => {
       const res = await loginUser(payload);
 
       const token =
-        res.data?.access_token ||
-        res.data?.token ||
-        res.data?.accessToken ||
-        res.data?.access;
+        res.data?.access_token || res.data?.token || res.data?.accessToken || res.data?.access;
 
       if (!token) {
         return setError("Token not found in response");
@@ -77,9 +74,7 @@ const Login = () => {
         navigate("/home");
       }
     } catch (err) {
-      const apiMessage =
-        err?.response?.data?.message ||
-        "Login failed";
+      const apiMessage = err?.response?.data?.message || "Login failed";
 
       setError(apiMessage);
     } finally {
@@ -90,28 +85,20 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-200 p-5">
       <div className="bg-white/80 backdrop-blur-md border border-white/30 shadow-2xl rounded-3xl p-10 w-full max-w-md text-center animate-[slideUp_0.6s_cubic-bezier(0.16,1,0.3,1)]">
+        <h1 className="text-3xl font-extrabold tracking-tight text-blue-600 mb-8">SASTA STORE</h1>
 
-        <h1 className="text-3xl font-extrabold tracking-tight text-blue-600 mb-8">
-          SASTA STORE
-        </h1>
-
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">
-          Account Login
-        </h2>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Account Login</h2>
 
         <p className="text-slate-600 text-sm mb-8">
           Please enter your credentials to access your account.
         </p>
 
         <form onSubmit={handleSubmit}>
-
           {/* ================= EMAIL LOGIN ================= */}
           {step === "email" && (
             <>
               <div className="text-left mb-5">
-                <label className="block text-sm font-semibold text-slate-800 mb-2">
-                  Email
-                </label>
+                <label className="block text-sm font-semibold text-slate-800 mb-2">Email</label>
                 <input
                   name="email"
                   type="email"
@@ -122,9 +109,7 @@ const Login = () => {
               </div>
 
               <div className="text-left mb-5">
-                <label className="block text-sm font-semibold text-slate-800 mb-2">
-                  Password
-                </label>
+                <label className="block text-sm font-semibold text-slate-800 mb-2">Password</label>
                 <input
                   name="password"
                   type="password"
@@ -158,9 +143,7 @@ const Login = () => {
           {step === "otp" && (
             <>
               <div className="text-left mb-5">
-                <label className="block text-sm font-semibold text-slate-800 mb-2">
-                  Enter OTP
-                </label>
+                <label className="block text-sm font-semibold text-slate-800 mb-2">Enter OTP</label>
                 <input
                   name="otp"
                   type="text"
@@ -197,11 +180,7 @@ const Login = () => {
               className="w-full px-4 py-3.5 bg-blue-600 text-white rounded-xl font-semibold text-base border-none cursor-pointer transition-all shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
               disabled={isLoading}
             >
-              {isLoading
-                ? "Signing in..."
-                : step === "otp"
-                  ? "Verify & Login"
-                  : "Login"}
+              {isLoading ? "Signing in..." : step === "otp" ? "Verify & Login" : "Login"}
             </button>
           )}
 
@@ -257,7 +236,6 @@ const Login = () => {
               Sign up here
             </span>
           </div>
-
         </form>
       </div>
     </div>

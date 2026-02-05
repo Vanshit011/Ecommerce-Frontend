@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getProfile,
@@ -42,12 +42,7 @@ const Profile = () => {
     country: "",
   });
 
-  useEffect(() => {
-    loadProfile();
-    loadAddresses();
-  }, []);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       const res = await getProfile();
       const user = res.data.user || res.data;
@@ -60,16 +55,21 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
-  const loadAddresses = async () => {
+  const loadAddresses = useCallback(async () => {
     try {
       const res = await getAddresses();
       setAddresses(res.data || []);
     } catch {
       console.error("Address load failed");
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadProfile();
+    loadAddresses();
+  }, [loadProfile, loadAddresses]);
 
   /* PROFILE SAVE */
   const handleSave = async () => {
@@ -92,14 +92,21 @@ const Profile = () => {
 
   const handleAddressSubmit = async () => {
     try {
+      const payload = {
+        full_name: addressForm.fullname,
+        address_line_1: addressForm.addressline1,
+        address_line_2: addressForm.addressline2,
+        city: addressForm.city,
+        state: addressForm.state,
+        postal_code: addressForm.postalcode,
+        country: addressForm.country,
+      };
+
       if (editingAddress) {
-        await updateAddress(
-          editingAddress.id || editingAddress._id,
-          addressForm,
-        );
+        await updateAddress(editingAddress.id || editingAddress._id, payload);
         showToast("Address updated", "success");
       } else {
-        await createAddress(addressForm);
+        await createAddress(payload);
         showToast("Address added", "success");
       }
 
@@ -124,12 +131,12 @@ const Profile = () => {
   const handleEditAddress = (addr) => {
     setEditingAddress(addr);
     setAddressForm({
-      fullname: addr.fullname || "",
-      addressline1: addr.addressline1 || "",
-      addressline2: addr.addressline2 || "",
+      fullname: addr.full_name || addr.fullname || "",
+      addressline1: addr.address_line_1 || addr.addressline1 || "",
+      addressline2: addr.address_line_2 || addr.addressline2 || "",
       city: addr.city || "",
       state: addr.state || "",
-      postalcode: addr.postalcode || "",
+      postalcode: addr.postal_code || addr.postalcode || "",
       country: addr.country || "",
     });
     setShowAddressForm(true);
@@ -143,7 +150,7 @@ const Profile = () => {
 
   const handleSetDefault = async (id) => {
     const alreadyDefault = addresses.find(
-      (a) => (a.id || a._id) === id && a.isdefault,
+      (a) => (a.id || a._id) === id && (a.is_default || a.isdefault),
     );
 
     if (alreadyDefault) return;
@@ -157,9 +164,7 @@ const Profile = () => {
     return (
       <div className="min-h-screen bg-gray-100">
         <Header />
-        <div className="flex justify-center py-20">
-          Loading profile...
-        </div>
+        <div className="flex justify-center py-20">Loading profile...</div>
       </div>
     );
   }
@@ -169,7 +174,6 @@ const Profile = () => {
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-10 grid lg:grid-cols-[280px_1fr] gap-8">
-
         {/* SIDEBAR */}
         <aside className="h-fit sticky top-24 space-y-6">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
@@ -179,7 +183,9 @@ const Profile = () => {
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hello,</p>
-                <h3 className="font-bold text-slate-800 text-lg leading-tight">{profile?.name || "User"}</h3>
+                <h3 className="font-bold text-slate-800 text-lg leading-tight">
+                  {profile?.name || "User"}
+                </h3>
               </div>
             </div>
 
@@ -188,8 +194,17 @@ const Profile = () => {
                 onClick={() => personalRef.current?.scrollIntoView({ behavior: "smooth" })}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 text-blue-700 font-bold transition-all text-sm"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Personal Details
               </button>
@@ -198,9 +213,18 @@ const Profile = () => {
                 onClick={() => navigate("/my-orders")}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400 group-hover:text-slate-600" viewBox="0 0 20 20" fill="currentColor">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-slate-400 group-hover:text-slate-600"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
                   <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                  <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 My Orders
               </button>
@@ -209,9 +233,18 @@ const Profile = () => {
                 onClick={() => navigate("/my-payments")}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400 group-hover:text-slate-600" viewBox="0 0 20 20" fill="currentColor">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-slate-400 group-hover:text-slate-600"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
                   <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                  <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 My Payments
               </button>
@@ -221,14 +254,18 @@ const Profile = () => {
 
         {/* CONTENT */}
         <section className="space-y-8">
-
           {/* PERSONAL DETAILS CARD */}
-          <div ref={personalRef} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+          <div
+            ref={personalRef}
+            className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8"
+          >
             <h2 className="text-2xl font-bold text-slate-800 mb-6">Personal Information</h2>
 
             <div className="grid md:grid-cols-2 gap-6 max-w-2xl">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Email Address
+                </label>
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -238,7 +275,9 @@ const Profile = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mobile Number</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Mobile Number
+                </label>
                 <input
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value)}
@@ -260,7 +299,10 @@ const Profile = () => {
           </div>
 
           {/* ADDRESS BOOK */}
-          <div ref={addressRef} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+          <div
+            ref={addressRef}
+            className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8"
+          >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
               <div>
                 <h2 className="text-2xl font-bold text-slate-800">Address Book</h2>
@@ -282,26 +324,36 @@ const Profile = () => {
                 return (
                   <div
                     key={id}
-                    className={`relative p-5 rounded-2xl border-2 transition-all ${addr.isdefault
+                    className={`relative p-5 rounded-2xl border-2 transition-all ${
+                      addr.is_default || addr.isdefault
                         ? "border-blue-500 bg-blue-50/10 shadow-md shadow-blue-100"
                         : "border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-100"
-                      }`}
+                    }`}
                   >
-                    {addr.isdefault && (
+                    {(addr.is_default || addr.isdefault) && (
                       <span className="absolute top-4 right-4 bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-md tracking-wide">
                         DEFAULT
                       </span>
                     )}
 
                     <div className="pr-16">
-                      <h4 className="font-bold text-slate-800 mb-1">{addr.fullname}</h4>
+                      <h4 className="font-bold text-slate-800 mb-1">
+                        {addr.full_name || addr.fullname}
+                      </h4>
                       <p className="text-sm text-slate-600 leading-relaxed">
-                        {addr.addressline1}
-                        {addr.addressline2 && <>, {addr.addressline2}</>}
+                        {addr.address_line_1 || addr.addressline1}
+                        {(addr.address_line_2 || addr.addressline2) && (
+                          <>, {addr.address_line_2 || addr.addressline2}</>
+                        )}
                         <br />
-                        {addr.city}, {addr.state} - <span className="font-semibold text-slate-800">{addr.postalcode}</span>
+                        {addr.city}, {addr.state} -{" "}
+                        <span className="font-semibold text-slate-800">
+                          {addr.postal_code || addr.postalcode}
+                        </span>
                         <br />
-                        <span className="text-slate-400 font-medium text-xs mt-1 block uppercase tracking-wider">{addr.country}</span>
+                        <span className="text-slate-400 font-medium text-xs mt-1 block uppercase tracking-wider">
+                          {addr.country}
+                        </span>
                       </p>
                     </div>
 
@@ -318,7 +370,7 @@ const Profile = () => {
                       >
                         Remove
                       </button>
-                      {!addr.isdefault && (
+                      {!(addr.is_default || addr.isdefault) && (
                         <button
                           onClick={() => handleSetDefault(id)}
                           className="ml-auto text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
@@ -334,13 +386,31 @@ const Profile = () => {
               {addresses.length === 0 && (
                 <div className="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                   <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-8 w-8 text-slate-300"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                   </div>
                   <h3 className="text-slate-900 font-bold mb-1">No addresses saved</h3>
-                  <p className="text-slate-500 text-sm">Add a delivery address to checkout faster.</p>
+                  <p className="text-slate-500 text-sm">
+                    Add a delivery address to checkout faster.
+                  </p>
                 </div>
               )}
             </div>
@@ -367,47 +437,77 @@ const Profile = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Full Name</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Full Name
+                    </label>
                     <input
                       placeholder="John Doe"
                       value={addressForm.fullname}
-                      onChange={(e) => setAddressForm({ ...addressForm, fullname: e.target.value })}
+                      onChange={(e) =>
+                        setAddressForm({
+                          ...addressForm,
+                          fullname: e.target.value,
+                        })
+                      }
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Country</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Country
+                    </label>
                     <input
                       placeholder="India"
                       value={addressForm.country}
-                      onChange={(e) => setAddressForm({ ...addressForm, country: e.target.value })}
+                      onChange={(e) =>
+                        setAddressForm({
+                          ...addressForm,
+                          country: e.target.value,
+                        })
+                      }
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Address Line 1</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Address Line 1
+                    </label>
                     <input
                       placeholder="Flat, House no., Building, Company, Apartment"
                       value={addressForm.addressline1}
-                      onChange={(e) => setAddressForm({ ...addressForm, addressline1: e.target.value })}
+                      onChange={(e) =>
+                        setAddressForm({
+                          ...addressForm,
+                          addressline1: e.target.value,
+                        })
+                      }
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Address Line 2 (Optional)</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Address Line 2 (Optional)
+                    </label>
                     <input
                       placeholder="Area, Street, Sector, Village"
                       value={addressForm.addressline2}
-                      onChange={(e) => setAddressForm({ ...addressForm, addressline2: e.target.value })}
+                      onChange={(e) =>
+                        setAddressForm({
+                          ...addressForm,
+                          addressline2: e.target.value,
+                        })
+                      }
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">City</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      City
+                    </label>
                     <input
                       placeholder="Mumbai"
                       value={addressForm.city}
@@ -417,21 +517,35 @@ const Profile = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">State</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      State
+                    </label>
                     <input
                       placeholder="Maharashtra"
                       value={addressForm.state}
-                      onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
+                      onChange={(e) =>
+                        setAddressForm({
+                          ...addressForm,
+                          state: e.target.value,
+                        })
+                      }
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Postal Code</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Postal Code
+                    </label>
                     <input
                       placeholder="400001"
                       value={addressForm.postalcode}
-                      onChange={(e) => setAddressForm({ ...addressForm, postalcode: e.target.value })}
+                      onChange={(e) =>
+                        setAddressForm({
+                          ...addressForm,
+                          postalcode: e.target.value,
+                        })
+                      }
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
@@ -458,7 +572,6 @@ const Profile = () => {
               </div>
             </div>
           )}
-
         </section>
       </div>
     </div>

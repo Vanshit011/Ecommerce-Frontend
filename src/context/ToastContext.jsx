@@ -2,26 +2,24 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 
 const ToastContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useToast = () => {
   const context = useContext(ToastContext);
   if (!context) throw new Error("useToast must be used within a ToastProvider");
   return context;
 };
 
-export const ToastProvider = ({ children }) => {
+const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
-  const showToast = useCallback(
-    (message, type = "success", duration = 2000) => {
-      const id = Math.random().toString(36).slice(2, 9);
-      setToasts((prev) => [...prev, { id, message, type }]);
+  const showToast = useCallback((message, type = "success", duration = 2000) => {
+    const id = Math.random().toString(36).slice(2, 9);
+    setToasts((prev) => [...prev, { id, message, type }]);
 
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, duration);
-    },
-    [],
-  );
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, duration);
+  }, []);
 
   return (
     <ToastContext.Provider value={{ showToast }}>
@@ -31,8 +29,9 @@ export const ToastProvider = ({ children }) => {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`px-6 py-3 rounded-xl text-slate-900 font-semibold text-sm shadow-xl animate-[toastIn_0.3s_cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${toast.type === "success" ? "bg-green-500" : "bg-red-500"
-              }`}
+            className={`px-6 py-3 rounded-xl text-slate-900 font-semibold text-sm shadow-xl animate-[toastIn_0.3s_cubic-bezier(0.16,1,0.3,1)] pointer-events-auto ${
+              toast.type === "success" ? "bg-green-500" : "bg-red-500"
+            }`}
           >
             {toast.message}
           </div>
@@ -41,3 +40,5 @@ export const ToastProvider = ({ children }) => {
     </ToastContext.Provider>
   );
 };
+
+export default ToastProvider;
