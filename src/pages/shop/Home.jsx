@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getProducts, getCategories, addToCart, prefetchProductDetails, createOrder, getAddresses } from "../../services/api";
-import { useToast } from "../../context/ToastContext";
+import { getProducts, getCategories } from "../../services/api";
 import Header from "../../components/common/Header";
 import { getImageUrl } from "../../utils/imageUtils";
 import { ProductSkeleton } from "../../components/common/Skeleton";
@@ -9,25 +8,23 @@ import flashSaleImg from "../../assets/images/flash-sale.jpg";
 
 const Home = () => {
   const navigate = useNavigate();
-  const { showToast } = useToast();
 
   const [featured, setFeatured] = useState([]);
   const [bestSellers, setBestSellers] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [addingToCartId, setAddingToCartId] = useState(null);
 
   // Load Data
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [prodRes, catRes] = await Promise.all([
-          getProducts(),
-          getCategories(),
-        ]);
+        const [prodRes, catRes] = await Promise.all([getProducts(), getCategories()]);
 
         const products = prodRes?.data?.data || prodRes?.data;
-        const rawCats = catRes?.data?.data || catRes?.data?.categories || (Array.isArray(catRes?.data) ? catRes.data : []);
+        const rawCats =
+          catRes?.data?.data ||
+          catRes?.data?.categories ||
+          (Array.isArray(catRes?.data) ? catRes.data : []);
 
         // Logic from Header.jsx to be consistent
         const buildCategoryTree = (cats) => {
@@ -35,9 +32,7 @@ const Home = () => {
             const hasNoParent =
               !cat.parentId &&
               (!cat.parent ||
-                (typeof cat.parent === "object" &&
-                  !cat.parent.id &&
-                  !cat.parent._id));
+                (typeof cat.parent === "object" && !cat.parent.id && !cat.parent._id));
             return hasNoParent;
           });
 
@@ -80,33 +75,6 @@ const Home = () => {
     loadData();
   }, []);
 
-  const handleAddToCart = async (e, productId) => {
-    e.stopPropagation();
-    try {
-      setAddingToCartId(productId);
-      await addToCart(productId);
-      showToast("Product added to bag!", "success");
-    } catch (err) {
-      console.error("Add to cart error:", err);
-      showToast(err.response?.data?.message || "Failed to add to bag", "error");
-    } finally {
-      setAddingToCartId(null);
-    }
-  };
-
-  const handleBuyNow = async (e, p) => {
-    e.stopPropagation();
-    try {
-      setAddingToCartId(p.id || p._id);
-      await addToCart(p.id || p._id);
-      navigate("/cart");
-    } catch {
-      showToast("Failed to add to bag", "error");
-    } finally {
-      setAddingToCartId(null);
-    }
-  };
-
   return (
     <div className="bg-slate-50 min-h-screen">
       <Header />
@@ -123,7 +91,6 @@ const Home = () => {
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
 
             <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
-
               {/* Left Content */}
               <div className="flex-1 text-center md:text-left">
                 <span className="inline-block py-1.5 px-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold tracking-widest uppercase mb-6 animate-fade-in text-yellow-300 shadow-lg">
@@ -131,12 +98,17 @@ const Home = () => {
                 </span>
 
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 tracking-tight leading-tight animate-slide-up">
-                  Discover <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 filter drop-shadow-sm">Limitless</span><br />
+                  Discover{" "}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 filter drop-shadow-sm">
+                    Limitless
+                  </span>
+                  <br />
                   Shopping
                 </h1>
 
                 <p className="text-lg md:text-xl text-blue-100 max-w-xl mx-auto md:mx-0 mb-8 leading-relaxed font-medium opacity-90">
-                  Experience the best in Electronics & Fashion with up to <span className="font-bold text-yellow-300">70% OFF</span> on premium brands.
+                  Experience the best in Electronics & Fashion with up to{" "}
+                  <span className="font-bold text-yellow-300">70% OFF</span> on premium brands.
                 </p>
 
                 <button
@@ -144,8 +116,17 @@ const Home = () => {
                   className="bg-white text-blue-900 px-10 py-4 rounded-2xl font-bold text-lg hover:bg-yellow-400 hover:text-blue-900 transition-all hover:scale-105 shadow-xl shadow-blue-900/30 active:scale-95 flex items-center gap-2 mx-auto md:mx-0"
                 >
                   Start Shopping
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </button>
               </div>
@@ -163,13 +144,14 @@ const Home = () => {
                   {/* Floating Badge */}
                   <div className="absolute -bottom-6 -left-6 bg-white text-blue-900 p-4 rounded-2xl shadow-xl animate-bounce-slow hidden md:block">
                     <div className="text-center">
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Limited Time</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Limited Time
+                      </p>
                       <p className="text-2xl font-black">80% OFF</p>
                     </div>
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -216,7 +198,9 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-end mb-10">
             <div>
-              <span className="text-blue-600 font-bold tracking-widest uppercase text-xs mb-2 block">Premium Selection</span>
+              <span className="text-blue-600 font-bold tracking-widest uppercase text-xs mb-2 block">
+                Premium Selection
+              </span>
               <h2 className="text-3xl font-bold text-slate-900">Featured Products</h2>
             </div>
             <button
@@ -225,78 +209,98 @@ const Home = () => {
             >
               View All
               <span className="bg-slate-100 p-2 rounded-full group-hover:bg-blue-50 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
                 </svg>
               </span>
             </button>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
-            {loading ? (
-              Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
-            ) : (
-              featured.map((p) => (
-                <div
-                  key={p.id || p._id}
-                  onClick={() => navigate(`/product/${p.id || p._id}`)}
-                  className="group bg-white rounded-[2rem] border border-slate-100 hover:border-blue-100 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full relative"
-                >
-                  <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Add to wishlist logic if needed
-                      }}
-                      className="w-10 h-10 bg-white rounded-full shadow-lg text-slate-400 hover:text-red-500 flex items-center justify-center hover:scale-110 transition-transform"
-                    >
-                      ♥
-                    </button>
-                  </div>
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
+              : featured.map((p) => (
+                  <div
+                    key={p.id || p._id}
+                    onClick={() => navigate(`/product/${p.id || p._id}`)}
+                    className="group bg-white rounded-[2rem] border border-slate-100 hover:border-blue-100 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col h-full relative"
+                  >
+                    <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Add to wishlist logic if needed
+                        }}
+                        className="w-10 h-10 bg-white rounded-full shadow-lg text-slate-400 hover:text-red-500 flex items-center justify-center hover:scale-110 transition-transform"
+                      >
+                        ♥
+                      </button>
+                    </div>
 
-                  <div className="relative aspect-[4/3] bg-gradient-to-b from-slate-50 to-white p-6 overflow-hidden">
-                    <img
-                      src={getImageUrl(p)}
-                      alt={p.name}
-                      className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700 ease-out"
-                    />
-                    {p.salePrice && (
-                      <span className="absolute top-4 left-4 bg-red-500 text-white text-[10px] font-bold px-3 py-1 pb-1.5 rounded-full shadow-lg shadow-red-200 tracking-wider">
-                        SALE
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="p-5 flex flex-col flex-1">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 font-mono">
-                      {p.brand || "PREMIUM"}
-                    </p>
-                    <h4 className="font-bold text-slate-800 text-lg mb-1 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
-                      {p.name}
-                    </h4>
-
-                    <div className="mt-auto pt-4 flex items-end justify-between border-t border-slate-50">
-                      <div>
-                        {p.salePrice && (
-                          <span className="text-xs text-slate-400 line-through font-semibold block mb-0.5">₹{p.price.toLocaleString()}</span>
-                        )}
-                        <span className="text-xl font-black text-slate-900 tracking-tight">
-                          ₹{(p.salePrice || p.price).toLocaleString()}
+                    <div className="relative aspect-[4/3] bg-gradient-to-b from-slate-50 to-white p-6 overflow-hidden">
+                      <img
+                        src={getImageUrl(p)}
+                        alt={p.name}
+                        className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700 ease-out"
+                      />
+                      {p.salePrice && (
+                        <span className="absolute top-4 left-4 bg-red-500 text-white text-[10px] font-bold px-3 py-1 pb-1.5 rounded-full shadow-lg shadow-red-200 tracking-wider">
+                          SALE
                         </span>
-                      </div>
+                      )}
+                    </div>
 
-                      {/* Clickable card replaces separate buttons for a cleaner UI */}
-                      <div className="flex items-center gap-1.5 text-blue-600 font-bold text-[10px] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity translate-x-1 group-hover:translate-x-0 duration-300">
-                        <span>Details</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                        </svg>
+                    <div className="p-5 flex flex-col flex-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 font-mono">
+                        {p.brand || "PREMIUM"}
+                      </p>
+                      <h4 className="font-bold text-slate-800 text-lg mb-1 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
+                        {p.name}
+                      </h4>
+
+                      <div className="mt-auto pt-4 flex items-end justify-between border-t border-slate-50">
+                        <div>
+                          {p.salePrice && (
+                            <span className="text-xs text-slate-400 line-through font-semibold block mb-0.5">
+                              ₹{p.price.toLocaleString()}
+                            </span>
+                          )}
+                          <span className="text-xl font-black text-slate-900 tracking-tight">
+                            ₹{(p.salePrice || p.price).toLocaleString()}
+                          </span>
+                        </div>
+
+                        {/* Clickable card replaces separate buttons for a cleaner UI */}
+                        <div className="flex items-center gap-1.5 text-blue-600 font-bold text-[10px] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity translate-x-1 group-hover:translate-x-0 duration-300">
+                          <span>Details</span>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-3 w-3"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))}
           </div>
         </div>
       </section>
@@ -308,7 +312,9 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="flex justify-between items-end mb-10">
             <div>
-              <span className="text-purple-600 font-bold tracking-widest uppercase text-xs mb-2 block">Trending Now</span>
+              <span className="text-purple-600 font-bold tracking-widest uppercase text-xs mb-2 block">
+                Trending Now
+              </span>
               <h2 className="text-3xl font-bold text-slate-900">Best Sellers</h2>
             </div>
             <button
@@ -320,50 +326,57 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
-            {loading ? (
-              Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
-            ) : (
-              bestSellers.map((p) => (
-                <div
-                  key={p.id || p._id}
-                  onClick={() => navigate(`/product/${p.id || p._id}`)}
-                  className="group bg-white rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
-                >
-                  <div className="flex p-4 gap-4">
-                    <div className="w-24 h-24 bg-slate-50 rounded-2xl p-2 flex-shrink-0">
-                      <img
-                        src={getImageUrl(p)}
-                        alt={p.name}
-                        className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
-                      />
-                    </div>
-
-                    <div className="flex flex-col flex-1 min-w-0 py-1">
-                      <div className="mb-auto">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                          {p.brand || "Top Rated"}
-                        </p>
-                        <h4 className="font-bold text-slate-800 text-sm leading-tight truncate group-hover:text-blue-600 transition-colors">
-                          {p.name}
-                        </h4>
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => <ProductSkeleton key={i} />)
+              : bestSellers.map((p) => (
+                  <div
+                    key={p.id || p._id}
+                    onClick={() => navigate(`/product/${p.id || p._id}`)}
+                    className="group bg-white rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+                  >
+                    <div className="flex p-4 gap-4">
+                      <div className="w-24 h-24 bg-slate-50 rounded-2xl p-2 flex-shrink-0">
+                        <img
+                          src={getImageUrl(p)}
+                          alt={p.name}
+                          className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                        />
                       </div>
 
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-lg font-black text-slate-900">
-                          ₹{(p.salePrice || p.price).toLocaleString()}
-                        </span>
+                      <div className="flex flex-col flex-1 min-w-0 py-1">
+                        <div className="mb-auto">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                            {p.brand || "Top Rated"}
+                          </p>
+                          <h4 className="font-bold text-slate-800 text-sm leading-tight truncate group-hover:text-blue-600 transition-colors">
+                            {p.name}
+                          </h4>
+                        </div>
 
-                        <div className="w-8 h-8 flex items-center justify-center text-slate-300 group-hover:text-blue-500 transition-colors">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                          </svg>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-lg font-black text-slate-900">
+                            ₹{(p.salePrice || p.price).toLocaleString()}
+                          </span>
+
+                          <div className="w-8 h-8 flex items-center justify-center text-slate-300 group-hover:text-blue-500 transition-colors">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))}
           </div>
         </div>
       </section>

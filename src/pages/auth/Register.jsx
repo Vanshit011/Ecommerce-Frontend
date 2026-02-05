@@ -30,24 +30,15 @@ const Register = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-200 p-5">
       <div className="bg-white/80 backdrop-blur-md border border-white/30 shadow-2xl rounded-3xl p-10 w-full max-w-md text-center animate-[slideUp_0.6s_cubic-bezier(0.16,1,0.3,1)]">
+        <h1 className="text-3xl font-extrabold tracking-tight text-blue-600 mb-8">SASTA STORE</h1>
 
-        <h1 className="text-3xl font-extrabold tracking-tight text-blue-600 mb-8">
-          SASTA STORE
-        </h1>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Create Account</h2>
 
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">
-          Create Account
-        </h2>
-
-        <p className="text-slate-600 text-sm mb-8">
-          Join us for a curate shopping experience.
-        </p>
+        <p className="text-slate-600 text-sm mb-8">Join us for a curate shopping experience.</p>
 
         <form onSubmit={handleSubmit}>
           <div className="text-left mb-5">
-            <label className="block text-sm font-semibold text-slate-800 mb-2">
-              Email
-            </label>
+            <label className="block text-sm font-semibold text-slate-800 mb-2">Email</label>
             <input
               name="email"
               type="email"
@@ -59,9 +50,7 @@ const Register = () => {
           </div>
 
           <div className="text-left mb-5">
-            <label className="block text-sm font-semibold text-slate-800 mb-2">
-              Phone Number
-            </label>
+            <label className="block text-sm font-semibold text-slate-800 mb-2">Phone Number</label>
             <input
               name="mobile"
               type="tel"
@@ -74,9 +63,7 @@ const Register = () => {
           </div>
 
           <div className="text-left mb-5">
-            <label className="block text-sm font-semibold text-slate-800 mb-2">
-              Password
-            </label>
+            <label className="block text-sm font-semibold text-slate-800 mb-2">Password</label>
             <input
               name="password"
               type="password"
