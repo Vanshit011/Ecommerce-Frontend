@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 import { payOrder, getOrderById } from "../../../services/api";
-import Header from "../../../components/common/Header";
+
 import { useToast } from "../../../context/ToastContext";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -65,7 +65,7 @@ const CheckoutForm = ({ order }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 min-h-[150px]">
         <PaymentElement />
       </div>
 
@@ -206,6 +206,24 @@ const Checkout = () => {
     }
   }, [id, navigate, showToast, clientSecret]);
 
+  const options = useMemo(
+    () =>
+      clientSecret
+        ? {
+            clientSecret,
+            appearance: {
+              theme: "stripe",
+              variables: {
+                colorPrimary: "#2563eb",
+                fontFamily: "system-ui, sans-serif",
+                borderRadius: "12px",
+              },
+            },
+          }
+        : null,
+    [clientSecret],
+  );
+
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
@@ -216,7 +234,6 @@ const Checkout = () => {
   if (fatalError) {
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
-        <Header />
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="bg-white p-8 rounded-[2rem] shadow-xl text-center max-w-md w-full border border-red-100">
             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -252,7 +269,6 @@ const Checkout = () => {
   if (loading || !order || !clientSecret) {
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
-        <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" />
         </div>
@@ -262,8 +278,6 @@ const Checkout = () => {
 
   return (
     <div className="bg-slate-50 min-h-screen">
-      <Header />
-
       <div className="max-w-xl mx-auto px-4 py-12">
         <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
@@ -327,22 +341,11 @@ const Checkout = () => {
               </div>
             </div>
 
-            <Elements
-              stripe={stripePromise}
-              options={{
-                clientSecret,
-                appearance: {
-                  theme: "stripe",
-                  variables: {
-                    colorPrimary: "#2563eb",
-                    fontFamily: "system-ui, sans-serif",
-                    borderRadius: "12px",
-                  },
-                },
-              }}
-            >
-              <CheckoutForm order={order} />
-            </Elements>
+            {options && (
+              <Elements stripe={stripePromise} options={options} key={clientSecret}>
+                <CheckoutForm order={order} />
+              </Elements>
+            )}
           </div>
         </div>
 

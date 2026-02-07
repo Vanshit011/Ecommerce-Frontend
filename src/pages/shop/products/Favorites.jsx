@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getFavorites, removeFromFavorites, prefetchProductDetails } from "../../../services/api";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../context/ToastContext";
-import Header from "../../../components/common/Header";
+
 import { getImageUrl } from "../../../utils/imageUtils";
 import { ProductSkeleton } from "../../../components/common/Skeleton";
 
@@ -51,8 +51,6 @@ const Favorites = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      <Header />
-
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h2 className="text-2xl font-semibold mb-6">Your Favorites ❤️</h2>
 

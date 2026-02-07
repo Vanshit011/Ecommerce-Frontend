@@ -8,7 +8,7 @@ import {
 } from "../../../services/api";
 import { useCart } from "../../../context/CartContext";
 import { useToast } from "../../../context/ToastContext";
-import Header from "../../../components/common/Header";
+
 import { getImageUrl } from "../../../utils/imageUtils";
 import { ProductDetailSkeleton } from "../../../components/common/Skeleton";
 import ImageMagnifier from "../../../components/common/ImageMagnifier";
@@ -140,7 +140,6 @@ const ProductDetails = () => {
   if (loading)
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
-        <Header />
         <ProductDetailSkeleton />
       </div>
     );
@@ -148,7 +147,6 @@ const ProductDetails = () => {
   if (error)
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
         <div className="flex-1 flex items-center justify-center flex-col">
           <h2 className="text-xl font-semibold mb-3">{error}</h2>
           <button onClick={() => navigate("/")} className="text-blue-600 hover:underline">
@@ -160,8 +158,6 @@ const ProductDetails = () => {
 
   return (
     <div className="bg-slate-50 min-h-screen animate-fade-in">
-      <Header />
-
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-12">
         {/* Breadcrumb & Navigation */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">

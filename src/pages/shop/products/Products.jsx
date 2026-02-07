@@ -5,9 +5,8 @@ import {
   getFavorites,
   addToFavorites,
   removeFromFavorites,
-  prefetchProductDetails,
 } from "../../../services/api";
-import Header from "../../../components/common/Header";
+
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { getImageUrl } from "../../../utils/imageUtils";
 import { ProductSkeleton, CategorySkeleton } from "../../../components/common/Skeleton";
@@ -161,14 +160,17 @@ const Products = () => {
   }, [search, searchParams, setSearchParams]);
 
   useEffect(() => {
-    const t = setTimeout(
-      () =>
-        setDebouncedPrice({
+    const t = setTimeout(() => {
+      setDebouncedPrice((prev) => {
+        if (prev.min === minPrice && prev.max === maxPrice) {
+          return prev;
+        }
+        return {
           min: minPrice,
           max: maxPrice,
-        }),
-      400,
-    );
+        };
+      });
+    }, 400);
     return () => clearTimeout(t);
   }, [minPrice, maxPrice]);
 
@@ -261,6 +263,7 @@ const Products = () => {
     const categoryParam = searchParams.get("category");
     const pageParam = Number(searchParams.get("page")) || 1;
     const sortParam = searchParams.get("sort") || "created_at_desc";
+    const limitParam = Number(searchParams.get("limit")) || 9;
 
     if (searchParam !== search) {
       setSearch(searchParam);
@@ -278,7 +281,8 @@ const Products = () => {
 
     if (pageParam !== page) setPage(pageParam);
     if (sortParam !== sort) setSort(sortParam);
-  }, [searchParams, search, debouncedSearch, selectedCategories, page, sort]);
+    if (limitParam !== limit) setLimit(limitParam);
+  }, [searchParams, search, debouncedSearch, selectedCategories, page, sort, limit]);
 
   const treeData = React.useMemo(() => {
     const tree = buildTree(categories);
@@ -327,19 +331,19 @@ const Products = () => {
       next = [...selectedCategories, ...newIds];
     }
 
-    setSelectedCategories(next);
-    setPage(1);
+    // Depend on URL sync for state update to avoid race conditions/double fetches
     updateURL({ category: next.join(","), page: 1 });
   };
 
-  // Get all category IDs including children for API filtering
-  const getCategoryIdsForFilter = useCallback(() => {
+  /*  OPTIMIZED CATEGORY FILTER  */
+  // Calculate category IDs to filter whenever categories or selection changes.
+  // We use useMemo to get the array, then derive a string key for the effect dependency.
+  const categoryIdsToFilter = React.useMemo(() => {
     if (selectedCategories.length === 0) return [];
 
     const allIds = new Set();
-
-    // Create a flat map of all categories
     const categoryMap = new Map();
+
     const flattenCategories = (cats) => {
       cats.forEach((cat) => {
         const catId = cat.id || cat._id;
@@ -351,17 +355,14 @@ const Products = () => {
     };
     flattenCategories(categories);
 
-    // For each selected category, add it and all its children
     selectedCategories.forEach((selectedId) => {
       allIds.add(selectedId);
-
       const category = categoryMap.get(selectedId);
       if (category) {
         const getChildIds = (cat) => {
           if (cat.children && cat.children.length > 0) {
             cat.children.forEach((child) => {
-              const childId = child.id || child._id;
-              allIds.add(childId);
+              allIds.add(child.id || child._id);
               getChildIds(child);
             });
           }
@@ -373,21 +374,21 @@ const Products = () => {
     return Array.from(allIds);
   }, [categories, selectedCategories]);
 
+  const categoryFilterString = categoryIdsToFilter.join(",");
+
   /*  FETCH PRODUCTS  */
 
   useEffect(() => {
+    let isMounted = true;
     const fetchProductsData = async () => {
       setLoading(true);
 
       try {
-        // Get all category IDs including children of selected categories
-        const categoryIdsToFilter = getCategoryIdsForFilter();
-
         const params = {
           page,
           limit,
           search: debouncedSearch || undefined,
-          category: categoryIdsToFilter.length ? categoryIdsToFilter.join(",") : undefined,
+          category: categoryFilterString || undefined,
           minPrice: debouncedPrice.min,
           maxPrice: debouncedPrice.max,
           sort,
@@ -395,26 +396,35 @@ const Products = () => {
 
         const res = await getProducts(params);
 
-        setProducts(res?.data?.data || []);
-        setMeta(res?.data?.meta || null);
-      } catch {
-        setProducts([]);
-        setMeta(null);
+        if (isMounted) {
+          setProducts(res?.data?.data || []);
+          setMeta(res?.data?.meta || null);
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error("Fetch products failed:", error);
+          setProducts([]);
+          setMeta(null);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchProductsData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [
     page,
     limit,
     debouncedSearch,
-    selectedCategories,
+    categoryFilterString, // Stable primitive dependency
     debouncedPrice,
     sort,
-    categories,
-    getCategoryIdsForFilter,
   ]);
 
   // Scroll to top when page changes
@@ -437,8 +447,6 @@ const Products = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      <Header />
-
       <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-[320px_1fr] gap-6">
         {/*  SIDEBAR  */}
         <aside className="h-fit sticky top-24 space-y-8">
@@ -620,8 +628,8 @@ const Products = () => {
                 value={sort}
                 onChange={(e) => {
                   const val = e.target.value;
-                  setSort(val);
-                  setPage(1);
+                  // setSort(val); // Handled by URL sync
+                  // setPage(1);   // Handled by URL sync
                   updateURL({ sort: val, page: 1 });
                 }}
                 className="border rounded px-2 py-2 text-sm"
@@ -664,7 +672,6 @@ const Products = () => {
               products.map((product) => (
                 <div
                   key={product.id || product._id}
-                  onMouseEnter={() => prefetchProductDetails(product.id || product._id)}
                   onClick={() => navigate(`/product/${product.id || product._id}`)}
                   className="group bg-white rounded-3xl border border-slate-100 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 flex flex-col h-full animate-slide-up cursor-pointer"
                 >
@@ -780,8 +787,8 @@ const Products = () => {
                   value={limit}
                   onChange={(e) => {
                     const val = Number(e.target.value);
-                    setLimit(val);
-                    setPage(1);
+                    // setLimit(val); // Handled by URL sync
+                    // setPage(1);    // Handled by URL sync
                     updateURL({ limit: val, page: 1 });
                   }}
                   className="bg-transparent font-bold text-blue-600 outline-none cursor-pointer"
@@ -851,7 +858,7 @@ const Products = () => {
                   <button
                     onClick={() => {
                       const next = Math.min(meta.totalPages, page + 1);
-                      setPage(next);
+                      // setPage(next); // Handled by URL sync
                       updateURL({ page: next });
                     }}
                     disabled={page === meta.totalPages}
