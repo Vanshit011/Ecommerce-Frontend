@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getProducts, getCategories } from "../../services/api";
-import Header from "../../components/common/Header";
 import { getImageUrl } from "../../utils/imageUtils";
 import { ProductSkeleton } from "../../components/common/Skeleton";
 import flashSaleImg from "../../assets/images/flash-sale.jpg";
@@ -77,8 +76,6 @@ const Home = () => {
 
   return (
     <div className="bg-slate-50 min-h-screen">
-      <Header />
-
       {/* HERO SECTION */}
       <section className="relative bg-white overflow-hidden pb-12">
         <div className="absolute inset-0 bg-blue-50/50"></div>

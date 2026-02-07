@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -7,6 +8,7 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import Home from "./pages/shop/Home";
 import ProtectedRoute from "./components/routes/ProtectedRoute";
 import AdminLayout from "./components/layout/AdminLayout";
+import ShopLayout from "./components/layout/ShopLayout";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
@@ -19,8 +21,9 @@ import ProductDetails from "./pages/shop/products/ProductDetails";
 
 // Checkout flow
 import Cart from "./pages/shop/checkout/Cart";
-import Checkout from "./pages/shop/checkout/Checkout";
 import OrderSuccess from "./pages/shop/checkout/OrderSuccess";
+
+const Checkout = lazy(() => import("./pages/shop/checkout/Checkout"));
 
 // User account
 import Profile from "./pages/shop/account/Profile";
@@ -60,88 +63,98 @@ function App() {
               <Route path="customers" element={<AdminCustomers />} />
             </Route>
 
-            {/* Public Routes */}
-            <Route
-              path="/home"
-              element={
-                <ProtectedRoute>
-                  <Home />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/products"
-              element={
-                <ProtectedRoute>
-                  <Products />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/product/:id"
-              element={
-                <ProtectedRoute>
-                  <ProductDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/cart"
-              element={
-                <ProtectedRoute>
-                  <Cart />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/favorites"
-              element={
-                <ProtectedRoute>
-                  <Favorites />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/checkout/:id"
-              element={
-                <ProtectedRoute>
-                  <Checkout />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/order-success/:id"
-              element={
-                <ProtectedRoute>
-                  <OrderSuccess />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/my-orders"
-              element={
-                <ProtectedRoute>
-                  <MyOrders />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/my-payments"
-              element={
-                <ProtectedRoute>
-                  <MyPayments />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            {/* Shop Routes with Layout */}
+            <Route element={<ShopLayout />}>
+              {/* Public Routes */}
+              <Route
+                path="/home"
+                element={
+                  <ProtectedRoute>
+                    <Home />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/products"
+                element={
+                  <ProtectedRoute>
+                    <Products />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/product/:id"
+                element={
+                  <ProtectedRoute>
+                    <ProductDetails />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/cart"
+                element={
+                  <ProtectedRoute>
+                    <Cart />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/favorites"
+                element={
+                  <ProtectedRoute>
+                    <Favorites />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/checkout/:id"
+                element={
+                  <ProtectedRoute>
+                    <Suspense
+                      fallback={
+                        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                          <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" />
+                        </div>
+                      }
+                    >
+                      <Checkout />
+                    </Suspense>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/order-success/:id"
+                element={
+                  <ProtectedRoute>
+                    <OrderSuccess />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-orders"
+                element={
+                  <ProtectedRoute>
+                    <MyOrders />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-payments"
+                element={
+                  <ProtectedRoute>
+                    <MyPayments />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
           </Routes>
         </BrowserRouter>
       </CartProvider>

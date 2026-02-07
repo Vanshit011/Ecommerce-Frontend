@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { getMyPayments } from "../../../services/api";
-import Header from "../../../components/common/Header";
+
 import { useToast } from "../../../context/ToastContext";
 import { useNavigate } from "react-router-dom";
 
@@ -72,15 +72,12 @@ const MyPayments = () => {
   if (loading)
     return (
       <>
-        <Header />
         <div className="p-10 text-center text-gray-500">Loading your payments...</div>
       </>
     );
 
   return (
     <div className="bg-slate-50 min-h-screen">
-      <Header />
-
       <div className="max-w-7xl mx-auto px-4 py-10 grid lg:grid-cols-[280px_1fr] gap-8">
         {/* SIDEBAR */}
         <aside className="h-fit sticky top-24 space-y-6">

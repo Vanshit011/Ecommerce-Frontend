@@ -1,7 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getOrderById } from "../../../services/api";
-import Header from "../../../components/common/Header";
 
 const OrderSuccess = () => {
   const navigate = useNavigate();
@@ -24,7 +23,6 @@ const OrderSuccess = () => {
   if (!order)
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
-        <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" />
         </div>
@@ -33,8 +31,6 @@ const OrderSuccess = () => {
 
   return (
     <div className="bg-slate-50 min-h-screen animate-fade-in">
-      <Header />
-
       <div className="max-w-3xl mx-auto px-4 py-12">
         <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 p-8 md:p-12 text-center border border-slate-100 relative overflow-hidden">
           {/* Confetti Background Effect */}

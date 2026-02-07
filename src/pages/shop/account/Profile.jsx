@@ -10,7 +10,6 @@ import {
   setDefaultAddress,
 } from "../../../services/api";
 
-import Header from "../../../components/common/Header";
 import { useToast } from "../../../context/ToastContext";
 
 const Profile = () => {
@@ -163,7 +162,6 @@ const Profile = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100">
-        <Header />
         <div className="flex justify-center py-20">Loading profile...</div>
       </div>
     );
@@ -171,8 +169,6 @@ const Profile = () => {
 
   return (
     <div className="bg-slate-50 min-h-screen">
-      <Header />
-
       <div className="max-w-7xl mx-auto px-4 py-10 grid lg:grid-cols-[280px_1fr] gap-8">
         {/* SIDEBAR */}
         <aside className="h-fit sticky top-24 space-y-6">

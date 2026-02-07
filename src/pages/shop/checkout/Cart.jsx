@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { clearCart, getAddresses, setDefaultAddress, createOrder } from "../../../services/api";
+import { getAddresses, setDefaultAddress, createOrder } from "../../../services/api";
 import { useCart } from "../../../context/CartContext";
 import { useToast } from "../../../context/ToastContext";
-import Header from "../../../components/common/Header";
+
 import { getImageUrl } from "../../../utils/imageUtils";
 import { CartSkeleton } from "../../../components/common/Skeleton";
 
@@ -12,12 +12,13 @@ const Cart = () => {
   const { showToast } = useToast();
   const {
     cart,
-    setCart,
     refreshCart,
     addToCart: globalAddToCart,
     updateQty: globalUpdateQty,
+    removeFromCart,
+    clearCart,
+    loading,
   } = useCart();
-  const [loading] = useState(false);
   const [addresses, setAddresses] = useState([]);
   const [showAddressPicker, setShowAddressPicker] = useState(false);
 
@@ -39,11 +40,16 @@ const Cart = () => {
     refreshCart();
   }, [refreshCart]);
 
+  // Use a ref to ensure we only fetch addresses once when items exist
+  const fetchedAddresses = React.useRef(false);
+  const hasItems = cart?.items?.length > 0;
+
   useEffect(() => {
-    if (cart?.items?.length > 0) {
+    if (hasItems && !fetchedAddresses.current) {
+      fetchedAddresses.current = true;
       loadAddresses();
     }
-  }, [cart, loadAddresses]);
+  }, [hasItems, loadAddresses]);
 
   const defaultAddress = addresses.find((a) => a.is_default || a.isdefault);
 
@@ -74,10 +80,7 @@ const Cart = () => {
 
   const handleRemoveItem = async (productId, item) => {
     try {
-      await globalUpdateQty(productId, 0, {
-        size: item?.size,
-        color: item?.color,
-      });
+      await removeFromCart(productId, item);
       showToast("Item removed from cart", "success");
     } catch (err) {
       console.error("Remove item error:", err);
@@ -90,7 +93,7 @@ const Cart = () => {
 
     try {
       await clearCart();
-      setCart(null);
+      // Addresses clear is local UI state, might want to keep or maybe not needed if cart is null
       setAddresses([]);
       showToast("Cart cleared", "success");
     } catch {
@@ -151,7 +154,6 @@ const Cart = () => {
   if (loading)
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
-        <Header />
         <div className="max-w-6xl mx-auto px-4 py-12 w-full">
           <div className="h-10 bg-slate-200 rounded-2xl w-48 mb-8 animate-pulse" />
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8">
@@ -169,8 +171,6 @@ const Cart = () => {
 
   return (
     <div className="bg-slate-50 min-h-screen animate-fade-in">
-      <Header />
-
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Shopping Bag</h1>

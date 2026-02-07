@@ -3,6 +3,7 @@ import {
   getCart,
   addToCart as apiAddToCart,
   updateCartQty as apiUpdateCartQty,
+  clearCart as apiClearCart,
 } from "../services/api";
 
 const CartContext = createContext();
@@ -74,23 +75,75 @@ const CartProvider = ({ children }) => {
     [fetchCart],
   );
 
+  const removeFromCart = useCallback(
+    async (productId, item) => {
+      // Optimistic Update
+      const previousCart = cart;
+
+      setCart((prev) => {
+        if (!prev || !prev.items) return prev;
+        const updatedItems = prev.items.filter((i) => {
+          const pId = i.product._id || i.product.id;
+          return pId !== productId;
+        });
+        return { ...prev, items: updatedItems };
+      });
+
+      // Update count immediately
+      setCartCount((prev) => Math.max(0, prev - (item.quantity || 1)));
+
+      try {
+        // We use updateQty with 0 to remove on backend as per previous pattern,
+        // or we could use a specific remove endpoint if it existed.
+        // The user's code used globalUpdateQty(productId, 0, ...).
+        // Let's assume we should call the API similarly.
+        await apiUpdateCartQty(productId, 0, {
+          size: item?.size,
+          color: item?.color,
+        });
+        await fetchCart();
+      } catch (error) {
+        console.error("Remove from cart error:", error);
+        // Revert on failure
+        setCart(previousCart);
+        // Recalculate count from previous cart
+        const count = (previousCart?.items || []).reduce((sum, i) => sum + i.quantity, 0);
+        setCartCount(count);
+        throw error;
+      }
+    },
+    [cart, fetchCart],
+  );
+
+  const clearCart = useCallback(async () => {
+    try {
+      await apiClearCart();
+      setCart(null);
+      setCartCount(0);
+    } catch (error) {
+      console.error("Clear cart error:", error);
+      throw error;
+    }
+  }, []);
+
   const refreshCart = useCallback(() => fetchCart(), [fetchCart]);
 
-  return (
-    <CartContext.Provider
-      value={{
-        cart,
-        cartCount,
-        loading,
-        addToCart,
-        updateQty,
-        refreshCart,
-        setCart, // Allow direct updates if needed
-      }}
-    >
-      {children}
-    </CartContext.Provider>
+  const value = React.useMemo(
+    () => ({
+      cart,
+      cartCount,
+      loading,
+      addToCart,
+      updateQty,
+      removeFromCart,
+      clearCart,
+      refreshCart,
+      setCart, // Allow direct updates if needed
+    }),
+    [cart, cartCount, loading, addToCart, updateQty, removeFromCart, clearCart, refreshCart],
   );
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
 
 export default CartProvider;
