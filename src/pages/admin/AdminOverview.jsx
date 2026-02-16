@@ -1,88 +1,315 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getMyProducts, getCategories, getAdminOrders } from "../../services/api";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  BarChart,
+  Bar,
+} from "recharts";
+import {
+  getDashboardOverview,
+  getRevenueAnalytics,
+  getOrderStatistics,
+  getTopProducts,
+  getRecentOrders,
+  getSalesByCategory,
+  getPopularFavorites,
+  getMyProducts,
+} from "../../services/api";
 import { getImageUrl } from "../../utils/imageUtils";
 
+const AdvancedSectionFilter = ({ filters, setFilters, years, months }) => {
+  const [viewMode, setViewMode] = useState(
+    filters.startDate || filters.endDate ? "custom" : "standard",
+  );
+
+  return (
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-slate-50 border border-slate-200 p-1 rounded-xl shadow-sm w-full sm:w-auto">
+      {/* Toggle Controls */}
+      <div className="flex bg-white rounded-lg p-0.5 border border-slate-100 shadow-sm flex-1 sm:flex-initial">
+        <button
+          onClick={() => {
+            setViewMode("standard");
+            setFilters({ ...filters, startDate: "", endDate: "" });
+          }}
+          className={`flex-1 sm:px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-tight transition-all ${
+            viewMode === "standard"
+              ? "bg-blue-600 text-white shadow-sm"
+              : "text-slate-400 hover:text-slate-600"
+          }`}
+        >
+          Standard
+        </button>
+        <button
+          onClick={() => setViewMode("custom")}
+          className={`flex-1 sm:px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-tight transition-all ${
+            viewMode === "custom"
+              ? "bg-blue-600 text-white shadow-sm"
+              : "text-slate-400 hover:text-slate-600"
+          }`}
+        >
+          Custom Range
+        </button>
+      </div>
+
+      <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
+        {viewMode === "standard" ? (
+          <div className="flex items-center gap-1.5 w-full animate-in fade-in slide-in-from-left-2 duration-300">
+            <select
+              value={filters.year}
+              onChange={(e) => setFilters({ ...filters, year: parseInt(e.target.value) })}
+              className="flex-1 sm:flex-initial bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-bold text-slate-700 outline-none hover:border-blue-300 shadow-sm min-w-[70px]"
+            >
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={filters.month}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  month: e.target.value === "" ? "" : parseInt(e.target.value),
+                })
+              }
+              className="flex-1 sm:flex-initial bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-bold text-slate-700 outline-none hover:border-blue-300 shadow-sm"
+            >
+              {months.map((m) => (
+                <option key={m.label} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="flex items-center bg-white border border-slate-200 rounded-lg px-2 py-1 gap-1 shadow-sm w-full animate-in fade-in slide-in-from-right-2 duration-300 overflow-hidden">
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+              className="bg-transparent text-[10px] font-bold outline-none w-full sm:w-24 text-slate-700 cursor-pointer"
+            />
+            <span className="text-slate-300 font-bold shrink-0">→</span>
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+              className="bg-transparent text-[10px] font-bold outline-none w-full sm:w-24 text-slate-700 cursor-pointer"
+              min={filters.startDate}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const AdminOverview = () => {
+  const [revenueFilters, setRevenueFilters] = useState({
+    year: new Date().getFullYear(),
+    month: "",
+    startDate: "",
+    endDate: "",
+  });
+  const [statusFilters, setStatusFilters] = useState({
+    year: new Date().getFullYear(),
+    month: "",
+    startDate: "",
+    endDate: "",
+  });
+  const [volumeFilters, setVolumeFilters] = useState({
+    year: new Date().getFullYear(),
+    month: "",
+    startDate: "",
+    endDate: "",
+  });
+  const [favoritesFilters, setFavoritesFilters] = useState({
+    year: new Date().getFullYear(),
+    month: "",
+    startDate: "",
+    endDate: "",
+  });
+
+  const [orderStatusData, setOrderStatusData] = useState([]);
   const [stats, setStats] = useState({
     revenue: 0,
     orders: 0,
     products: 0,
     categories: 0,
     customers: 0,
+    revenueChange: 0,
+    ordersChange: 0,
   });
   const [recentOrders, setRecentOrders] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [salesByCategory, setSalesByCategory] = useState([]);
+  const [popularFavorites, setPopularFavorites] = useState([]);
+  const [revenueMonthly, setRevenueMonthly] = useState([]);
+  const [volumeMonthly, setVolumeMonthly] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
+  const months = [
+    { value: "", label: "All Months" },
+    { value: 1, label: "Jan" },
+    { value: 2, label: "Feb" },
+    { value: 3, label: "Mar" },
+    { value: 4, label: "Apr" },
+    { value: 5, label: "May" },
+    { value: 6, label: "Jun" },
+    { value: 7, label: "Jul" },
+    { value: 8, label: "Aug" },
+    { value: 9, label: "Sep" },
+    { value: 10, label: "Oct" },
+    { value: 11, label: "Nov" },
+    { value: 12, label: "Dec" },
+  ];
+
+  const getParams = (filters) => {
+    const isCustomMode = !!(filters.startDate || filters.endDate);
+    return {
+      year: isCustomMode ? undefined : filters.year,
+      month: isCustomMode ? undefined : filters.month || undefined,
+      startDate: filters.startDate || undefined,
+      endDate: filters.endDate || undefined,
+    };
+  };
+
+  // 1. Fetch Revenue & Category Data
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchRevenueData = async () => {
       try {
-        const [productsRes, categoriesRes, ordersRes] = await Promise.all([
-          getMyProducts({ limit: 1000 }), // Get all for counts/low stock
-          getCategories(),
-          getAdminOrders({ limit: 100 }), // Get recent orders
+        const params = getParams(revenueFilters);
+        const [revenueRes, salesByCategoryRes] = await Promise.all([
+          getRevenueAnalytics(params),
+          getSalesByCategory(params),
         ]);
 
-        // 1. Process Products
-        const productList =
-          productsRes.data?.data ||
-          productsRes.data?.products ||
-          (Array.isArray(productsRes.data) ? productsRes.data : []) ||
-          [];
+        setRevenueMonthly(revenueRes.data?.monthlyData || []);
+        setSalesByCategory(salesByCategoryRes.data || []);
+        setStats((prev) => ({
+          ...prev,
+          revenue: revenueRes.data?.totalRevenue || 0,
+          revenueChange: revenueRes.data?.growth || 0,
+        }));
+      } catch (error) {
+        console.error("Revenue Fetch Error:", error);
+      }
+    };
+    fetchRevenueData();
+  }, [revenueFilters]);
+
+  // 2. Fetch Order Volume Data
+  useEffect(() => {
+    const fetchVolumeData = async () => {
+      try {
+        const params = getParams(volumeFilters);
+        const revenueRes = await getRevenueAnalytics(params);
+        setVolumeMonthly(revenueRes.data?.monthlyData || []);
+      } catch (error) {
+        console.error("Volume Fetch Error:", error);
+      }
+    };
+    fetchVolumeData();
+  }, [volumeFilters]);
+
+  // 3. Fetch Order Status Data
+  useEffect(() => {
+    const fetchStatusData = async () => {
+      try {
+        const params = getParams(statusFilters);
+        const ordersStatsRes = await getOrderStatistics(params);
+        const ordersData = ordersStatsRes.data;
+
+        if (ordersData) {
+          setOrderStatusData(
+            [
+              { name: "Pending", value: ordersData.pending || 0, color: "#f59e0b" },
+              { name: "Confirmed", value: ordersData.confirmed || 0, color: "#3b82f6" },
+              { name: "Shipped", value: ordersData.shipped || 0, color: "#8b5cf6" },
+              { name: "Delivered", value: ordersData.delivered || 0, color: "#10b981" },
+              { name: "Cancelled", value: ordersData.cancelled || 0, color: "#ef4444" },
+            ].filter((item) => item.value > 0),
+          );
+          setStats((prev) => ({
+            ...prev,
+            orders: ordersData.total || 0,
+          }));
+        }
+      } catch (error) {
+        console.error("Status Fetch Error:", error);
+      }
+    };
+    fetchStatusData();
+  }, [statusFilters]);
+
+  // 3. Fetch Favorites Data
+  useEffect(() => {
+    const fetchFavoritesData = async () => {
+      try {
+        const params = getParams(favoritesFilters);
+        const favoritesRes = await getPopularFavorites(params);
+        setPopularFavorites(favoritesRes.data || []);
+      } catch (error) {
+        console.error("Favorites Fetch Error:", error);
+      }
+    };
+    fetchFavoritesData();
+  }, [favoritesFilters]);
+
+  // 4. Initial Load for Static/Global Overview (Recent Orders, Top Products, Inventory)
+  useEffect(() => {
+    const fetchStaticData = async () => {
+      try {
+        const [overviewRes, topProductsRes, recentOrdersRes, productsRes] = await Promise.all([
+          getDashboardOverview({ year: new Date().getFullYear() }),
+          getTopProducts({ limit: 5 }),
+          getRecentOrders({ limit: 5 }),
+          getMyProducts({ limit: 100 }),
+        ]);
+
+        const overview = overviewRes.data;
+        const topProdsData = topProductsRes.data || [];
+        const recentOrdersData = recentOrdersRes.data || [];
+
+        setStats((prev) => ({
+          ...prev,
+          products: overview?.totalProducts || 0,
+          categories: overview?.totalCategories || 0,
+          customers: overview?.totalCustomers || 0,
+        }));
+
+        setRecentOrders(recentOrdersData.slice(0, 5));
+        setTopProducts(topProdsData.slice(0, 5));
+
+        const productList = productsRes.data?.data || productsRes.data || [];
         const lowStock = productList
-          .filter((p) => (p.stock_qty || p.stockQty || 0) < 10)
+          .filter((p) => {
+            const stock = p.stock_qty || p.stockQty || 0;
+            return stock > 0 && stock < 10;
+          })
           .slice(0, 5);
-
-        // 2. Process Categories
-        const categoryList =
-          categoriesRes.data?.data ||
-          categoriesRes.data?.categories ||
-          (Array.isArray(categoriesRes.data) ? categoriesRes.data : []) ||
-          [];
-
-        // 3. Process Orders
-        let orderList = [];
-        const rawOrders = ordersRes.data;
-        if (rawOrders?.data && Array.isArray(rawOrders.data)) orderList = rawOrders.data;
-        else if (rawOrders?.orders && Array.isArray(rawOrders.orders)) orderList = rawOrders.orders;
-        else if (Array.isArray(rawOrders)) orderList = rawOrders;
-
-        // Calculate Revenue (Only Confirmed, Shipped, and Delivered orders)
-        const successfulStatuses = ["CONFIRMED", "SHIPPED", "DELIVERED"];
-        const totalRevenue = orderList
-          .filter((order) =>
-            successfulStatuses.includes(
-              String(order.orderStatus || order.status || "").toUpperCase(),
-            ),
-          )
-          .reduce((acc, order) => acc + (Number(order.total_amount || order.totalAmount) || 0), 0);
-
-        // Calculate Unique Customers
-        const uniqueCustomers = new Set();
-        orderList.forEach((order) => {
-          const userId = order.user?.id || order.userId || `guest-${order.address?.email}`;
-          uniqueCustomers.add(userId);
-        });
-
-        setStats({
-          revenue: totalRevenue,
-          orders: orderList.length, // Total fetched (might differ from DB total if paginated, but good for overview)
-          products: productList.length,
-          categories: categoryList.length,
-          customers: uniqueCustomers.size,
-        });
-
-        setRecentOrders(orderList.slice(0, 5));
         setLowStockProducts(lowStock);
       } catch (error) {
-        console.error("Dashboard Fetch Error:", error);
+        console.error("Static Data Fetch Error:", error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchDashboardData();
+    fetchStaticData();
   }, []);
 
   const formatCurrency = (amount) => {
@@ -93,14 +320,27 @@ const AdminOverview = () => {
     }).format(amount);
   };
 
+  const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
+
   if (loading) return <div className="p-10 text-center text-slate-500">Loading Dashboard...</div>;
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-6 space-y-8 bg-slate-50/50 min-h-screen">
       {/* HEADER */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-800">Dashboard Overview</h1>
-        <p className="text-slate-500 mt-1">Real-time insights and store performance.</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Dashboard Overview</h1>
+          <p className="text-slate-500 mt-1 font-medium">
+            Real-time performance metrics & analytics.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="px-3 py-1 bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-200 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
+            Personalized Analytics Active
+          </span>
+        </div>
       </div>
 
       {/* STATS GRID */}
@@ -108,6 +348,7 @@ const AdminOverview = () => {
         <StatCard
           title="Total Revenue"
           value={formatCurrency(stats.revenue)}
+          change={stats.revenueChange}
           icon={
             <path
               strokeLinecap="round"
@@ -120,6 +361,7 @@ const AdminOverview = () => {
         <StatCard
           title="Total Orders"
           value={stats.orders}
+          change={stats.ordersChange}
           icon={
             <path
               strokeLinecap="round"
@@ -167,54 +409,280 @@ const AdminOverview = () => {
         />
       </div>
 
+      {/* CHARTS SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* REVENUE CHART */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+          <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-6">
+            <h2 className="text-xl font-bold text-slate-800">Revenue Overview</h2>
+            <AdvancedSectionFilter
+              filters={revenueFilters}
+              setFilters={setRevenueFilters}
+              years={years}
+              months={months}
+            />
+          </div>
+          <div className="h-[350px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={revenueMonthly}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                  tickFormatter={(value) => `₹${value / 1000}k`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    borderRadius: "12px",
+                    border: "none",
+                    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+                  }}
+                  formatter={(value) => [formatCurrency(value), "Revenue"]}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#3b82f6"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#colorRevenue)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* SALES BY CATEGORY CHART */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          <h2 className="text-xl font-bold text-slate-800 mb-6">Sales by Category</h2>
+          <div className="flex-1 min-h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={salesByCategory}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="sales"
+                  nameKey="category"
+                >
+                  {salesByCategory.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    borderRadius: "12px",
+                    border: "none",
+                    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+                  }}
+                  formatter={(value) => [formatCurrency(value), "Sales"]}
+                />
+                <Legend iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* ORDER VOLUME CHART */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+          <div className="flex flex-col gap-4 mb-6">
+            <h2 className="text-xl font-bold text-slate-800">Order Volume Trends</h2>
+            <AdvancedSectionFilter
+              filters={volumeFilters}
+              setFilters={setVolumeFilters}
+              years={years}
+              months={months}
+            />
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={volumeMonthly}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis
+                  dataKey="month"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#64748b", fontSize: 12 }}
+                />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                <Tooltip
+                  cursor={{ fill: "#f8fafc" }}
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    borderRadius: "12px",
+                    border: "none",
+                    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+                  }}
+                />
+                <Bar dataKey="orders" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={30} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* ORDER STATUS BREAKDOWN */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col transition-all hover:shadow-md">
+          <div className="flex flex-col gap-4 mb-6">
+            <h2 className="text-xl font-bold text-slate-800">Order Status Distribution</h2>
+            <AdvancedSectionFilter
+              filters={statusFilters}
+              setFilters={setStatusFilters}
+              years={years}
+              months={months}
+            />
+          </div>
+          <div className="flex-1 min-h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={orderStatusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                  nameKey="name"
+                >
+                  {orderStatusData.map((entry, index) => (
+                    <Cell key={`status-cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    borderRadius: "12px",
+                    border: "none",
+                    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+                  }}
+                />
+                <Legend iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* POPULAR FAVORITES */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
+          <div className="p-6 border-b border-slate-100 flex flex-col gap-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-bold text-slate-800">Popular Favorites</h2>
+              <span className="px-2.5 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full border border-amber-200 ring-4 ring-amber-50">
+                User Interests
+              </span>
+            </div>
+            <AdvancedSectionFilter
+              filters={favoritesFilters}
+              setFilters={setFavoritesFilters}
+              years={years}
+              months={months}
+            />
+          </div>
+          <div className="divide-y divide-slate-100 overflow-y-auto max-h-[300px]">
+            {popularFavorites.length > 0 ? (
+              popularFavorites.map((item, index) => (
+                <div
+                  key={item.productId || `fav-${index}`}
+                  className="p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors"
+                >
+                  <div className="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 font-bold text-xs ring-4 ring-rose-50/50">
+                    #{index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-slate-800 truncate">
+                      {item.productName}
+                    </h4>
+                    <p className="text-xs text-slate-500">{item.favoritesCount} people favorited</p>
+                  </div>
+                  <Link
+                    to={`/admin/products?search=${item.productName}`}
+                    className="text-xs font-bold text-blue-600 hover:underline"
+                  >
+                    View
+                  </Link>
+                </div>
+              ))
+            ) : (
+              <div className="p-12 text-center text-slate-500 text-sm">No favorites data.</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* RECENT ORDERS */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-            <h2 className="text-lg font-bold text-slate-800">Recent Orders</h2>
+            <h2 className="text-xl font-bold text-slate-800">Recent Customer Activity</h2>
             <Link
               to="/admin/orders"
-              className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+              className="px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all"
             >
-              View All
+              View History
             </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
+              <thead className="bg-slate-50/80 text-[10px] uppercase text-slate-500 font-bold tracking-wider">
                 <tr>
-                  <th className="px-6 py-4">Order ID</th>
+                  <th className="px-6 py-4">Transaction</th>
                   <th className="px-6 py-4">Customer</th>
-                  <th className="px-6 py-4">Total</th>
+                  <th className="px-6 py-4">Value</th>
                   <th className="px-6 py-4">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {recentOrders.length > 0 ? (
-                  recentOrders.map((order) => (
+                  recentOrders.map((order, index) => (
                     <tr
-                      key={order.id || order._id}
-                      className="hover:bg-slate-50/50 transition-colors"
+                      key={order.id || order._id || `order-${index}`}
+                      className="hover:bg-slate-50/50 transition-colors group"
                     >
-                      <td className="px-6 py-4 text-sm font-medium text-slate-700">
-                        #{String(order.id || order._id).slice(-6)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-600">
-                        {order.user?.name || "Guest"}
-                        <div className="text-[10px] text-slate-400">{order.user?.email}</div>
-                      </td>
-                      <td className="px-6 py-4 text-sm font-bold text-slate-800">
-                        {formatCurrency(order.total_amount || order.totalAmount)}
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-bold text-slate-800">
+                          #{String(order.id || order._id).slice(-6)}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
-                        <StatusBadge status={order.orderStatus || order.status} />
+                        <div className="text-sm font-medium text-slate-600">
+                          {order.customerName || "Guest"}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-black text-slate-900">
+                          {formatCurrency(order.amount || order.total_amount)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={order.status || order.orderStatus} />
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="px-6 py-8 text-center text-slate-500 text-sm">
-                      No recent orders found.
+                    <td colSpan="4" className="px-6 py-12 text-center text-slate-500 text-sm">
+                      No recent activity.
                     </td>
                   </tr>
                 )}
@@ -223,23 +691,80 @@ const AdminOverview = () => {
           </div>
         </div>
 
+        {/* TOP PRODUCTS LIST */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h2 className="text-xl font-bold text-slate-800">Performance Leaders</h2>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              By Revenue
+            </span>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {topProducts.length > 0 ? (
+              topProducts.map((product, index) => (
+                <div
+                  key={product.id || product._id || `top-${index}`}
+                  className="p-5 flex items-center gap-4 hover:bg-slate-50 transition-colors group"
+                >
+                  <div className="relative w-14 h-14 bg-slate-100 rounded-xl overflow-hidden shadow-inner group-hover:scale-105 transition-transform">
+                    <img
+                      src={getImageUrl(product)}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = "https://placehold.jp/400x400.png?text=No%20Image";
+                      }}
+                    />
+                    {index === 0 && (
+                      <div className="absolute top-0 right-0 p-1 bg-amber-400 rounded-bl-lg">
+                        <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-slate-800 transition-colors group-hover:text-blue-600 truncate">
+                      {product.name}
+                    </h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        {product.sales || product.totalSold || 0} Sold
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-black text-slate-900">
+                      {formatCurrency(product.revenue || product.totalRevenue || 0)}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-16 text-center text-slate-500 text-sm">No sales leaders yet.</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* LOW STOCK ALERT */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-fit">
-          <div className="p-6 border-b border-slate-100">
-            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-              Low Stock Alert
+        <div className="bg-white rounded-2xl border border-rose-100 shadow-sm overflow-hidden flex flex-col ring-4 ring-rose-50/30">
+          <div className="p-6 border-b border-rose-50 bg-rose-50/30 flex justify-between items-center">
+            <h2 className="text-xl font-bold text-rose-800 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+              Inventory Critical
             </h2>
           </div>
           <div className="p-0">
             {lowStockProducts.length > 0 ? (
-              <div className="divide-y divide-slate-100">
-                {lowStockProducts.map((product) => (
+              <div className="divide-y divide-rose-50">
+                {lowStockProducts.map((product, index) => (
                   <div
-                    key={product.id || product._id}
-                    className="p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors"
+                    key={product.id || product._id || `low-${index}`}
+                    className="p-5 flex items-center gap-4 hover:bg-rose-50/50 transition-colors group"
                   >
-                    <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 border border-slate-200">
+                    <div className="w-14 h-14 bg-white rounded-xl overflow-hidden border border-rose-100 shadow-sm group-hover:scale-105 transition-transform">
                       <img
                         src={getImageUrl(product)}
                         alt={product.name}
@@ -250,25 +775,25 @@ const AdminOverview = () => {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-slate-800 truncate">
+                      <h4 className="text-sm font-bold text-slate-800 truncate group-hover:text-rose-700">
                         {product.name}
                       </h4>
-                      <p className="text-xs text-slate-500">
-                        Stock:{" "}
-                        <span className="font-bold text-red-600">
+                      <p className="text-xs text-rose-500 font-medium mt-1">
+                        Stock Level:{" "}
+                        <span className="font-black">
                           {product.stock_qty || product.stockQty} left
                         </span>
                       </p>
                     </div>
                     <Link
                       to={`/admin/products?search=${product.name}`}
-                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all"
+                      className="p-3 bg-white text-rose-400 hover:text-rose-600 border border-slate-100 rounded-xl hover:shadow-md transition-all"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
-                        strokeWidth={1.5}
+                        strokeWidth={2}
                         stroke="currentColor"
                         className="w-5 h-5"
                       >
@@ -283,9 +808,19 @@ const AdminOverview = () => {
                 ))}
               </div>
             ) : (
-              <div className="p-8 text-center">
-                <div className="text-green-500 text-4xl mb-2">✓</div>
-                <p className="text-slate-600 font-medium">All items well stocked!</p>
+              <div className="p-16 text-center">
+                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mx-auto mb-4 border border-emerald-100">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="3"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-slate-800">Inventory Healthy</h3>
+                <p className="text-slate-500 text-sm mt-1">All items are well stocked and ready.</p>
               </div>
             )}
           </div>
@@ -295,7 +830,7 @@ const AdminOverview = () => {
   );
 };
 
-const StatCard = ({ title, value, icon, color }) => (
+const StatCard = ({ title, value, icon, color, change }) => (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-all group">
     <div
       className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}
@@ -311,9 +846,19 @@ const StatCard = ({ title, value, icon, color }) => (
         {icon}
       </svg>
     </div>
-    <div>
+    <div className="flex-1">
       <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider">{title}</p>
-      <h3 className="text-2xl font-bold text-slate-800">{value}</h3>
+      <div className="flex items-baseline gap-2">
+        <h3 className="text-2xl font-bold text-slate-800">{value}</h3>
+        {change !== undefined && (
+          <span
+            className={`text-xs font-bold ${change >= 0 ? "text-emerald-500" : "text-rose-500"}`}
+          >
+            {change >= 0 ? "+" : ""}
+            {change}%
+          </span>
+        )}
+      </div>
     </div>
   </div>
 );

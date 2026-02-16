@@ -130,4 +130,19 @@ export const payOrder = (orderId) => API.post(`/payments/order/${orderId}`);
 
 export const getMyPayments = () => API.get("/payments/my");
 
+// Admin Dashboard
+export const getDashboardOverview = (params) => API.get("/dashboard/overview", { params });
+
+export const getRevenueAnalytics = (params) => API.get("/dashboard/revenue", { params });
+
+export const getOrderStatistics = (params) => API.get("/dashboard/orders/stats", { params });
+
+export const getTopProducts = (params) => API.get("/dashboard/products/top", { params });
+
+export const getRecentOrders = (params) => API.get("/dashboard/orders/recent", { params });
+
+export const getSalesByCategory = () => API.get("/dashboard/sales/category");
+
+export const getPopularFavorites = () => API.get("/dashboard/favorites/popular");
+
 export default API;

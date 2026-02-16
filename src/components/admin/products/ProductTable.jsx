@@ -1,4 +1,10 @@
 import React from "react";
+import {
+  getLowestPrice,
+  getHighestPrice,
+  getTotalStock,
+  hasVariants,
+} from "../../../utils/variantUtils";
 
 const ProductTable = ({
   products,
@@ -34,11 +40,11 @@ const ProductTable = ({
             <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
               Product
             </th>
-            <th className="hidden lg:table-cell text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-              SKU
-            </th>
             <th className="hidden md:table-cell text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
               Category
+            </th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              Variants
             </th>
             <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
               Price
@@ -62,9 +68,9 @@ const ProductTable = ({
               </td>
             </tr>
           ) : (
-            products.map((p) => (
+            products.map((p, index) => (
               <tr
-                key={p.id || p._id}
+                key={p.id || p._id || `prod-${index}`}
                 className="border-b border-slate-200 hover:bg-slate-50 cursor-pointer"
                 onClick={() => setViewProduct(p)}
               >
@@ -90,11 +96,6 @@ const ProductTable = ({
                     </div>
                   </div>
                 </td>
-                <td className="hidden lg:table-cell py-3 px-4">
-                  <code className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                    {p.sku || "N/A"}
-                  </code>
-                </td>
                 <td className="hidden md:table-cell py-3 px-4">
                   <span className="text-xs font-semibold bg-slate-100 px-2 py-1 rounded-md text-slate-600 whitespace-nowrap">
                     {getCategoryPath(
@@ -103,45 +104,69 @@ const ProductTable = ({
                   </span>
                 </td>
                 <td className="py-3 px-4">
-                  <div className="flex flex-col">
-                    <span
-                      className={`text-sm font-semibold ${p.sale_price || p.salePrice ? "text-slate-400 line-through text-xs" : "text-slate-800"}`}
-                    >
-                      ₹{p.price}
+                  {hasVariants(p) ? (
+                    <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
+                      {p.variants.length} variant{p.variants.length > 1 ? "s" : ""}
                     </span>
-                    {(p.sale_price || p.salePrice) && (
-                      <>
-                        <span className="text-sm font-bold text-green-600">
-                          ₹{p.sale_price || p.salePrice}
-                        </span>
-                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 w-fit mt-1">
-                          Save ₹{(p.price - (p.sale_price || p.salePrice)).toLocaleString()}
-                        </span>
-                      </>
-                    )}
-                  </div>
+                  ) : (
+                    <span className="text-slate-400 text-xs">No variants</span>
+                  )}
                 </td>
                 <td className="py-3 px-4">
-                  <span
-                    className={`text-sm font-medium ${(p.stock_qty || p.stockQty || 0) < 10 ? "text-red-600" : "text-slate-700"}`}
-                  >
-                    {p.stock_qty || p.stockQty || 0}
-                  </span>
+                  {hasVariants(p) ? (
+                    <div className="flex flex-col">
+                      {p.variants.length > 1 ? (
+                        <span className="text-sm font-semibold text-slate-800">
+                          ₹{getLowestPrice(p.variants).toLocaleString()} - ₹
+                          {getHighestPrice(p.variants).toLocaleString()}
+                        </span>
+                      ) : (
+                        <span className="text-sm font-semibold text-slate-800">
+                          ₹{getLowestPrice(p.variants).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                  ) : p.price ? (
+                    <span className="text-sm font-semibold text-slate-800">
+                      ₹{p.price.toLocaleString()}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 text-xs">No price</span>
+                  )}
                 </td>
                 <td className="py-3 px-4">
-                  {(p.stock_qty || p.stockQty || 0) <= 0 ? (
+                  {hasVariants(p) ? (
+                    <span
+                      className={`text-sm font-medium ${getTotalStock(p.variants) < 10 ? "text-red-600" : "text-slate-700"}`}
+                    >
+                      {getTotalStock(p.variants)}
+                    </span>
+                  ) : (
+                    <span
+                      className={`text-sm font-medium ${(p.stock_qty || p.stockQty || 0) < 10 ? "text-red-600" : "text-slate-700"}`}
+                    >
+                      {p.stock_qty || p.stockQty || 0}
+                    </span>
+                  )}
+                </td>
+                <td className="py-3 px-4">
+                  {hasVariants(p) ? (
+                    getTotalStock(p.variants) <= 0 ? (
+                      <span className="bg-red-100 text-red-600 text-[10px] font-bold uppercase px-2 py-1 rounded-full">
+                        SOLD OUT
+                      </span>
+                    ) : (
+                      <span className="bg-green-100 text-green-600 text-[10px] font-bold uppercase px-2 py-1 rounded-full">
+                        IN STOCK
+                      </span>
+                    )
+                  ) : (p.stock_qty || p.stockQty || 0) <= 0 ? (
                     <span className="bg-red-100 text-red-600 text-[10px] font-bold uppercase px-2 py-1 rounded-full">
                       SOLD OUT
                     </span>
                   ) : (
-                    <span
-                      className={`text-[10px] font-bold uppercase px-2 py-1 rounded-full ${
-                        p.availability === "INSTOCK"
-                          ? "bg-green-100 text-green-600"
-                          : "bg-red-100 text-red-600"
-                      }`}
-                    >
-                      {p.availability?.replace("_", " ") || "UNKNOWN"}
+                    <span className="bg-green-100 text-green-600 text-[10px] font-bold uppercase px-2 py-1 rounded-full">
+                      IN STOCK
                     </span>
                   )}
                 </td>
