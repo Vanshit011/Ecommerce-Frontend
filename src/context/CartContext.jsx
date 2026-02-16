@@ -41,8 +41,11 @@ const CartProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // Only fetch if token exists
-    if (localStorage.getItem("token")) {
+    // Only fetch if token exists AND user is NOT an admin
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    if (token && role !== "admin") {
       fetchCart();
     } else {
       setLoading(false);

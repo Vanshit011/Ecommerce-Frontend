@@ -12,6 +12,15 @@ import { useToast } from "../../../context/ToastContext";
 import { getImageUrl } from "../../../utils/imageUtils";
 import { ProductDetailSkeleton } from "../../../components/common/Skeleton";
 import ImageMagnifier from "../../../components/common/ImageMagnifier";
+import {
+  getAvailableColors,
+  getAvailableSizes,
+  findVariant,
+  isVariantAvailable,
+  getFirstAvailableVariant,
+  hasVariants,
+  getStockStatus,
+} from "../../../utils/variantUtils";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -27,7 +36,8 @@ const ProductDetails = () => {
   const [addingToCart, setAddingToCart] = useState(false);
   const [buyingNow, setBuyingNow] = useState(false);
 
-  // New State for Options
+  // Variant Selection State
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -70,6 +80,26 @@ const ProductDetails = () => {
     checkFavoriteStatus();
   }, [id]);
 
+  // Initialize selected variant when product loads
+  useEffect(() => {
+    if (product && hasVariants(product)) {
+      const firstVariant = getFirstAvailableVariant(product.variants);
+      if (firstVariant) {
+        setSelectedVariant(firstVariant);
+        setSelectedColor(firstVariant.color || "");
+        setSelectedSize(firstVariant.size || "");
+      }
+    }
+  }, [product]);
+
+  // Update selected variant when color or size changes
+  useEffect(() => {
+    if (product && hasVariants(product)) {
+      const variant = findVariant(product.variants, selectedColor, selectedSize);
+      setSelectedVariant(variant);
+    }
+  }, [selectedColor, selectedSize, product]);
+
   const toggleFavorite = async () => {
     try {
       if (isFavorite) {
@@ -87,12 +117,8 @@ const ProductDetails = () => {
   };
 
   const validateSelection = () => {
-    if (product?.sizes?.length > 0 && !selectedSize) {
-      showToast("Please select a size", "error");
-      return false;
-    }
-    if (product?.colors?.length > 0 && !selectedColor) {
-      showToast("Please select a color", "error");
+    if (hasVariants(product) && !selectedVariant) {
+      showToast("Please select a variant", "error");
       return false;
     }
     return true;
@@ -104,8 +130,7 @@ const ProductDetails = () => {
     try {
       setAddingToCart(true);
       await globalAddToCart(product.id || product._id, {
-        size: selectedSize,
-        color: selectedColor,
+        variant_id: selectedVariant?.id,
         quantity: quantity,
       });
       showToast("Product added to cart!", "success");
@@ -123,8 +148,7 @@ const ProductDetails = () => {
     try {
       setBuyingNow(true);
       await globalAddToCart(product.id || product._id, {
-        size: selectedSize,
-        color: selectedColor,
+        variant_id: selectedVariant?.id,
         quantity: quantity,
       });
       showToast("Added to bag! Redirecting...", "success");
@@ -335,7 +359,18 @@ const ProductDetails = () => {
                   <span className="px-4 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-blue-100/50">
                     {product?.category?.name || "Premium Collection"}
                   </span>
-                  {(product?.stock_qty || product?.stockQty || 0) > 0 ? (
+                  {hasVariants(product) ? (
+                    selectedVariant && isVariantAvailable(selectedVariant) ? (
+                      <div className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-emerald-100/50">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                        {getStockStatus(selectedVariant)}
+                      </div>
+                    ) : (
+                      <span className="px-4 py-1.5 bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg shadow-red-200">
+                        Sold Out
+                      </span>
+                    )
+                  ) : (product?.stock_qty || product?.stockQty || 0) > 0 ? (
                     <div className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-emerald-100/50">
                       <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                       In Stock
@@ -362,32 +397,71 @@ const ProductDetails = () => {
                   <div className="absolute -inset-2 bg-gradient-to-r from-blue-600/5 to-purple-600/5 rounded-[2.5rem] blur-xl opacity-0 group-hover/price:opacity-100 transition-opacity duration-700" />
                   <div className="relative p-8 bg-slate-50/50 backdrop-blur-sm rounded-[2rem] border border-slate-100 flex items-center justify-between overflow-hidden">
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">
-                        Investment
-                      </span>
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                          {selectedVariant ? "Price" : "Starting From"}
+                        </span>
+                        {(selectedVariant?.sku || product?.sku || product?.variants?.[0]?.sku) && (
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-wider rounded">
+                            SKU:{" "}
+                            {selectedVariant?.sku || product?.sku || product?.variants?.[0]?.sku}
+                          </span>
+                        )}
+                      </div>
                       <div className="grid">
                         <span className="text-5xl font-black text-slate-900 leading-none tracking-tighter">
-                          ₹{(product?.salePrice || product?.price || 0).toLocaleString()}
+                          ₹
+                          {selectedVariant
+                            ? (
+                                selectedVariant.sale_price ||
+                                selectedVariant.price ||
+                                0
+                              ).toLocaleString()
+                            : hasVariants(product)
+                              ? (
+                                  product.variants[0]?.sale_price ||
+                                  product.variants[0]?.price ||
+                                  0
+                                ).toLocaleString()
+                              : (
+                                  product?.sale_price ||
+                                  product?.salePrice ||
+                                  product?.price ||
+                                  0
+                                ).toLocaleString()}
                         </span>
-                        {product?.salePrice && (
+                        {selectedVariant?.sale_price && selectedVariant?.price ? (
                           <span className="text-lg text-slate-400 line-through font-bold mt-2 opacity-60">
-                            ₹{product?.price?.toLocaleString()}
+                            ₹{selectedVariant.price.toLocaleString()}
                           </span>
+                        ) : (
+                          !selectedVariant &&
+                          (product?.salePrice || product?.sale_price) &&
+                          product?.price && (
+                            <span className="text-lg text-slate-400 line-through font-bold mt-2 opacity-60">
+                              ₹{product.price.toLocaleString()}
+                            </span>
+                          )
                         )}
                       </div>
                     </div>
 
-                    {product?.salePrice && (
+                    {selectedVariant?.sale_price && selectedVariant?.price && (
                       <div className="flex flex-col items-end gap-2 text-right">
                         <div className="px-5 py-2.5 bg-slate-900 text-white rounded-2xl text-[10px] font-black tracking-widest shadow-xl shadow-slate-200">
                           LIMITED OFFER
                         </div>
                         <div className="text-3xl font-black text-blue-600 tracking-tighter">
-                          {Math.round(((product.price - product.salePrice) / product.price) * 100)}%
-                          OFF
+                          {Math.round(
+                            ((selectedVariant.price - selectedVariant.sale_price) /
+                              selectedVariant.price) *
+                              100,
+                          )}
+                          % OFF
                         </div>
                         <div className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
-                          You Save ₹{(product.price - product.salePrice).toLocaleString()}
+                          You Save ₹
+                          {(selectedVariant.price - selectedVariant.sale_price).toLocaleString()}
                         </div>
                       </div>
                     )}
@@ -460,15 +534,15 @@ const ProductDetails = () => {
                 </div>
 
                 {/* OPTIONS */}
-                {(product?.colors?.length > 0 || product?.sizes?.length > 0) && (
+                {hasVariants(product) && (
                   <div className="space-y-8 mb-8">
-                    {product.colors?.length > 0 && (
+                    {getAvailableColors(product.variants).length > 0 && (
                       <div>
                         <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-4">
-                          Colorway
+                          Colorway {selectedColor && `- ${selectedColor}`}
                         </h3>
                         <div className="flex flex-wrap gap-2.5">
-                          {product.colors.map((color, i) => (
+                          {getAvailableColors(product.variants).map((color, i) => (
                             <button
                               key={i}
                               onClick={() => setSelectedColor(color)}
@@ -484,13 +558,13 @@ const ProductDetails = () => {
                         </div>
                       </div>
                     )}
-                    {product.sizes?.length > 0 && (
+                    {getAvailableSizes(product.variants).length > 0 && (
                       <div>
                         <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-4">
-                          Select Size
+                          Select Size {selectedSize && `- ${selectedSize}`}
                         </h3>
                         <div className="flex flex-wrap gap-3">
-                          {product.sizes.map((size, i) => (
+                          {getAvailableSizes(product.variants).map((size, i) => (
                             <button
                               key={i}
                               onClick={() => setSelectedSize(size)}
@@ -533,7 +607,11 @@ const ProductDetails = () => {
                       </button>
                     </div>
                     <div className="text-xs font-bold text-slate-400">
-                      {product?.stock_qty || product?.stockQty || 0} items available
+                      {selectedVariant
+                        ? `${selectedVariant.stock_qty || 0} items available`
+                        : hasVariants(product)
+                          ? `Select variant to see stock`
+                          : `${product?.stock_qty || product?.stockQty || 0} items available`}
                     </div>
                   </div>
                 </div>
@@ -560,9 +638,17 @@ const ProductDetails = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_1fr] gap-4">
                   <button
                     onClick={handleBuyNow}
-                    disabled={(product?.stock_qty || product?.stockQty || 0) <= 0 || buyingNow}
+                    disabled={
+                      hasVariants(product)
+                        ? !selectedVariant || !isVariantAvailable(selectedVariant)
+                        : (product?.stock_qty || 0) <= 0 || buyingNow
+                    }
                     className={`h-20 flex items-center justify-center gap-4 rounded-[2rem] font-black text-xl transition-all active:scale-95 shadow-2xl shadow-blue-200/50 ${
-                      (product?.stock_qty || product?.stockQty || 0) <= 0
+                      (
+                        hasVariants(product)
+                          ? !selectedVariant || !isVariantAvailable(selectedVariant)
+                          : (product?.stock_qty || 0) <= 0
+                      )
                         ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
                         : buyingNow
                           ? "bg-blue-600/50 text-white/50"
@@ -594,9 +680,17 @@ const ProductDetails = () => {
 
                   <button
                     onClick={handleAddToCart}
-                    disabled={(product?.stock_qty || product?.stockQty || 0) <= 0 || addingToCart}
+                    disabled={
+                      hasVariants(product)
+                        ? !selectedVariant || !isVariantAvailable(selectedVariant)
+                        : (product?.stock_qty || 0) <= 0 || addingToCart
+                    }
                     className={`h-20 flex items-center justify-center gap-4 rounded-[2rem] font-black text-xl transition-all active:scale-95 bg-white border-2 border-slate-900 group ${
-                      (product?.stock_qty || product?.stockQty || 0) <= 0
+                      (
+                        hasVariants(product)
+                          ? !selectedVariant || !isVariantAvailable(selectedVariant)
+                          : (product?.stock_qty || 0) <= 0
+                      )
                         ? "border-slate-100 text-slate-300 cursor-not-allowed"
                         : addingToCart
                           ? "bg-slate-50 text-slate-400 border-slate-200"

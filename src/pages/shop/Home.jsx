@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getProducts, getCategories } from "../../services/api";
 import { getImageUrl } from "../../utils/imageUtils";
 import { ProductSkeleton } from "../../components/common/Skeleton";
+import { getLowestPrice, hasVariants, getPriceRange } from "../../utils/variantUtils";
 import flashSaleImg from "../../assets/images/flash-sale.jpg";
 
 const Home = () => {
@@ -268,14 +269,23 @@ const Home = () => {
 
                       <div className="mt-auto pt-4 flex items-end justify-between border-t border-slate-50">
                         <div>
-                          {p.salePrice && (
-                            <span className="text-xs text-slate-400 line-through font-semibold block mb-0.5">
-                              ₹{p.price.toLocaleString()}
+                          {hasVariants(p) ? (
+                            <>
+                              {p.variants.length > 1 ? (
+                                <span className="text-xl font-black text-slate-900 tracking-tight">
+                                  {getPriceRange(p.variants)}
+                                </span>
+                              ) : (
+                                <span className="text-xl font-black text-slate-900 tracking-tight">
+                                  ₹{getLowestPrice(p.variants).toLocaleString()}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-xl font-black text-slate-900 tracking-tight">
+                              ₹{(p.salePrice || p.price || 0).toLocaleString()}
                             </span>
                           )}
-                          <span className="text-xl font-black text-slate-900 tracking-tight">
-                            ₹{(p.salePrice || p.price).toLocaleString()}
-                          </span>
                         </div>
 
                         {/* Clickable card replaces separate buttons for a cleaner UI */}
@@ -352,7 +362,9 @@ const Home = () => {
 
                         <div className="flex items-center justify-between mt-2">
                           <span className="text-lg font-black text-slate-900">
-                            ₹{(p.salePrice || p.price).toLocaleString()}
+                            {hasVariants(p)
+                              ? `₹${getLowestPrice(p.variants).toLocaleString()}`
+                              : `₹${(p.salePrice || p.price || 0).toLocaleString()}`}
                           </span>
 
                           <div className="w-8 h-8 flex items-center justify-center text-slate-300 group-hover:text-blue-500 transition-colors">

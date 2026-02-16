@@ -163,20 +163,30 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                 <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Price</p>
-                <p className="text-lg font-bold text-slate-800">₹{viewProduct.price}</p>
+                <p className="text-lg font-bold text-slate-800">
+                  ₹{viewProduct.price || viewProduct.variants?.[0]?.price || 0}
+                </p>
               </div>
               <div className="bg-green-50 p-3 rounded-xl border border-green-100">
                 <p className="text-[10px] uppercase font-bold text-green-400 mb-1">Sale Price</p>
                 <p className="text-lg font-bold text-green-700">
-                  {viewProduct.sale_price || viewProduct.salePrice
-                    ? `₹${viewProduct.sale_price || viewProduct.salePrice}`
+                  {viewProduct.sale_price ||
+                  viewProduct.salePrice ||
+                  viewProduct.variants?.[0]?.sale_price
+                    ? `₹${viewProduct.sale_price || viewProduct.salePrice || viewProduct.variants?.[0]?.sale_price}`
                     : "N/A"}
                 </p>
-                {(viewProduct.sale_price || viewProduct.salePrice) && (
+                {(viewProduct.sale_price ||
+                  viewProduct.salePrice ||
+                  viewProduct.variants?.[0]?.sale_price) && (
                   <p className="text-[10px] font-bold text-emerald-600 mt-1">
                     You Save: ₹
                     {(
-                      viewProduct.price - (viewProduct.sale_price || viewProduct.salePrice)
+                      (viewProduct.price || viewProduct.variants?.[0]?.price || 0) -
+                      (viewProduct.sale_price ||
+                        viewProduct.salePrice ||
+                        viewProduct.variants?.[0]?.sale_price ||
+                        0)
                     ).toLocaleString()}
                   </p>
                 )}
@@ -186,12 +196,18 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
                 <p className="text-[10px] uppercase font-bold text-blue-400 mb-1">SKU</p>
-                <p className="font-semibold text-blue-700">{viewProduct.sku || "N/A"}</p>
+                <p className="font-semibold text-blue-700">
+                  {viewProduct.sku || viewProduct.variants?.[0]?.sku || "N/A"}
+                </p>
               </div>
               <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                 <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Stock</p>
                 <p className="font-semibold text-slate-700">
-                  {viewProduct.stock_qty || viewProduct.stockQty || 0} units
+                  {viewProduct.stock_qty ||
+                    viewProduct.stockQty ||
+                    viewProduct.variants?.[0]?.stock_qty ||
+                    0}{" "}
+                  units
                 </p>
               </div>
             </div>
@@ -212,7 +228,10 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
 
             <div className="space-y-2">
               <p className="text-xs font-bold text-slate-400 uppercase">Availability</p>
-              {(viewProduct.stock_qty || viewProduct.stockQty || 0) <= 0 ? (
+              {(viewProduct.stock_qty ||
+                viewProduct.stockQty ||
+                viewProduct.variants?.[0]?.stock_qty ||
+                0) <= 0 ? (
                 <span className="px-2 py-1 rounded text-xs font-bold bg-red-600 text-white shadow-sm">
                   SOLD OUT
                 </span>

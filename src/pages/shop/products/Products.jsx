@@ -10,6 +10,7 @@ import {
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { getImageUrl } from "../../../utils/imageUtils";
 import { ProductSkeleton, CategorySkeleton } from "../../../components/common/Skeleton";
+import { getLowestPrice, getTotalStock, hasVariants } from "../../../utils/variantUtils";
 
 /* ================= CATEGORY TREE NODE ================= */
 
@@ -690,21 +691,28 @@ const Products = () => {
                         {product.category?.name || "Product"}
                       </span>
 
-                      {(product.stock_qty || product.stockQty || 0) <= 0 ? (
+                      {hasVariants(product) ? (
+                        getTotalStock(product.variants) <= 0 ? (
+                          <span className="px-3 py-1 bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg shadow-slate-200">
+                            SOLD OUT
+                          </span>
+                        ) : getTotalStock(product.variants) <= 5 ? (
+                          <span className="px-3 py-1 bg-orange-500 text-white text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg shadow-orange-200 animate-pulse">
+                            ONLY {getTotalStock(product.variants)} LEFT
+                          </span>
+                        ) : null
+                      ) : (product.stock_qty || 0) <= 0 ? (
                         <span className="px-3 py-1 bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg shadow-slate-200">
                           SOLD OUT
                         </span>
-                      ) : (product.stock_qty || product.stockQty || 0) <= 5 ? (
+                      ) : (product.stock_qty || 0) <= 5 ? (
                         <span className="px-3 py-1 bg-orange-500 text-white text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg shadow-orange-200 animate-pulse">
-                          ONLY {product.stock_qty || product.stockQty} LEFT
+                          ONLY {product.stock_qty} LEFT
                         </span>
                       ) : null}
-                      {(product.salePrice || product.sale_price) && (
-                        <span className="px-3 py-1 bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg shadow-blue-200">
-                          SAVE ₹
-                          {(
-                            product.price - (product.salePrice || product.sale_price)
-                          ).toLocaleString()}
+                      {hasVariants(product) && product.variants.length > 1 && (
+                        <span className="px-3 py-1 bg-purple-600 text-white text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg shadow-purple-200">
+                          {product.variants.length} OPTIONS
                         </span>
                       )}
                     </div>
@@ -740,18 +748,18 @@ const Products = () => {
 
                     <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-50">
                       <div className="flex flex-col">
-                        {(product.salePrice || product.sale_price) && (
-                          <span className="text-[10px] text-slate-400 line-through font-bold">
-                            ₹{product.price.toLocaleString()}
-                          </span>
-                        )}
                         <span className="text-xl font-black text-slate-900 leading-none mt-0.5">
-                          ₹
-                          {(
-                            product.salePrice ||
-                            product.sale_price ||
-                            product.price
-                          ).toLocaleString()}
+                          {hasVariants(product) ? (
+                            product.variants.length > 1 ? (
+                              <span className="text-sm">
+                                From ₹{getLowestPrice(product.variants).toLocaleString()}
+                              </span>
+                            ) : (
+                              `₹${getLowestPrice(product.variants).toLocaleString()}`
+                            )
+                          ) : (
+                            `₹${(product.salePrice || product.sale_price || product.price || 0).toLocaleString()}`
+                          )}
                         </span>
                       </div>
 
