@@ -27,42 +27,44 @@ import {
 } from "../../services/api";
 import { getImageUrl } from "../../utils/imageUtils";
 
-const AdvancedSectionFilter = ({ filters, setFilters, years, months }) => {
+const AdvancedSectionFilter = ({ filters, setFilters, years, months, hideCustom = false }) => {
   const [viewMode, setViewMode] = useState(
-    filters.startDate || filters.endDate ? "custom" : "standard",
+    !hideCustom && (filters.startDate || filters.endDate) ? "custom" : "standard",
   );
 
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-slate-50 border border-slate-200 p-1 rounded-xl shadow-sm w-full sm:w-auto">
       {/* Toggle Controls */}
-      <div className="flex bg-white rounded-lg p-0.5 border border-slate-100 shadow-sm flex-1 sm:flex-initial">
-        <button
-          onClick={() => {
-            setViewMode("standard");
-            setFilters({ ...filters, startDate: "", endDate: "" });
-          }}
-          className={`flex-1 sm:px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-tight transition-all ${
-            viewMode === "standard"
-              ? "bg-blue-600 text-white shadow-sm"
-              : "text-slate-400 hover:text-slate-600"
-          }`}
-        >
-          Standard
-        </button>
-        <button
-          onClick={() => setViewMode("custom")}
-          className={`flex-1 sm:px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-tight transition-all ${
-            viewMode === "custom"
-              ? "bg-blue-600 text-white shadow-sm"
-              : "text-slate-400 hover:text-slate-600"
-          }`}
-        >
-          Custom Range
-        </button>
-      </div>
+      {!hideCustom && (
+        <div className="flex bg-white rounded-lg p-0.5 border border-slate-100 shadow-sm flex-1 sm:flex-initial">
+          <button
+            onClick={() => {
+              setViewMode("standard");
+              setFilters({ ...filters, startDate: "", endDate: "" });
+            }}
+            className={`flex-1 sm:px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-tight transition-all ${
+              viewMode === "standard"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            Standard
+          </button>
+          <button
+            onClick={() => setViewMode("custom")}
+            className={`flex-1 sm:px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-tight transition-all ${
+              viewMode === "custom"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            Custom Range
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
-        {viewMode === "standard" ? (
+        {viewMode === "standard" || hideCustom ? (
           <div className="flex items-center gap-1.5 w-full animate-in fade-in slide-in-from-left-2 duration-300">
             <select
               value={filters.year}
@@ -117,6 +119,12 @@ const AdvancedSectionFilter = ({ filters, setFilters, years, months }) => {
 };
 
 const AdminOverview = () => {
+  const [overviewFilters, setOverviewFilters] = useState({
+    year: new Date().getFullYear(),
+    month: "",
+    startDate: "",
+    endDate: "",
+  });
   const [revenueFilters, setRevenueFilters] = useState({
     year: new Date().getFullYear(),
     month: "",
@@ -135,7 +143,7 @@ const AdminOverview = () => {
     startDate: "",
     endDate: "",
   });
-  const [favoritesFilters, setFavoritesFilters] = useState({
+  const [categoryFilters, setCategoryFilters] = useState({
     year: new Date().getFullYear(),
     month: "",
     startDate: "",
@@ -188,29 +196,53 @@ const AdminOverview = () => {
     };
   };
 
-  // 1. Fetch Revenue & Category Data
+  // 1. Fetch Revenue Data
   useEffect(() => {
     const fetchRevenueData = async () => {
       try {
         const params = getParams(revenueFilters);
-        const [revenueRes, salesByCategoryRes] = await Promise.all([
-          getRevenueAnalytics(params),
-          getSalesByCategory(params),
-        ]);
-
+        const revenueRes = await getRevenueAnalytics(params);
         setRevenueMonthly(revenueRes.data?.monthlyData || []);
-        setSalesByCategory(salesByCategoryRes.data || []);
-        setStats((prev) => ({
-          ...prev,
-          revenue: revenueRes.data?.totalRevenue || 0,
-          revenueChange: revenueRes.data?.growth || 0,
-        }));
       } catch (error) {
         console.error("Revenue Fetch Error:", error);
       }
     };
     fetchRevenueData();
   }, [revenueFilters]);
+
+  // 1.1 Fetch Sales by Category Data
+  useEffect(() => {
+    const fetchCategoryData = async () => {
+      try {
+        const params = getParams(categoryFilters);
+        const categoryRes = await getSalesByCategory(params);
+        setSalesByCategory(categoryRes.data || []);
+      } catch (error) {
+        console.error("Category Fetch Error:", error);
+      }
+    };
+    fetchCategoryData();
+  }, [categoryFilters]);
+
+  // 1.1 Fetch Overview Stats (Header controlled)
+  useEffect(() => {
+    const fetchOverviewData = async () => {
+      try {
+        const params = getParams(overviewFilters);
+        const revenueRes = await getRevenueAnalytics(params);
+        setStats((prev) => ({
+          ...prev,
+          revenue: revenueRes.data?.totalRevenue || 0,
+          revenueChange: revenueRes.data?.revenueGrowth || revenueRes.data?.growth || 0,
+          orders: revenueRes.data?.totalOrders || 0,
+          ordersChange: revenueRes.data?.orderGrowth || 0,
+        }));
+      } catch (error) {
+        console.error("Overview Stats Error:", error);
+      }
+    };
+    fetchOverviewData();
+  }, [overviewFilters]);
 
   // 2. Fetch Order Volume Data
   useEffect(() => {
@@ -244,10 +276,6 @@ const AdminOverview = () => {
               { name: "Cancelled", value: ordersData.cancelled || 0, color: "#ef4444" },
             ].filter((item) => item.value > 0),
           );
-          setStats((prev) => ({
-            ...prev,
-            orders: ordersData.total || 0,
-          }));
         }
       } catch (error) {
         console.error("Status Fetch Error:", error);
@@ -256,19 +284,18 @@ const AdminOverview = () => {
     fetchStatusData();
   }, [statusFilters]);
 
-  // 3. Fetch Favorites Data
+  // 4. Fetch Favorites Data (No Filters)
   useEffect(() => {
     const fetchFavoritesData = async () => {
       try {
-        const params = getParams(favoritesFilters);
-        const favoritesRes = await getPopularFavorites(params);
+        const favoritesRes = await getPopularFavorites({});
         setPopularFavorites(favoritesRes.data || []);
       } catch (error) {
         console.error("Favorites Fetch Error:", error);
       }
     };
     fetchFavoritesData();
-  }, [favoritesFilters]);
+  }, []);
 
   // 4. Initial Load for Static/Global Overview (Recent Orders, Top Products, Inventory)
   useEffect(() => {
@@ -284,7 +311,6 @@ const AdminOverview = () => {
         const overview = overviewRes.data;
         const topProdsData = topProductsRes.data || [];
         const recentOrdersData = recentOrdersRes.data || [];
-
         setStats((prev) => ({
           ...prev,
           products: overview?.totalProducts || 0,
@@ -336,15 +362,17 @@ const AdminOverview = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <span className="px-3 py-1 bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-200 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
-            Personalized Analytics Active
-          </span>
+          <AdvancedSectionFilter
+            filters={overviewFilters}
+            setFilters={setOverviewFilters}
+            years={years}
+            months={months}
+          />
         </div>
       </div>
 
       {/* STATS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <StatCard
           title="Total Revenue"
           value={formatCurrency(stats.revenue)}
@@ -359,7 +387,7 @@ const AdminOverview = () => {
           color="bg-gradient-to-br from-green-500 to-emerald-600"
         />
         <StatCard
-          title="Total Orders"
+          title={`Orders`}
           value={stats.orders}
           change={stats.ordersChange}
           icon={
@@ -370,42 +398,6 @@ const AdminOverview = () => {
             />
           }
           color="bg-gradient-to-br from-blue-500 to-indigo-600"
-        />
-        <StatCard
-          title="Total Customers"
-          value={stats.customers}
-          icon={
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
-            />
-          }
-          color="bg-gradient-to-br from-teal-500 to-cyan-600"
-        />
-        <StatCard
-          title="Total Products"
-          value={stats.products}
-          icon={
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-            />
-          }
-          color="bg-gradient-to-br from-purple-500 to-violet-600"
-        />
-        <StatCard
-          title="Categories"
-          value={stats.categories}
-          icon={
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-            />
-          }
-          color="bg-gradient-to-br from-amber-500 to-orange-600"
         />
       </div>
 
@@ -420,6 +412,7 @@ const AdminOverview = () => {
               setFilters={setRevenueFilters}
               years={years}
               months={months}
+              hideCustom={true}
             />
           </div>
           <div className="h-[350px] w-full">
@@ -469,8 +462,17 @@ const AdminOverview = () => {
 
         {/* SALES BY CATEGORY CHART */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-          <h2 className="text-xl font-bold text-slate-800 mb-6">Sales by Category</h2>
-          <div className="flex-1 min-h-[300px]">
+          <div className="flex flex-col gap-4 mb-6">
+            <h2 className="text-xl font-bold text-slate-800">Sales by Category</h2>
+            <AdvancedSectionFilter
+              filters={categoryFilters}
+              setFilters={setCategoryFilters}
+              years={years}
+              months={months}
+              hideCustom={true}
+            />
+          </div>
+          <div className="h-[400px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -513,6 +515,7 @@ const AdminOverview = () => {
               setFilters={setVolumeFilters}
               years={years}
               months={months}
+              hideCustom={true}
             />
           </div>
           <div className="h-[300px] w-full">
@@ -552,7 +555,7 @@ const AdminOverview = () => {
               months={months}
             />
           </div>
-          <div className="flex-1 min-h-[300px]">
+          <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -585,19 +588,11 @@ const AdminOverview = () => {
 
         {/* POPULAR FAVORITES */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
-          <div className="p-6 border-b border-slate-100 flex flex-col gap-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-slate-800">Popular Favorites</h2>
-              <span className="px-2.5 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full border border-amber-200 ring-4 ring-amber-50">
-                User Interests
-              </span>
-            </div>
-            <AdvancedSectionFilter
-              filters={favoritesFilters}
-              setFilters={setFavoritesFilters}
-              years={years}
-              months={months}
-            />
+          <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <h2 className="text-xl font-bold text-slate-800">Popular Favorites</h2>
+            <span className="px-2.5 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full border border-amber-200 ring-4 ring-amber-50">
+              User Interests
+            </span>
           </div>
           <div className="divide-y divide-slate-100 overflow-y-auto max-h-[300px]">
             {popularFavorites.length > 0 ? (

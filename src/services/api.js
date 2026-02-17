@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
+  baseURL: import.meta.env.VITE_API || "http://localhost:3000",
   withCredentials: true,
   paramsSerializer: {
     indexes: null,
@@ -141,7 +141,7 @@ export const getTopProducts = (params) => API.get("/dashboard/products/top", { p
 
 export const getRecentOrders = (params) => API.get("/dashboard/orders/recent", { params });
 
-export const getSalesByCategory = () => API.get("/dashboard/sales/category");
+export const getSalesByCategory = (params) => API.get("/dashboard/sales/category", { params });
 
 export const getPopularFavorites = () => API.get("/dashboard/favorites/popular");
 
