@@ -96,7 +96,11 @@ export const addToCart = (productId, data) => API.post(`/cart/${productId}`, dat
 
 export const getCart = () => API.get("/cart");
 
-export const updateCartQty = (productId, qty, data) => API.post(`/cart/${productId}/${qty}`, data);
+export const updateCartQty = (productId, qty, variantId) =>
+  API.post(`/cart/${productId}/${qty}${variantId ? `?variantId=${variantId}` : ""}`);
+
+export const removeCartItem = (productId, variantId) =>
+  API.delete(`/cart/${productId}${variantId ? `?variantId=${variantId}` : ""}`);
 
 export const clearCart = () => API.delete("/cart");
 

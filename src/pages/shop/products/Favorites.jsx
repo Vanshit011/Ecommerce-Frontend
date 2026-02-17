@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getFavorites, removeFromFavorites, prefetchProductDetails } from "../../../services/api";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../context/ToastContext";
+import { getLowestPrice } from "../../../utils/variantUtils";
 
 import { getImageUrl } from "../../../utils/imageUtils";
 import { ProductSkeleton } from "../../../components/common/Skeleton";
@@ -139,13 +140,19 @@ const Favorites = () => {
 
                   <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-50">
                     <div className="flex flex-col">
-                      {product.salePrice && (
+                      {(product.salePrice || product.variants?.[0]?.sale_price) > 0 && (
                         <span className="text-[10px] text-slate-400 line-through font-bold">
-                          ₹{product.price?.toLocaleString()}
+                          ₹{(product.price || product.variants?.[0]?.price || 0).toLocaleString()}
                         </span>
                       )}
-                      <span className="text-lg font-black text-slate-900 leading-none mt-0.5">
-                        ₹{(product.salePrice || product.price || 0).toLocaleString()}
+                      <span className="text-lg font-black text-indigo-600 leading-none mt-0.5">
+                        ₹
+                        {(
+                          product.salePrice ||
+                          product.price ||
+                          getLowestPrice(product.variants) ||
+                          0
+                        ).toLocaleString()}
                       </span>
                     </div>
 

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { getProfile, logout, updateProfile } from "../../../services/api"; // Added updateProfile
-import { useToast } from "../../../context/ToastContext";
+import { getProfile, logout, updateProfile } from "../../../services/api";
+import { useToast } from "../../../context/ToastContext.jsx";
 
 const AdminProfileModal = ({ onClose }) => {
   const navigate = useNavigate();
@@ -10,10 +10,24 @@ const AdminProfileModal = ({ onClose }) => {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", mobile: "" });
+  const modalRef = useRef(null);
 
   useEffect(() => {
     fetchAdminProfile();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [onClose]);
 
   const fetchAdminProfile = async () => {
     try {
@@ -44,7 +58,7 @@ const AdminProfileModal = ({ onClose }) => {
   const handleSave = async () => {
     try {
       await updateProfile(formData);
-      await fetchAdminProfile(); // Refresh data
+      await fetchAdminProfile();
       setIsEditing(false);
       showToast("Profile updated successfully!", "success");
     } catch (error) {
@@ -56,19 +70,16 @@ const AdminProfileModal = ({ onClose }) => {
   if (!admin && !loading) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
       <div
-        className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-fadeIn"
-        onClick={(e) => e.stopPropagation()}
+        ref={modalRef}
+        className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-scale-up"
       >
         {/* HEADER */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white text-center relative">
+        <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-8 text-white text-center relative">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1.5 bg-white/20 hover:bg-white/30 rounded-full transition-colors text-white"
+            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-white active:scale-95"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -85,7 +96,7 @@ const AdminProfileModal = ({ onClose }) => {
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="absolute top-4 left-4 p-1.5 bg-white/20 hover:bg-white/30 rounded-full transition-colors text-white"
+              className="absolute top-6 left-6 p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-white active:scale-95"
               title="Edit Profile"
             >
               <svg
@@ -105,83 +116,96 @@ const AdminProfileModal = ({ onClose }) => {
             </button>
           )}
 
-          <div className="w-20 h-20 bg-white rounded-full mx-auto mb-3 flex items-center justify-center text-blue-600 font-bold text-3xl shadow-lg">
-            {admin?.name?.charAt(0).toUpperCase() || "A"}
+          <div className="w-24 h-24 bg-white/20 backdrop-blur-xl rounded-full mx-auto mb-4 flex items-center justify-center text-white ring-4 ring-white/10 shadow-2xl overflow-hidden">
+            <span className="font-black text-4xl drop-shadow-md">
+              {admin?.name?.charAt(0).toUpperCase() || "A"}
+            </span>
           </div>
 
-          <h2 className="text-xl font-bold">{admin?.name || "Admin"}</h2>
-
-          <p className="text-blue-100 text-sm mt-1">{admin?.email || "admin@example.com"}</p>
+          <h2 className="text-2xl font-black tracking-tight">{admin?.name || "Admin"}</h2>
+          <p className="text-indigo-100 text-xs font-bold uppercase tracking-widest mt-2">
+            {admin?.email || "admin@example.com"}
+          </p>
         </div>
 
         {/* BODY */}
-        <div className="p-6">
-          <div className="space-y-4 mb-8">
+        <div className="p-8">
+          <div className="space-y-4 mb-10">
             {/* EMAIL Field */}
-            <div className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
-              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm shrink-0">
+            <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-50 border border-slate-100 transition-colors hover:bg-slate-100/50">
+              <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-xl shadow-sm shrink-0">
                 📧
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-slate-400 font-bold uppercase">Email</p>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                  Email Address
+                </p>
                 {isEditing ? (
                   <input
                     type="email"
-                    className="bg-white border border-slate-300 rounded px-2 py-1 text-sm w-full mt-0.5 outline-none focus:border-blue-500 text-slate-700"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm mt-1 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 outline-none transition-all font-bold text-slate-700"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 ) : (
-                  <p className="text-slate-700 font-medium truncate">{admin?.email || "N/A"}</p>
+                  <p className="text-slate-700 font-bold truncate text-sm mt-0.5">
+                    {admin?.email || "N/A"}
+                  </p>
                 )}
               </div>
             </div>
 
             {/* MOBILE Field */}
-            <div className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
-              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm shrink-0">
+            <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-50 border border-slate-100 transition-colors hover:bg-slate-100/50">
+              <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-xl shadow-sm shrink-0">
                 📱
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-slate-400 font-bold uppercase">Mobile</p>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                  Mobile Number
+                </p>
                 {isEditing ? (
                   <input
                     type="tel"
-                    className="bg-white border border-slate-300 rounded px-2 py-1 text-sm w-full mt-0.5 outline-none focus:border-blue-500 text-slate-700"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm mt-1 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 outline-none transition-all font-bold text-slate-700"
                     value={formData.mobile}
                     onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
                   />
                 ) : (
-                  <p className="text-slate-700 font-medium">{admin?.mobile || "N/A"}</p>
+                  <p className="text-slate-700 font-bold text-sm mt-0.5">
+                    {admin?.mobile || "N/A"}
+                  </p>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
-              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-slate-400 shadow-sm shrink-0">
+            <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-50 border border-slate-100 transition-colors hover:bg-slate-100/50">
+              <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-xl shadow-sm shrink-0">
                 🛡️
               </div>
               <div>
-                <p className="text-xs text-slate-400 font-bold uppercase">Role</p>
-                <p className="text-slate-700 font-medium">Admin</p>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                  Account Privilege
+                </p>
+                <p className="text-slate-700 font-black text-sm mt-0.5">System Admin</p>
               </div>
             </div>
           </div>
 
           {isEditing ? (
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={() => {
                   setIsEditing(false);
                   setFormData({ name: admin.name, email: admin.email, mobile: admin.mobile });
                 }}
-                className="flex-1 py-3.5 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-all"
+                className="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-all text-sm active:scale-95"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                className="flex-1 py-3.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all"
+                className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all text-sm active:scale-95"
               >
                 Save Changes
               </button>
@@ -189,13 +213,13 @@ const AdminProfileModal = ({ onClose }) => {
           ) : (
             <button
               onClick={handleLogout}
-              className="w-full py-3.5 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl bg-red-50 text-red-600 font-black uppercase tracking-widest hover:bg-red-100 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 active:scale-95 text-xs"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 stroke="currentColor"
                 className="w-5 h-5"
               >
@@ -205,7 +229,7 @@ const AdminProfileModal = ({ onClose }) => {
                   d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
                 />
               </svg>
-              Sign Out
+              Sign Out Securely
             </button>
           )}
         </div>

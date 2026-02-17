@@ -3,6 +3,7 @@ import {
   getCart,
   addToCart as apiAddToCart,
   updateCartQty as apiUpdateCartQty,
+  removeCartItem as apiRemoveCartItem,
   clearCart as apiClearCart,
 } from "../services/api";
 
@@ -66,9 +67,9 @@ const CartProvider = ({ children }) => {
   );
 
   const updateQty = useCallback(
-    async (productId, qty, data) => {
+    async (productId, qty, variantId) => {
       try {
-        await apiUpdateCartQty(productId, qty, data);
+        await apiUpdateCartQty(productId, qty, variantId);
         await fetchCart(); // Always refresh to get the full updated state
       } catch (error) {
         console.error("Update qty error:", error);
@@ -82,12 +83,14 @@ const CartProvider = ({ children }) => {
     async (productId, item) => {
       // Optimistic Update
       const previousCart = cart;
+      const variantId = item.variant_id || item.variant?._id || item.variant?.id;
 
       setCart((prev) => {
         if (!prev || !prev.items) return prev;
         const updatedItems = prev.items.filter((i) => {
-          const pId = i.product._id || i.product.id;
-          return pId !== productId;
+          const pId = i.product?._id || i.product?.id;
+          const vId = i.variant_id || i.variant?._id || i.variant?.id;
+          return !(pId === productId && vId === variantId);
         });
         return { ...prev, items: updatedItems };
       });
@@ -96,14 +99,7 @@ const CartProvider = ({ children }) => {
       setCartCount((prev) => Math.max(0, prev - (item.quantity || 1)));
 
       try {
-        // We use updateQty with 0 to remove on backend as per previous pattern,
-        // or we could use a specific remove endpoint if it existed.
-        // The user's code used globalUpdateQty(productId, 0, ...).
-        // Let's assume we should call the API similarly.
-        await apiUpdateCartQty(productId, 0, {
-          size: item?.size,
-          color: item?.color,
-        });
+        await apiRemoveCartItem(productId, variantId);
         await fetchCart();
       } catch (error) {
         console.error("Remove from cart error:", error);

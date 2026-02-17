@@ -13,36 +13,51 @@ const CategoryTable = ({
 }) => {
   if (loading) {
     return (
-      <div className="h-60 flex flex-col items-center justify-center gap-3 text-slate-500">
-        <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
-        <p>Loading categories...</p>
+      <div className="h-96 flex flex-col items-center justify-center gap-4 text-slate-400">
+        <div className="w-12 h-12 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
+        <p className="font-bold text-sm uppercase tracking-widest">Loading categories...</p>
       </div>
     );
   }
 
   return (
-    <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-      <div className="overflow-x-auto -mx-6 px-6 pb-20">
-        <table className="w-full border-collapse min-w-[500px]">
+    <div className="w-full">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse min-w-[700px]">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Name
+            <tr className="bg-slate-50/80 border-b border-slate-100">
+              <th className="text-left py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                Category Name
               </th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Products
+              <th className="text-left py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                Analytics
               </th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Actions
+              <th className="text-right py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                Quick Actions
               </th>
             </tr>
           </thead>
 
-          <tbody>
+          <tbody className="divide-y divide-slate-50">
             {treeData.length === 0 ? (
               <tr>
-                <td colSpan="3" className="text-center py-8 text-slate-500">
-                  No categories found
+                <td colSpan="3" className="text-center py-20">
+                  <div className="flex flex-col items-center justify-center gap-3 text-slate-300">
+                    <svg
+                      className="w-12 h-12"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.5"
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4a2 2 0 012-2m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                      />
+                    </svg>
+                    <p className="font-bold text-sm">No hierarchical categories found</p>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -50,51 +65,70 @@ const CategoryTable = ({
             )}
           </tbody>
         </table>
+      </div>
 
-        {/* PAGINATION */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
-            <p className="text-sm text-slate-600">
-              Showing {startIndex + 1} to {Math.min(endIndex, treeData.length)} of {treeData.length}{" "}
-              categories
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Previous
-              </button>
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-6 py-8 border-t border-slate-50 bg-slate-50/30">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Showing <span className="text-slate-900">{startIndex + 1}</span> -{" "}
+            <span className="text-slate-900">{Math.min(endIndex, treeData.length)}</span> of{" "}
+            <span className="text-slate-900">{treeData.length}</span> results
+          </p>
 
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-100 shadow-sm disabled:opacity-0 disabled:pointer-events-none transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+
+            <div className="flex items-center gap-1.5 px-2">
               {[...Array(totalPages)].map((_, index) => {
                 const page = index + 1;
+                const isSelected = currentPage === page;
                 return (
                   <button
                     key={page}
                     onClick={() => handlePageChange(page)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      currentPage === page
-                        ? "bg-blue-600 text-white"
-                        : "border border-slate-300 text-slate-700 hover:bg-slate-50"
+                    className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${
+                      isSelected
+                        ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
+                        : "bg-white text-slate-400 hover:bg-slate-50 border border-slate-100"
                     }`}
                   >
-                    {page}
+                    {String(page).padStart(2, "0")}
                   </button>
                 );
               })}
-
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Next
-              </button>
             </div>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-100 shadow-sm disabled:opacity-0 disabled:pointer-events-none transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

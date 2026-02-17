@@ -24,7 +24,7 @@ const OrderSuccess = () => {
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -36,7 +36,7 @@ const OrderSuccess = () => {
           {/* Confetti Background Effect */}
           <div className="absolute inset-0 pointer-events-none opacity-10">
             <div
-              className="absolute top-10 left-10 w-4 h-4 bg-blue-500 rounded-full animate-bounce"
+              className="absolute top-10 left-10 w-4 h-4 bg-indigo-500 rounded-full animate-bounce"
               style={{ animationDelay: "0s" }}
             />
             <div
@@ -78,7 +78,7 @@ const OrderSuccess = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
             <button
               onClick={() => navigate("/my-orders")}
-              className="w-full sm:w-auto px-8 py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
+              className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-200"
             >
               View My Order
             </button>
@@ -119,7 +119,7 @@ const OrderSuccess = () => {
 
               <div className="border-t border-slate-200 my-4 pt-4 flex justify-between items-end">
                 <dt className="font-black text-slate-900 text-lg">Total Paid</dt>
-                <dd className="font-black text-blue-600 text-2xl tracking-tighter">
+                <dd className="font-black text-indigo-600 text-2xl tracking-tighter">
                   ₹
                   {Number(
                     order.total_amount || order.totalAmount || order.totalPrice,

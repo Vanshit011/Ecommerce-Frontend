@@ -26,7 +26,7 @@ const ProductTable = ({
   if (loading) {
     return (
       <div className="h-60 flex flex-col items-center justify-center gap-3 text-slate-500">
-        <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
         <p>Loading inventory...</p>
       </div>
     );
@@ -173,7 +173,7 @@ const ProductTable = ({
                 <td className="py-3 px-4 text-center">
                   <div className="relative inline-block">
                     <button
-                      className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1"
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenMenuId(openMenuId === (p.id || p._id) ? null : p.id || p._id);
@@ -258,7 +258,7 @@ const ProductTable = ({
                       setLimit(Number(e.target.value));
                       setPage(1);
                     }}
-                    className="border border-slate-200 rounded-lg p-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="border border-slate-200 rounded-lg p-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     {[5, 10, 20, 50].map((opt) => (
                       <option key={opt} value={opt}>
@@ -280,7 +280,7 @@ const ProductTable = ({
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
                   className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   title="Previous Page"
@@ -313,8 +313,8 @@ const ProductTable = ({
                           onClick={() => setPage(pageNum)}
                           className={`w-9 h-9 flex items-center justify-center rounded-lg border font-medium text-sm transition-all ${
                             page === pageNum
-                              ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100"
-                              : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600"
+                              ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100"
+                              : "bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
                           }`}
                         >
                           {pageNum}
@@ -332,7 +332,7 @@ const ProductTable = ({
                 </div>
 
                 <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
                   disabled={page === totalPages}
                   className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   title="Next Page"

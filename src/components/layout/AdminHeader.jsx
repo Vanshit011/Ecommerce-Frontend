@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { getProfile } from "../../../services/api";
-import AdminProfileModal from "../profile/AdminProfileModal";
+import { getProfile } from "../../services/api";
+import AdminProfileModal from "../admin/profile/AdminProfileModal";
 
 const AdminHeader = ({ onMenuClick }) => {
   const location = useLocation();
@@ -62,11 +62,11 @@ const AdminHeader = ({ onMenuClick }) => {
           className="flex items-center gap-3 cursor-pointer p-1.5 pr-4 hover:bg-slate-50 rounded-full border border-transparent hover:border-slate-200 transition-all group"
           onClick={() => setShowProfile(true)}
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-md ring-2 ring-white group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-md ring-2 ring-white group-hover:scale-105 transition-transform">
             {adminName.charAt(0).toUpperCase()}
           </div>
           <div className="hidden sm:block text-left">
-            <p className="text-sm font-bold text-slate-700 leading-tight group-hover:text-blue-700">
+            <p className="text-sm font-bold text-slate-700 leading-tight group-hover:text-indigo-700">
               {adminName}
             </p>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Admin</p>
@@ -77,7 +77,7 @@ const AdminHeader = ({ onMenuClick }) => {
             viewBox="0 0 24 24"
             strokeWidth={2}
             stroke="currentColor"
-            className="w-4 h-4 text-slate-400 group-hover:text-blue-500 hidden sm:block"
+            className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 hidden sm:block"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
           </svg>

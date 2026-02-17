@@ -13,13 +13,14 @@ import { getImageUrl } from "../../../utils/imageUtils";
 import { ProductDetailSkeleton } from "../../../components/common/Skeleton";
 import ImageMagnifier from "../../../components/common/ImageMagnifier";
 import {
-  getAvailableColors,
-  getAvailableSizes,
-  findVariant,
   isVariantAvailable,
   getFirstAvailableVariant,
   hasVariants,
   getStockStatus,
+  getAvailableColors,
+  getAvailableSizes,
+  findVariant,
+  getLowestPrice,
 } from "../../../utils/variantUtils";
 
 const ProductDetails = () => {
@@ -38,9 +39,9 @@ const ProductDetails = () => {
 
   // Variant Selection State
   const [selectedVariant, setSelectedVariant] = useState(null);
-  const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [currentColor, setCurrentColor] = useState("");
+  const [currentSize, setCurrentSize] = useState("");
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -86,19 +87,19 @@ const ProductDetails = () => {
       const firstVariant = getFirstAvailableVariant(product.variants);
       if (firstVariant) {
         setSelectedVariant(firstVariant);
-        setSelectedColor(firstVariant.color || "");
-        setSelectedSize(firstVariant.size || "");
+        setCurrentColor(firstVariant.color || "");
+        setCurrentSize(firstVariant.size || "");
       }
     }
   }, [product]);
 
-  // Update selected variant when color or size changes
+  // Update selected variant when attributes change
   useEffect(() => {
     if (product && hasVariants(product)) {
-      const variant = findVariant(product.variants, selectedColor, selectedSize);
+      const variant = findVariant(product.variants, currentColor, currentSize);
       setSelectedVariant(variant);
     }
-  }, [selectedColor, selectedSize, product]);
+  }, [currentColor, currentSize, product]);
 
   const toggleFavorite = async () => {
     try {
@@ -173,7 +174,7 @@ const ProductDetails = () => {
       <div className="min-h-screen flex flex-col">
         <div className="flex-1 flex items-center justify-center flex-col">
           <h2 className="text-xl font-semibold mb-3">{error}</h2>
-          <button onClick={() => navigate("/")} className="text-blue-600 hover:underline">
+          <button onClick={() => navigate("/")} className="text-indigo-600 hover:underline">
             Go Home
           </button>
         </div>
@@ -188,14 +189,14 @@ const ProductDetails = () => {
           <nav className="flex items-center gap-2 text-sm text-slate-500 overflow-x-auto whitespace-nowrap pb-2 sm:pb-0">
             <span
               onClick={() => navigate("/home")}
-              className="hover:text-blue-600 transition-colors cursor-pointer"
+              className="hover:text-indigo-600 transition-colors cursor-pointer"
             >
               Home
             </span>
             <span className="text-slate-300">/</span>
             <span
               onClick={() => navigate("/products")}
-              className="hover:text-blue-600 transition-colors cursor-pointer"
+              className="hover:text-indigo-600 transition-colors cursor-pointer"
             >
               Products
             </span>
@@ -251,12 +252,12 @@ const ProductDetails = () => {
                             onClick={() => setSelectedImage(url)}
                             className={`relative w-16 h-16 md:w-full md:h-16 flex-shrink-0 rounded-xl border-2 transition-all cursor-pointer overflow-hidden ${
                               isSelected
-                                ? "border-blue-600 ring-2 ring-blue-50"
-                                : "border-slate-100 hover:border-blue-300"
+                                ? "border-indigo-600 ring-2 ring-indigo-50"
+                                : "border-slate-100 hover:border-indigo-300"
                             }`}
                           >
                             <img src={url} alt="" className="w-full h-full object-cover" />
-                            {isSelected && <div className="absolute inset-0 bg-blue-600/10" />}
+                            {isSelected && <div className="absolute inset-0 bg-indigo-600/10" />}
                           </div>
                         );
                       })}
@@ -356,7 +357,7 @@ const ProductDetails = () => {
             <div className="p-8 md:p-12 lg:p-16 flex flex-col h-full bg-white relative z-10 rounded-b-[2.5rem] lg:rounded-r-[2.5rem] lg:rounded-bl-none">
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3 mb-6">
-                  <span className="px-4 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-blue-100/50">
+                  <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-indigo-100/50">
                     {product?.category?.name || "Premium Collection"}
                   </span>
                   {hasVariants(product) ? (
@@ -394,7 +395,7 @@ const ProductDetails = () => {
 
                 {/* PRICE SECTION */}
                 <div className="relative mb-10 group/price">
-                  <div className="absolute -inset-2 bg-gradient-to-r from-blue-600/5 to-purple-600/5 rounded-[2.5rem] blur-xl opacity-0 group-hover/price:opacity-100 transition-opacity duration-700" />
+                  <div className="absolute -inset-2 bg-gradient-to-r from-indigo-600/5 to-purple-600/5 rounded-[2.5rem] blur-xl opacity-0 group-hover/price:opacity-100 transition-opacity duration-700" />
                   <div className="relative p-8 bg-slate-50/50 backdrop-blur-sm rounded-[2rem] border border-slate-100 flex items-center justify-between overflow-hidden">
                     <div className="flex flex-col">
                       <div className="flex items-center gap-3 mb-3">
@@ -402,7 +403,7 @@ const ProductDetails = () => {
                           {selectedVariant ? "Price" : "Starting From"}
                         </span>
                         {(selectedVariant?.sku || product?.sku || product?.variants?.[0]?.sku) && (
-                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-wider rounded">
+                          <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[9px] font-black uppercase tracking-wider rounded">
                             SKU:{" "}
                             {selectedVariant?.sku || product?.sku || product?.variants?.[0]?.sku}
                           </span>
@@ -418,11 +419,7 @@ const ProductDetails = () => {
                                 0
                               ).toLocaleString()
                             : hasVariants(product)
-                              ? (
-                                  product.variants[0]?.sale_price ||
-                                  product.variants[0]?.price ||
-                                  0
-                                ).toLocaleString()
+                              ? getLowestPrice(product.variants).toLocaleString()
                               : (
                                   product?.sale_price ||
                                   product?.salePrice ||
@@ -451,7 +448,7 @@ const ProductDetails = () => {
                         <div className="px-5 py-2.5 bg-slate-900 text-white rounded-2xl text-[10px] font-black tracking-widest shadow-xl shadow-slate-200">
                           LIMITED OFFER
                         </div>
-                        <div className="text-3xl font-black text-blue-600 tracking-tighter">
+                        <div className="text-3xl font-black text-indigo-600 tracking-tighter">
                           {Math.round(
                             ((selectedVariant.price - selectedVariant.sale_price) /
                               selectedVariant.price) *
@@ -480,76 +477,27 @@ const ProductDetails = () => {
                   </p>
                 </div>
 
-                {/* SPECIFICATIONS GRID */}
-                <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 mb-10">
-                  <div className="p-5 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-2 mb-2 text-slate-400">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                        />
-                      </svg>
-                      <span className="text-[10px] font-black uppercase tracking-widest">
-                        Weight
-                      </span>
-                    </div>
-                    <span className="text-base font-black text-slate-900">
-                      {product?.weight ? `${product.weight} kg` : "Premium Weight"}
-                    </span>
-                  </div>
-
-                  <div className="p-5 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-2 mb-2 text-slate-400">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-                        />
-                      </svg>
-                      <span className="text-[10px] font-black uppercase tracking-widest">
-                        Dimensions
-                      </span>
-                    </div>
-                    <span className="text-base font-black text-slate-900 line-clamp-1">
-                      {product?.dimensions || "Compact Pack"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* OPTIONS */}
+                {/* VARIANT SELECTORS */}
                 {hasVariants(product) && (
-                  <div className="space-y-8 mb-8">
+                  <div className="space-y-8 mb-10">
+                    {/* Color Selection */}
                     {getAvailableColors(product.variants).length > 0 && (
                       <div>
-                        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-4">
-                          Colorway {selectedColor && `- ${selectedColor}`}
+                        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                          Selection Color
+                          <span className="text-indigo-600 font-bold lowercase tracking-normal">
+                            — {currentColor || "Not selected"}
+                          </span>
                         </h3>
-                        <div className="flex flex-wrap gap-2.5">
-                          {getAvailableColors(product.variants).map((color, i) => (
+                        <div className="flex flex-wrap gap-3">
+                          {getAvailableColors(product.variants).map((color) => (
                             <button
-                              key={i}
-                              onClick={() => setSelectedColor(color)}
-                              className={`px-5 py-2.5 rounded-2xl text-xs font-bold shadow-sm first-letter:uppercase transition-all ${
-                                selectedColor === color
-                                  ? "bg-slate-900 text-white border border-slate-900"
-                                  : "bg-slate-50 border border-slate-200 text-slate-800 hover:border-slate-300"
+                              key={color}
+                              onClick={() => setCurrentColor(color)}
+                              className={`px-6 py-3 rounded-2xl font-bold text-sm transition-all border-2 ${
+                                currentColor === color
+                                  ? "bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-100 scale-105"
+                                  : "bg-white border-slate-100 text-slate-600 hover:border-slate-200"
                               }`}
                             >
                               {color}
@@ -558,20 +506,25 @@ const ProductDetails = () => {
                         </div>
                       </div>
                     )}
+
+                    {/* Size Selection */}
                     {getAvailableSizes(product.variants).length > 0 && (
                       <div>
-                        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-4">
-                          Select Size {selectedSize && `- ${selectedSize}`}
+                        <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                          Selection Size
+                          <span className="text-indigo-600 font-bold lowercase tracking-normal">
+                            — {currentSize || "Not selected"}
+                          </span>
                         </h3>
                         <div className="flex flex-wrap gap-3">
-                          {getAvailableSizes(product.variants).map((size, i) => (
+                          {getAvailableSizes(product.variants).map((size) => (
                             <button
-                              key={i}
-                              onClick={() => setSelectedSize(size)}
-                              className={`min-w-[60px] h-[60px] flex items-center justify-center border-2 rounded-2xl text-sm font-black transition-all shadow-sm active:scale-90 ${
-                                selectedSize === size
-                                  ? "bg-slate-900 border-slate-900 text-white"
-                                  : "bg-white border-slate-100 text-slate-800 hover:border-blue-600 hover:text-blue-600"
+                              key={size}
+                              onClick={() => setCurrentSize(size)}
+                              className={`px-6 py-3 rounded-2xl font-bold text-sm transition-all border-2 ${
+                                currentSize === size
+                                  ? "bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-100 scale-105"
+                                  : "bg-white border-slate-100 text-slate-600 hover:border-slate-200"
                               }`}
                             >
                               {size}
@@ -615,22 +568,6 @@ const ProductDetails = () => {
                     </div>
                   </div>
                 </div>
-
-                {/* TAGS */}
-                {product?.tags?.length > 0 && (
-                  <div className="pt-6 border-t border-slate-50 mb-8">
-                    <div className="flex flex-wrap gap-2">
-                      {product.tags.map((tag, i) => (
-                        <span
-                          key={i}
-                          className="px-3 py-1 bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-100 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-colors cursor-pointer"
-                        >
-                          #{tag.trim()}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* ACTIONS AREA */}
@@ -643,7 +580,7 @@ const ProductDetails = () => {
                         ? !selectedVariant || !isVariantAvailable(selectedVariant)
                         : (product?.stock_qty || 0) <= 0 || buyingNow
                     }
-                    className={`h-20 flex items-center justify-center gap-4 rounded-[2rem] font-black text-xl transition-all active:scale-95 shadow-2xl shadow-blue-200/50 ${
+                    className={`h-20 flex items-center justify-center gap-4 rounded-[2rem] font-black text-xl transition-all active:scale-95 shadow-2xl shadow-indigo-200/50 ${
                       (
                         hasVariants(product)
                           ? !selectedVariant || !isVariantAvailable(selectedVariant)
@@ -651,8 +588,8 @@ const ProductDetails = () => {
                       )
                         ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
                         : buyingNow
-                          ? "bg-blue-600/50 text-white/50"
-                          : "bg-blue-600 text-white hover:bg-blue-700 hover:-translate-y-1"
+                          ? "bg-indigo-600/50 text-white/50"
+                          : "bg-indigo-600 text-white hover:bg-indigo-700 hover:-translate-y-1"
                     }`}
                   >
                     {buyingNow ? (
@@ -685,7 +622,7 @@ const ProductDetails = () => {
                         ? !selectedVariant || !isVariantAvailable(selectedVariant)
                         : (product?.stock_qty || 0) <= 0 || addingToCart
                     }
-                    className={`h-20 flex items-center justify-center gap-4 rounded-[2rem] font-black text-xl transition-all active:scale-95 bg-white border-2 border-slate-900 group ${
+                    className={`h-20 flex items-center justify-center gap-4 rounded-[2rem] font-black text-xl transition-all active:scale-95 bg-white border-2 border-indigo-600 group ${
                       (
                         hasVariants(product)
                           ? !selectedVariant || !isVariantAvailable(selectedVariant)
@@ -694,7 +631,7 @@ const ProductDetails = () => {
                         ? "border-slate-100 text-slate-300 cursor-not-allowed"
                         : addingToCart
                           ? "bg-slate-50 text-slate-400 border-slate-200"
-                          : "text-slate-900 hover:bg-slate-900 hover:text-white"
+                          : "text-indigo-600 hover:bg-indigo-600 hover:text-white"
                     }`}
                   >
                     {addingToCart ? (
