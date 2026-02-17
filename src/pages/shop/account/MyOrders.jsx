@@ -14,16 +14,21 @@ const MyOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 5;
 
+  const filteredOrders = orders.filter((order) => {
+    if (statusFilter === "all") return true;
+    return order.status?.toLowerCase() === statusFilter.toLowerCase();
+  });
+
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
 
-  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
-
-  const totalPages = Math.ceil(orders.length / ordersPerPage);
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -85,63 +90,72 @@ const MyOrders = () => {
       <div className="max-w-7xl mx-auto px-4 py-10 grid lg:grid-cols-[280px_1fr] gap-8">
         {/* SIDEBAR */}
         <aside className="h-fit sticky top-24 space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-            <h3 className="font-bold text-slate-800 text-lg mb-6 px-2">Account Menu</h3>
+          <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6">
+            <h3 className="font-black text-slate-900 text-lg mb-6 px-2 tracking-tight">Account</h3>
 
-            <nav className="space-y-1">
+            <nav className="space-y-2">
               <button
                 onClick={() => navigate("/profile")}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-600 font-bold hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-slate-400 group-hover:text-slate-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-white border border-transparent group-hover:border-slate-100 transition-all">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
                 Personal Details
               </button>
 
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 text-blue-700 font-bold transition-all text-sm">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+              <button
+                onClick={() => navigate("/my-orders")}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-indigo-600 text-white font-bold transition-all text-sm shadow-xl shadow-indigo-200"
+              >
+                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                    <path
+                      fillRule="evenodd"
+                      d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
                 My Orders
               </button>
 
               <button
                 onClick={() => navigate("/my-payments")}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-600 font-bold hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-slate-400 group-hover:text-slate-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-white border border-transparent group-hover:border-slate-100 transition-all">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                    <path
+                      fillRule="evenodd"
+                      d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
                 My Payments
               </button>
             </nav>
@@ -149,14 +163,54 @@ const MyOrders = () => {
         </aside>
 
         {/* ORDER LIST */}
-        <div className="space-y-6">
-          <div className="flex items-end justify-between">
+        <div className="space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-slate-800">My Orders</h2>
-              <p className="text-slate-500 mt-1 text-sm">Track and manage your recent purchases</p>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">My Orders</h2>
+              <p className="text-slate-500 mt-2 font-medium">
+                Track and manage your recent purchases
+              </p>
             </div>
-            <div className="text-sm font-medium text-slate-500 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
-              Total Orders: <span className="text-slate-900 font-bold">{orders.length}</span>
+            <div className="flex flex-wrap items-center gap-3">
+              {/* STATUS FILTER */}
+              <div className="relative">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="appearance-none pl-4 pr-10 py-3 bg-white border border-slate-100 rounded-[1.25rem] text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all cursor-pointer"
+                >
+                  <option value="all">All Orders</option>
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              <div className="text-xs font-black text-slate-400 uppercase tracking-widest bg-white px-6 py-3 rounded-[1.25rem] border border-slate-100 shadow-sm flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                Total: <span className="text-slate-900">{filteredOrders.length} Orders</span>
+              </div>
             </div>
           </div>
 
@@ -185,26 +239,120 @@ const MyOrders = () => {
                 </p>
                 <button
                   onClick={() => navigate("/products")}
-                  className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95"
+                  className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
                 >
                   Start Shopping
                 </button>
               </div>
             ) : (
-              currentOrders.map((order) => (
-                <div
-                  key={order.id}
-                  onClick={() => openDetails(order)}
-                  className="group bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-blue-100 transition-all duration-300 cursor-pointer relative overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-slate-50 to-white rounded-bl-full -z-0 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+              currentOrders.map((order) => {
+                const id = order.id || order._id;
+                const date = new Date(order.created_at || order.createdAt).toLocaleDateString(
+                  undefined,
+                  { year: "numeric", month: "short", day: "numeric" },
+                );
+                const status = String(order.status || order.order_status).toUpperCase();
+                const itemsCount = order.items?.length || 0;
+                const total = Number(order.total_amount || order.totalAmount || 0);
 
-                  <div className="flex flex-col sm:flex-row justify-between gap-6 relative z-10">
-                    <div className="flex gap-4">
-                      <div className="w-16 h-16 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 group-hover:border-blue-100 transition-colors">
+                const getStatusStyle = (s) => {
+                  switch (s) {
+                    case "PENDING":
+                      return "bg-amber-50 text-amber-700 border-amber-100";
+                    case "CONFIRMED":
+                      return "bg-indigo-50 text-indigo-700 border-indigo-100";
+                    case "SHIPPED":
+                      return "bg-indigo-50 text-indigo-700 border-indigo-100";
+                    case "DELIVERED":
+                      return "bg-emerald-50 text-emerald-700 border-emerald-100";
+                    case "CANCELLED":
+                    case "FAILED":
+                      return "bg-rose-50 text-rose-700 border-rose-100";
+                    default:
+                      return "bg-slate-50 text-slate-600 border-slate-100";
+                  }
+                };
+
+                return (
+                  <div
+                    key={id}
+                    onClick={() => openDetails(order)}
+                    className="group bg-white border border-slate-100 rounded-[2rem] p-6 md:p-8 hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-500 cursor-pointer relative overflow-hidden"
+                  >
+                    {/* Card Background Pattern */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-[4rem] -z-0 opacity-40 group-hover:scale-125 transition-transform duration-700"></div>
+
+                    <div className="flex flex-col md:flex-row justify-between gap-8 relative z-10">
+                      <div className="flex items-start gap-5">
+                        <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-all duration-500">
+                          <svg
+                            className="w-8 h-8 text-slate-300 group-hover:text-white transition-colors"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                            />
+                          </svg>
+                        </div>
+
+                        <div>
+                          <div className="flex flex-wrap items-center gap-3 mb-2">
+                            <h4 className="font-black text-slate-900 text-xl tracking-tight">
+                              #{id.slice(0, 8).toUpperCase()}
+                            </h4>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">
+                              {date}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <p className="text-sm text-slate-500 font-bold">
+                              {itemsCount} {itemsCount === 1 ? "Item" : "Items"}
+                            </p>
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
+                            <p className="text-sm font-black text-slate-900">
+                              ₹{total.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-4">
+                        <span
+                          className={`text-[10px] px-4 py-2 rounded-full font-black uppercase tracking-widest border ${getStatusStyle(status)}`}
+                        >
+                          {status}
+                        </span>
+                        <div className="flex -space-x-3 overflow-hidden">
+                          {order.items?.slice(0, 3).map((item, idx) => (
+                            <div
+                              key={idx}
+                              className="w-10 h-10 rounded-xl border-4 border-white bg-slate-50 overflow-hidden shadow-sm"
+                            >
+                              <img
+                                src={getImageUrl(item.product)}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))}
+                          {itemsCount > 3 && (
+                            <div className="w-10 h-10 rounded-xl border-4 border-white bg-indigo-600 flex items-center justify-center text-[10px] font-black text-white shadow-sm">
+                              +{itemsCount - 3}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 pt-6 border-t border-slate-50 flex justify-between items-center">
+                      <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-8 w-8 text-slate-300 group-hover:text-blue-400 transition-colors"
+                          className="w-4 h-4"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -212,142 +360,110 @@ const MyOrders = () => {
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
                           />
                         </svg>
+                        Secured Delivery
                       </div>
-
-                      <div>
-                        <div className="flex items-center gap-3 mb-1">
-                          <h4 className="font-bold text-slate-800 text-lg">
-                            Order #{order.id.slice(0, 8).toUpperCase()}
-                          </h4>
-                          <span className="text-xs text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
-                            {new Date(order.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-sm text-slate-500 font-medium">
-                          {order.items?.length || 0} Items • Total:{" "}
-                          <span className="text-slate-900 font-bold">
-                            ₹{Number(order.total_amount || order.totalAmount).toLocaleString()}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-end justify-center gap-2">
-                      <span
-                        className={`text-xs px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider ${
-                          order.status === "pending"
-                            ? "bg-yellow-50 text-yellow-700 border border-yellow-100"
-                            : order.status === "confirmed"
-                              ? "bg-blue-50 text-blue-700 border border-blue-100"
-                              : order.status === "shipped"
-                                ? "bg-purple-50 text-purple-700 border border-purple-100"
-                                : order.status === "delivered"
-                                  ? "bg-green-50 text-green-700 border border-green-100"
-                                  : "bg-slate-100 text-slate-600 border border-slate-200"
-                        }`}
-                      >
-                        {order.status}
+                      <span className="text-sm font-black text-indigo-600 group-hover:translate-x-1 transition-all flex items-center gap-2">
+                        Manage Order
+                        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path
+                            fillRule="evenodd"
+                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
                       </span>
                     </div>
                   </div>
-
-                  <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
-                    <div className="flex -space-x-2">
-                      {order.items?.slice(0, 4).map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 overflow-hidden"
-                          title={item.product?.name}
-                        >
-                          <img
-                            src={getImageUrl(item.product)}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ))}
-                      {order.items?.length > 4 && (
-                        <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                          +{order.items.length - 4}
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-sm font-bold text-blue-600 group-hover:translate-x-1 transition-transform flex items-center gap-1">
-                      View Details
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </span>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
           {/* PAGINATION */}
           {orders.length > ordersPerPage && (
-            <div className="flex justify-center items-center gap-2 mt-8">
+            <div className="flex justify-center items-center gap-4 mt-12 bg-white/50 backdrop-blur-sm p-4 rounded-[2rem] border border-slate-100 w-fit mx-auto shadow-sm">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 hover:bg-white hover:shadow-md disabled:opacity-30 transition-all"
+                className="group w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-indigo-600 hover:border-indigo-600 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-slate-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+                  className="h-5 w-5 text-slate-600 group-hover:text-white transition-colors"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
                   <path
-                    fillRule="evenodd"
-                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                    clipRule="evenodd"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M15 19l-7-7 7-7"
                   />
                 </svg>
               </button>
 
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all ${
-                    currentPage === i + 1
-                      ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
-                      : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              <div className="flex items-center gap-2">
+                {[...Array(totalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  // Logic to show 1, last, and current +/- 1
+                  if (
+                    pageNum === 1 ||
+                    pageNum === totalPages ||
+                    (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`min-w-[48px] h-12 flex items-center justify-center rounded-2xl font-black text-xs transition-all ${
+                          currentPage === pageNum
+                            ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200 scale-110"
+                            : "bg-white text-slate-500 border border-slate-100 hover:border-indigo-400 hover:text-indigo-600"
+                        }`}
+                      >
+                        {String(pageNum).padStart(2, "0")}
+                      </button>
+                    );
+                  }
+
+                  // Show ellipsis
+                  if (pageNum === 2 || pageNum === totalPages - 1) {
+                    return (
+                      <span
+                        key={i}
+                        className="w-8 h-12 flex items-center justify-center text-slate-400 font-bold"
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+
+                  return null;
+                })}
+              </div>
 
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 hover:bg-white hover:shadow-md disabled:opacity-30 transition-all"
+                className="group w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-indigo-600 hover:border-indigo-600 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-slate-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+                  className="h-5 w-5 text-slate-600 group-hover:text-white transition-colors"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
                   <path
-                    fillRule="evenodd"
-                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                    clipRule="evenodd"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M9 5l7 7-7 7"
                   />
                 </svg>
               </button>
@@ -369,31 +485,49 @@ const MyOrders = () => {
               ✕
             </button>
 
-            <div className="p-8">
+            {/* Modal Content */}
+            <div className="p-8 md:p-12">
               {/* HEADER */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-6 border-b border-slate-100">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10 pb-8 border-b border-slate-100">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Order Details</h2>
-                  <p className="text-slate-500 font-medium mt-1">
-                    ID: #{selectedOrder.id.slice(0, 8).toUpperCase()} •{" "}
-                    {new Date(selectedOrder.created_at).toLocaleDateString()}
-                  </p>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
+                    Order Details
+                  </h2>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-black text-slate-400 uppercase tracking-widest">
+                      #
+                      {String(selectedOrder.id || selectedOrder._id)
+                        .slice(0, 8)
+                        .toUpperCase()}
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                    <span className="text-sm font-bold text-slate-500">
+                      {new Date(
+                        selectedOrder.created_at || selectedOrder.createdAt,
+                      ).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
                 </div>
 
                 <span
-                  className={`text-xs px-4 py-1.5 rounded-full font-bold uppercase tracking-wider ${
-                    selectedOrder.status === "pending"
-                      ? "bg-yellow-50 text-yellow-700 border border-yellow-100"
-                      : selectedOrder.status === "confirmed"
-                        ? "bg-blue-50 text-blue-700 border border-blue-100"
-                        : selectedOrder.status === "shipped"
-                          ? "bg-purple-50 text-purple-700 border border-purple-100"
-                          : selectedOrder.status === "delivered"
-                            ? "bg-green-50 text-green-700 border border-green-100"
-                            : "bg-slate-100 text-slate-700 border border-slate-200"
+                  className={`text-[10px] px-6 py-2.5 rounded-full font-black uppercase tracking-widest border ${
+                    selectedOrder.status === "pending" || selectedOrder.status === "PENDING"
+                      ? "bg-amber-50 text-amber-700 border-amber-100"
+                      : selectedOrder.status === "confirmed" || selectedOrder.status === "CONFIRMED"
+                        ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                        : selectedOrder.status === "shipped" || selectedOrder.status === "SHIPPED"
+                          ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                          : selectedOrder.status === "delivered" ||
+                              selectedOrder.status === "DELIVERED"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                            : "bg-rose-50 text-rose-700 border-rose-100"
                   }`}
                 >
-                  {selectedOrder.status}
+                  {String(selectedOrder.status || selectedOrder.order_status).toUpperCase()}
                 </span>
               </div>
 
@@ -504,7 +638,7 @@ const MyOrders = () => {
                           Qty: {item.quantity}
                         </span>
                         {item.size && (
-                          <span className="text-[10px] bg-blue-50 text-blue-600 font-black px-2 py-0.5 rounded-md border border-blue-100 uppercase tracking-wider">
+                          <span className="text-[10px] bg-indigo-50 text-indigo-600 font-black px-2 py-0.5 rounded-md border border-indigo-100 uppercase tracking-wider">
                             Size: {item.size}
                           </span>
                         )}

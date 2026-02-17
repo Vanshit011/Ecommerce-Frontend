@@ -12,16 +12,22 @@ const MyPayments = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const [currentPage, setCurrentPage] = useState(1);
   const paymentsPerPage = 10;
 
+  const filteredPayments = payments.filter((payment) => {
+    if (statusFilter === "all") return true;
+    return payment.status?.toLowerCase() === statusFilter.toLowerCase();
+  });
+
   const indexOfLastPayment = currentPage * paymentsPerPage;
   const indexOfFirstPayment = indexOfLastPayment - paymentsPerPage;
 
-  const currentPayments = payments.slice(indexOfFirstPayment, indexOfLastPayment);
+  const currentPayments = filteredPayments.slice(indexOfFirstPayment, indexOfLastPayment);
 
-  const totalPages = Math.ceil(payments.length / paymentsPerPage);
+  const totalPages = Math.ceil(filteredPayments.length / paymentsPerPage);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -81,63 +87,69 @@ const MyPayments = () => {
       <div className="max-w-7xl mx-auto px-4 py-10 grid lg:grid-cols-[280px_1fr] gap-8">
         {/* SIDEBAR */}
         <aside className="h-fit sticky top-24 space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-            <h3 className="font-bold text-slate-800 text-lg mb-6 px-2">Account Menu</h3>
+          <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6">
+            <h3 className="font-black text-slate-900 text-lg mb-6 px-2 tracking-tight">Account</h3>
 
-            <nav className="space-y-1">
+            <nav className="space-y-2">
               <button
                 onClick={() => navigate("/profile")}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-600 font-bold hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-slate-400 group-hover:text-slate-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-white border border-transparent group-hover:border-slate-100 transition-all">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
                 Personal Details
               </button>
 
               <button
                 onClick={() => navigate("/my-orders")}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-600 font-bold hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-slate-400 group-hover:text-slate-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-white border border-transparent group-hover:border-slate-100 transition-all">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                    <path
+                      fillRule="evenodd"
+                      d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
                 My Orders
               </button>
 
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 text-blue-700 font-bold transition-all text-sm">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+              <button className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-indigo-600 text-white font-bold transition-all text-sm shadow-xl shadow-indigo-200">
+                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                    <path
+                      fillRule="evenodd"
+                      d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
                 My Payments
               </button>
             </nav>
@@ -145,14 +157,53 @@ const MyPayments = () => {
         </aside>
 
         {/* PAYMENT LIST */}
-        <div className="space-y-6">
-          <div className="flex items-end justify-between">
+        <div className="space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-slate-800">Payment History</h2>
-              <p className="text-slate-500 mt-1 text-sm">View all your transactions and invoices</p>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Payment History</h2>
+              <p className="text-slate-500 mt-2 font-medium">
+                View all your transactions and invoices
+              </p>
             </div>
-            <div className="text-sm font-medium text-slate-500 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
-              Total Records: <span className="text-slate-900 font-bold">{payments.length}</span>
+            <div className="flex flex-wrap items-center gap-3">
+              {/* STATUS FILTER */}
+              <div className="relative">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="appearance-none pl-4 pr-10 py-3 bg-white border border-slate-100 rounded-[1.25rem] text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all cursor-pointer"
+                >
+                  <option value="all">All Payments</option>
+                  <option value="succeeded">Succeeded</option>
+                  <option value="pending">Pending</option>
+                  <option value="failed">Failed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              <div className="text-xs font-black text-slate-400 uppercase tracking-widest bg-white px-6 py-3 rounded-[1.25rem] border border-slate-100 shadow-sm flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                Total: <span className="text-slate-900">{filteredPayments.length} Records</span>
+              </div>
             </div>
           </div>
 
@@ -179,146 +230,197 @@ const MyPayments = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {currentPayments.map((payment) => (
-                <div
-                  key={payment.id}
-                  onClick={() => openDetails(payment)}
-                  className="group bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:border-blue-100 transition-all duration-300 cursor-pointer flex items-center gap-5"
-                >
+              {currentPayments.map((payment) => {
+                const id = payment.id || payment._id;
+                const status = String(payment.status || "UNKNOWN").toUpperCase();
+                const amount = Number(payment.amount || 0);
+                const date = new Date(payment.created_at || payment.createdAt).toLocaleDateString(
+                  "en-US",
+                  {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  },
+                );
+
+                const getPaymentStatusStyle = (s) => {
+                  switch (s) {
+                    case "SUCCEEDED":
+                    case "COMPLETED":
+                      return "bg-emerald-50 text-emerald-700 border-emerald-100";
+                    case "PENDING":
+                      return "bg-amber-50 text-amber-700 border-amber-100";
+                    case "FAILED":
+                      return "bg-rose-50 text-rose-700 border-rose-100";
+                    case "CANCELED":
+                    case "CANCELLED":
+                      return "bg-slate-100 text-slate-600 border-slate-100";
+                    default:
+                      return "bg-slate-50 text-slate-600 border-slate-100";
+                  }
+                };
+
+                return (
                   <div
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-colors ${
-                      payment.status === "succeeded" || payment.status === "completed"
-                        ? "bg-green-50 border-green-100 text-green-600"
-                        : payment.status === "pending"
-                          ? "bg-yellow-50 border-yellow-100 text-yellow-600"
-                          : "bg-red-50 border-red-100 text-red-600"
-                    }`}
+                    key={id}
+                    onClick={() => openDetails(payment)}
+                    className="group bg-white border border-slate-100 rounded-[2rem] p-6 hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-500 cursor-pointer flex flex-col sm:flex-row items-start sm:items-center gap-6 relative overflow-hidden"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-7 w-7"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a1 1 0 100-2 1 1 0 000 2z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-bl-[3rem] -z-0 opacity-40 group-hover:scale-125 transition-transform duration-700"></div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
-                      <h4 className="font-bold text-slate-800 text-sm truncate">
-                        ID: {payment.id?.slice(0, 16).toUpperCase()}...
-                      </h4>
-                      {payment.orderId && (
-                        <span className="hidden sm:inline-block text-slate-300">•</span>
-                      )}
-                      {payment.orderId && (
-                        <span className="text-xs font-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-100 truncate max-w-[150px]">
-                          Order: #{payment.orderId.slice(0, 8).toUpperCase()}
-                        </span>
-                      )}
+                    <div
+                      className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-500 group-hover:scale-110 relative z-10 ${
+                        status === "SUCCEEDED" || status === "COMPLETED"
+                          ? "bg-emerald-50 border-emerald-100 text-emerald-600"
+                          : status === "PENDING"
+                            ? "bg-amber-50 border-amber-100 text-amber-600"
+                            : "bg-rose-50 border-rose-100 text-rose-600"
+                      }`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-7 w-7"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a1 1 0 100-2 1 1 0 000 2z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
                     </div>
-                    <p className="text-xs text-slate-400 font-medium">
-                      {new Date(payment.created_at || payment.createdAt).toLocaleDateString(
-                        "en-US",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        },
-                      )}
-                    </p>
-                  </div>
 
-                  <div className="text-right">
-                    <p className="font-black text-slate-900 text-lg">
-                      ₹{Number(payment.amount || 0).toLocaleString()}
-                    </p>
-                    <span
-                      className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-wide inline-block mt-1 ${getStatusColor(
-                        payment.status,
-                      )}`}
-                    >
-                      {payment.status || "Unknown"}
-                    </span>
-                  </div>
+                    <div className="flex-1 min-w-0 relative z-10">
+                      <div className="flex flex-col mb-1.5">
+                        <h4 className="font-black text-slate-900 text-base tracking-tight truncate">
+                          ID: {id.slice(0, 16).toUpperCase()}...
+                        </h4>
+                        {payment.orderId && (
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                            Rel. Order: #{payment.orderId.slice(0, 8).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                        {date}
+                      </p>
+                    </div>
 
-                  <div className="hidden sm:block text-slate-300 group-hover:text-blue-500 transition-colors pl-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <div className="sm:text-right relative z-10">
+                      <p className="font-black text-slate-900 text-2xl tracking-tighter sm:mb-1">
+                        ₹{amount.toLocaleString()}
+                      </p>
+                      <span
+                        className={`text-[10px] px-4 py-1.5 rounded-full font-black uppercase tracking-widest border transition-colors ${getPaymentStatusStyle(status)}`}
+                      >
+                        {status}
+                      </span>
+                    </div>
+
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden lg:block opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-500">
+                      <svg
+                        className="w-6 h-6 text-indigo-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.5}
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
           {/* PAGINATION */}
           {payments.length > paymentsPerPage && (
-            <div className="flex justify-center items-center gap-2 mt-8">
+            <div className="flex justify-center items-center gap-4 mt-12 bg-white/50 backdrop-blur-sm p-4 rounded-[2rem] border border-slate-100 w-fit mx-auto shadow-sm">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 hover:bg-white hover:shadow-md disabled:opacity-30 transition-all"
+                className="group w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-indigo-600 hover:border-indigo-600 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-slate-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+                  className="h-5 w-5 text-slate-600 group-hover:text-white transition-colors"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
                   <path
-                    fillRule="evenodd"
-                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                    clipRule="evenodd"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M15 19l-7-7 7-7"
                   />
                 </svg>
               </button>
 
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all ${
-                    currentPage === i + 1
-                      ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
-                      : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              <div className="flex items-center gap-2">
+                {[...Array(totalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  // Truncate logic
+                  if (
+                    pageNum === 1 ||
+                    pageNum === totalPages ||
+                    (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        disabled={currentPage === pageNum}
+                        key={i}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`min-w-[48px] h-12 flex items-center justify-center rounded-2xl font-black text-xs transition-all ${
+                          currentPage === pageNum
+                            ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200 scale-110"
+                            : "bg-white text-slate-500 border border-slate-100 hover:border-indigo-400 hover:text-indigo-600"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  }
+
+                  if (pageNum === 2 || pageNum === totalPages - 1) {
+                    return (
+                      <span
+                        key={i}
+                        className="w-8 h-12 flex items-center justify-center text-slate-400 font-bold"
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
 
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 hover:bg-white hover:shadow-md disabled:opacity-30 transition-all"
+                className="group w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-indigo-600 hover:border-indigo-600 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-slate-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+                  className="h-5 w-5 text-slate-600 group-hover:text-white transition-colors"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
                   <path
-                    fillRule="evenodd"
-                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                    clipRule="evenodd"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.5}
+                    d="M9 5l7 7-7 7"
                   />
                 </svg>
               </button>
@@ -426,7 +528,7 @@ const MyPayments = () => {
                       closeModal();
                       navigate(`/my-orders`);
                     }}
-                    className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95"
+                    className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95"
                   >
                     View Order
                   </button>

@@ -415,8 +415,8 @@ const AdminOverview = () => {
               hideCustom={true}
             />
           </div>
-          <div className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="relative h-[350px] w-full min-h-[350px]">
+            <ResponsiveContainer width="99%" height="99%">
               <AreaChart data={revenueMonthly}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -472,8 +472,8 @@ const AdminOverview = () => {
               hideCustom={true}
             />
           </div>
-          <div className="h-[400px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="relative h-[400px] w-full min-h-[400px]">
+            <ResponsiveContainer width="99%" height="99%">
               <PieChart>
                 <Pie
                   data={salesByCategory}
@@ -496,7 +496,7 @@ const AdminOverview = () => {
                     border: "none",
                     boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
                   }}
-                  formatter={(value) => [formatCurrency(value), "Sales"]}
+                  formatter={(value, name) => [formatCurrency(value), name]}
                 />
                 <Legend iconType="circle" />
               </PieChart>
@@ -518,8 +518,8 @@ const AdminOverview = () => {
               hideCustom={true}
             />
           </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="relative h-[300px] w-full min-h-[300px]">
+            <ResponsiveContainer width="99%" height="99%">
               <BarChart data={volumeMonthly}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis
@@ -555,8 +555,8 @@ const AdminOverview = () => {
               months={months}
             />
           </div>
-          <div className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="relative h-[350px] w-full min-h-[350px]">
+            <ResponsiveContainer width="99%" height="99%">
               <PieChart>
                 <Pie
                   data={orderStatusData}

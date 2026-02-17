@@ -18,7 +18,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             setIsOpen(false);
           }}
         >
-          <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-xl flex items-center justify-center font-black text-lg">
+          <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-xl flex items-center justify-center font-black text-lg">
             S
           </div>
           <h1 className="text-lg font-bold text-slate-800 tracking-tight">Sasta Store</h1>
@@ -56,8 +56,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               className={({ isActive }) =>
                 `flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all ${
                   isActive
-                    ? "bg-blue-50 text-blue-700 font-semibold"
-                    : "hover:bg-slate-100 hover:text-blue-600"
+                    ? "bg-indigo-50 text-indigo-700 font-semibold"
+                    : "hover:bg-slate-100 hover:text-indigo-600"
                 }`
               }
             >
@@ -69,7 +69,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           {/* PRODUCTS DROPDOWN */}
           <li className="flex flex-col">
             <button
-              className="w-full flex items-center gap-3 px-4 py-3 bg-transparent border-none cursor-pointer font-medium text-slate-600 rounded-xl text-base hover:bg-slate-100 hover:text-blue-600 transition-all"
+              className="w-full flex items-center gap-3 px-4 py-3 bg-transparent border-none cursor-pointer font-medium text-slate-600 rounded-xl text-base hover:bg-slate-100 hover:text-indigo-600 transition-all"
               onClick={() => setOpenProducts(!openProducts)}
             >
               <span className="flex items-center justify-center">📦</span>
@@ -86,8 +86,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     className={({ isActive }) =>
                       `block px-3 py-2 rounded-lg text-sm text-slate-600 transition-all ${
                         isActive
-                          ? "bg-blue-50 text-blue-700"
-                          : "hover:bg-slate-50 hover:text-blue-600"
+                          ? "bg-indigo-50 text-indigo-700"
+                          : "hover:bg-slate-50 hover:text-indigo-600"
                       }`
                     }
                   >
@@ -101,8 +101,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     className={({ isActive }) =>
                       `block px-3 py-2 rounded-lg text-sm text-slate-600 transition-all ${
                         isActive
-                          ? "bg-blue-50 text-blue-700"
-                          : "hover:bg-slate-50 hover:text-blue-600"
+                          ? "bg-indigo-50 text-indigo-700"
+                          : "hover:bg-slate-50 hover:text-indigo-600"
                       }`
                     }
                   >
@@ -121,8 +121,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               className={({ isActive }) =>
                 `flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all ${
                   isActive
-                    ? "bg-blue-50 text-blue-700 font-semibold"
-                    : "hover:bg-slate-100 hover:text-blue-600"
+                    ? "bg-indigo-50 text-indigo-700 font-semibold"
+                    : "hover:bg-slate-100 hover:text-indigo-600"
                 }`
               }
             >
@@ -138,8 +138,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               className={({ isActive }) =>
                 `flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all ${
                   isActive
-                    ? "bg-blue-50 text-blue-700 font-semibold"
-                    : "hover:bg-slate-100 hover:text-blue-600"
+                    ? "bg-indigo-50 text-indigo-700 font-semibold"
+                    : "hover:bg-slate-100 hover:text-indigo-600"
                 }`
               }
             >

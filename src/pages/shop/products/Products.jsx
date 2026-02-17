@@ -30,12 +30,12 @@ const CategoryNode = ({
   return (
     <div style={{ paddingLeft: level === 0 ? 0 : 16 }}>
       <div
-        className={`flex items-center gap-2 py-2 px-2 rounded-xl transition-colors ${isChecked ? "bg-blue-50/50" : "hover:bg-slate-50"}`}
+        className={`flex items-center gap-2 py-2 px-2 rounded-xl transition-colors ${isChecked ? "bg-indigo-50/50" : "hover:bg-slate-50"}`}
       >
         {hasChildren ? (
           <button
             onClick={() => toggleExpand(id)}
-            className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white rounded-md transition-all shadow-sm"
+            className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-white rounded-md transition-all shadow-sm"
           >
             <span
               className={`transform transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
@@ -52,10 +52,10 @@ const CategoryNode = ({
             type="checkbox"
             checked={isChecked}
             onChange={() => toggleCategoryTree(cat)}
-            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 rounded-md transition-all cursor-pointer"
+            className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 rounded-md transition-all cursor-pointer"
           />
           <span
-            className={`text-sm font-medium transition-colors ${isChecked ? "text-blue-700" : "text-slate-600 group-hover:text-slate-900"}`}
+            className={`text-sm font-medium transition-colors ${isChecked ? "text-indigo-700" : "text-slate-600 group-hover:text-slate-900"}`}
           >
             {cat.name}
           </span>
@@ -454,7 +454,7 @@ const Products = () => {
           {/* CATEGORIES */}
           <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/60 p-6 border border-slate-100">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+              <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-4 w-4"
@@ -518,7 +518,7 @@ const Products = () => {
               <div className="relative h-2 bg-slate-100 rounded-full mb-6">
                 {/* Active Track */}
                 <div
-                  className="absolute h-full bg-blue-600 rounded-full opacity-80"
+                  className="absolute h-full bg-indigo-600 rounded-full opacity-80"
                   style={{
                     left: `${((minPrice - MIN_LIMIT) / (MAX_LIMIT - MIN_LIMIT)) * 100}%`,
                     right: `${100 - ((maxPrice - MIN_LIMIT) / (MAX_LIMIT - MIN_LIMIT)) * 100}%`,
@@ -537,7 +537,7 @@ const Products = () => {
                     setMinPrice(val);
                     setPage(1);
                   }}
-                  className="absolute w-full h-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-600 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:active:scale-110 [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:shadow-md cursor-pointer z-20"
+                  className="absolute w-full h-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-indigo-600 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:active:scale-110 [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:shadow-md cursor-pointer z-20"
                 />
                 <input
                   type="range"
@@ -550,7 +550,7 @@ const Products = () => {
                     setMaxPrice(val);
                     setPage(1);
                   }}
-                  className="absolute w-full h-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-600 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:active:scale-110 [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:shadow-md cursor-pointer z-10"
+                  className="absolute w-full h-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-indigo-600 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:active:scale-110 [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:shadow-md cursor-pointer z-10"
                 />
               </div>
 
@@ -591,7 +591,7 @@ const Products = () => {
             <button
               onClick={resetFilters}
               disabled={resetting}
-              className="mt-6 w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-slate-200"
+              className="mt-6 w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"
             >
               {resetting ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -687,7 +687,7 @@ const Products = () => {
 
                     {/* Badges */}
                     <div className="absolute top-4 left-4 flex flex-col gap-2">
-                      <span className="px-3 py-1 bg-white/80 backdrop-blur-md text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm border border-white/50">
+                      <span className="px-3 py-1 bg-white/80 backdrop-blur-md text-indigo-600 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm border border-white/50">
                         {product.category?.name || "Product"}
                       </span>
 
@@ -738,7 +738,7 @@ const Products = () => {
                   {/* Info Section */}
                   <div className="p-5 md:p-6 flex flex-col flex-1">
                     <div className="mb-3">
-                      <h3 className="font-bold text-slate-800 truncate text-lg group-hover:text-blue-600 transition-colors">
+                      <h3 className="font-bold text-slate-800 truncate text-lg group-hover:text-indigo-600 transition-colors">
                         {product.name}
                       </h3>
                       <p className="text-xs text-slate-400 mt-1 line-clamp-1 font-medium italic">
@@ -748,7 +748,7 @@ const Products = () => {
 
                     <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-50">
                       <div className="flex flex-col">
-                        <span className="text-xl font-black text-slate-900 leading-none mt-0.5">
+                        <span className="text-xl font-black text-indigo-600 leading-none mt-0.5">
                           {hasVariants(product) ? (
                             product.variants.length > 1 ? (
                               <span className="text-sm">
@@ -764,7 +764,7 @@ const Products = () => {
                       </div>
 
                       {/* Actions removed - user clicks card to view details & buy */}
-                      <div className="flex items-center gap-1.5 text-blue-600 font-bold text-[10px] uppercase tracking-wider group-hover:translate-x-1 transition-transform">
+                      <div className="flex items-center gap-1.5 text-indigo-600 font-bold text-[10px] uppercase tracking-wider group-hover:translate-x-1 transition-transform">
                         <span>View Details</span>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"

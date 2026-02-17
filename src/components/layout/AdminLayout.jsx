@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
-import AdminHeader from "../admin/layout/AdminHeader";
+import AdminHeader from "./AdminHeader";
 import Sidebar from "./Sidebar";
 
 const AdminLayout = () => {

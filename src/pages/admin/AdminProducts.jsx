@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useToast } from "../../context/ToastContext";
+import { useToast } from "../../context/ToastContext.jsx";
 import {
   getMyProducts,
   createProduct,
@@ -41,24 +41,17 @@ const AdminProducts = () => {
   const initialForm = {
     name: "",
     description: "",
-    price: "",
-    salePrice: "",
-    sku: "",
     brand: "",
-    stockQty: 0,
-    availability: "INSTOCK",
     category: "",
     image: null,
     images: [],
-    sizes: "",
-    colors: "",
+    has_variants: true,
+    variants: [{ color: "", size: "", price: "", stock_qty: "", sku: "" }],
+    specifications: {},
+    isActive: true,
+    mainImageIndex: 0,
+    sku: "",
     tags: "",
-    weight: "",
-    length: "",
-    width: "",
-    height: "",
-    metaTitle: "",
-    metaDescription: "",
   };
   const [formData, setFormData] = useState(initialForm);
 
@@ -145,13 +138,13 @@ const AdminProducts = () => {
     const p = Number(searchParams.get("page")) || 1;
     const l = Number(searchParams.get("limit")) || 10;
     const s = searchParams.get("search") || "";
-    if (p !== page) setPage(p);
-    if (l !== limit) setLimit(l);
-    if (s !== search) {
-      setSearch(s);
-      setDebouncedSearch(s);
-    }
-  }, [searchParams, page, limit, search]);
+
+    // Only update state if values actually changed to avoid unnecessary re-renders
+    setPage((prev) => (p !== prev ? p : prev));
+    setLimit((prev) => (l !== prev ? l : prev));
+    setSearch((prev) => (s !== prev ? s : prev));
+    setDebouncedSearch((prev) => (s !== prev ? s : prev));
+  }, [searchParams]); // Only depend on searchParams
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -206,6 +199,14 @@ const AdminProducts = () => {
     return result;
   })();
 
+  const handlePageChange = (newPage) => {
+    updateURL({ page: newPage });
+  };
+
+  const handleLimitChange = (newLimit) => {
+    updateURL({ limit: newLimit, page: 1 });
+  };
+
   /*  HANDLERS  */
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -216,18 +217,17 @@ const AdminProducts = () => {
     setFormData({
       ...product,
       category: product.category_id || product.categoryId || "",
-      salePrice: product.sale_price || product.salePrice || "",
-      stockQty: product.stock_qty || product.stockQty || 0,
-      metaTitle: product.meta_title || product.metaTitle || "",
-      metaDescription: product.meta_description || product.metaDescription || "",
+      brand: product.brand || "",
+      sku: product.sku || "",
       image: null,
       images: [],
-      sizes: Array.isArray(product.sizes) ? product.sizes.join(", ") : product.sizes || "",
-      colors: Array.isArray(product.colors) ? product.colors.join(", ") : product.colors || "",
-      tags: Array.isArray(product.tags) ? product.tags.join(", ") : product.tags || "",
-      length: product.dimensions?.length || "",
-      width: product.dimensions?.width || "",
-      height: product.dimensions?.height || "",
+      has_variants: true,
+      variants:
+        product.variants?.length > 0
+          ? product.variants
+          : [{ color: "", size: "", price: "", stock_qty: "", sku: "" }],
+      isActive: product.is_active ?? product.isActive ?? true,
+      mainImageIndex: product.main_image_index ?? product.mainImageIndex ?? 0,
     });
     setIsEditingId(product.id || product._id);
     setShowModal(true);
@@ -243,27 +243,29 @@ const AdminProducts = () => {
 
     append("name", formData.name);
     append("description", formData.description);
-    append("price", formData.price);
-    append("sale_price", formData.salePrice);
-    append("sku", formData.sku);
     append("brand", formData.brand);
-    append("stock_qty", formData.stockQty);
-    append("availability", formData.availability);
-    append("weight", formData.weight);
-    append("meta_title", formData.metaTitle);
-    append("meta_description", formData.metaDescription);
-    if (formData.length || formData.width || formData.height)
-      data.append(
-        "dimensions",
-        JSON.stringify({
-          length: Number(formData.length) || 0,
-          width: Number(formData.width) || 0,
-          height: Number(formData.height) || 0,
-        }),
-      );
-    ["sizes", "colors", "tags"].forEach((k) => {
-      if (formData[k]) formData[k].split(",").forEach((v) => data.append(`${k}[]`, v.trim()));
-    }); // Fixed brackets
+    append("sku", formData.sku);
+    // Removed price, sale_price, stock_qty, availability as they are now per-variant
+    // Removed has_variants as per backend validation rules
+    append("is_active", formData.isActive);
+    append("main_image_index", formData.mainImageIndex);
+
+    // Removed specifications as per user request
+
+    if (formData.has_variants && formData.variants?.length > 0) {
+      formData.variants.forEach((v, idx) => {
+        if (v.color) append(`variants[${idx}][color]`, v.color);
+        if (v.size) append(`variants[${idx}][size]`, v.size);
+        if (v.price) append(`variants[${idx}][price]`, v.price);
+        // Removed sale_price from variants as per backend validation rules
+        if (v.stock_qty || v.stockQty)
+          append(`variants[${idx}][stock_qty]`, v.stock_qty || v.stockQty);
+        if (v.sku) append(`variants[${idx}][sku]`, v.sku);
+      });
+    }
+
+    // Removed dimensions and tags as per user request
+
     if (formData.category) data.append("category_id", formData.category);
     if (formData.image) data.append("images", formData.image);
     if (formData.images?.length > 0)
@@ -326,7 +328,7 @@ const AdminProducts = () => {
     <div className="p-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-blue-600">Inventory</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-indigo-600">Inventory</h1>
           <p className="text-slate-600 mt-1 text-sm lg:text-base">
             Manage your product catalog and stock levels.
           </p>
@@ -337,7 +339,7 @@ const AdminProducts = () => {
             setFormData(initialForm);
             setShowModal(true);
           }}
-          className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-md flex items-center justify-center gap-2"
+          className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors shadow-md flex items-center justify-center gap-2"
         >
           <span className="text-xl">+</span> Add Product
         </button>
@@ -357,9 +359,9 @@ const AdminProducts = () => {
           handleDelete={handleDelete}
           meta={meta}
           page={page}
-          setPage={setPage}
+          setPage={handlePageChange}
           limit={limit}
-          setLimit={setLimit}
+          setLimit={handleLimitChange}
         />
       </div>
 

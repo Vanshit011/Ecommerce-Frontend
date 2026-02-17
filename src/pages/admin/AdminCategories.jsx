@@ -25,14 +25,16 @@ const AdminCategories = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState(new Set());
   const [viewProductsFor, setViewProductsFor] = useState(null);
-  const [openMenuId, setOpenMenuId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const [showModal, setShowModal] = useState(false);
+
   const fetchCategories = useCallback(async () => {
     try {
+      setLoading(true);
       const [catRes, prodRes] = await Promise.all([getCategories(), getMyProducts()]);
-
+      // ... existing fetch logic ...
       const rawCats =
         catRes?.data?.data ||
         catRes?.data?.categories ||
@@ -66,41 +68,22 @@ const AdminCategories = () => {
       const payload = { name: newCategory };
       if (parentId) payload.parentId = parentId;
 
-      let res;
-
       if (editId) {
-        // Optimistic Edit
-        setCategories((prev) =>
-          prev.map((c) => {
-            const cId = c.id || c._id;
-            if (cId === editId) return { ...c, ...payload };
-            return c;
-          }),
-        );
-
         await updateCategory(editId, payload);
         showToast("Category updated successfully");
       } else {
-        res = await createCategory(payload);
+        await createCategory(payload);
         showToast("Category added successfully");
-
-        // Optimistic Append if we have the data
-        const created = res.data?.data || res.data || res;
-        if (created && (created.id || created._id)) {
-          setCategories((prev) => [...prev, created]);
-        }
       }
 
       setNewCategory("");
       setParentId("");
       setEditId(null);
-
-      // Full sync
+      setShowModal(false);
       fetchCategories();
     } catch (err) {
       console.error("Save Category Error:", err);
       showToast("Failed to save category", "error");
-      fetchCategories(); // Revert/Sync on error
     } finally {
       setIsSubmitting(false);
     }
@@ -109,15 +92,26 @@ const AdminCategories = () => {
   const handleEditClick = (cat) => {
     setEditId(cat.id || cat._id);
     setNewCategory(cat.name);
-    setParentId(cat.parentId || "");
+    setParentId(
+      cat.parentId || (typeof cat.parent === "object" ? cat.parent.id || cat.parent._id : "") || "",
+    );
+    setShowModal(true);
+  };
+
+  const handleAddClick = () => {
+    setEditId(null);
+    setNewCategory("");
+    setParentId("");
+    setShowModal(true);
   };
 
   const handleCancelEdit = () => {
     setEditId(null);
     setNewCategory("");
     setParentId("");
+    setShowModal(false);
   };
-
+  // ... rest of handlers ...
   const handleDelete = async (id) => {
     const hasChildren = categories.some(
       (cat) => (cat.parentId || cat.parent?._id || cat.parent?.id) === id,
@@ -134,9 +128,6 @@ const AdminCategories = () => {
       if (!window.confirm("Delete this category?")) return;
     }
 
-    // Optimistic Delete
-    setCategories((prev) => prev.filter((c) => (c.id || c._id) !== id));
-
     try {
       await deleteCategory(id);
       showToast("Category deleted successfully");
@@ -144,7 +135,6 @@ const AdminCategories = () => {
     } catch (err) {
       console.error("Delete Category Error:", err);
       showToast("Failed to delete category", "error");
-      fetchCategories(); // Revert/Sync
     }
   };
 
@@ -221,109 +211,103 @@ const AdminCategories = () => {
 
     return (
       <React.Fragment key={categoryId}>
-        <tr className="border-b border-slate-200 hover:bg-slate-50">
-          <td className="py-3 px-4">
-            <div className="flex items-center gap-2" style={{ paddingLeft: `${level * 24}px` }}>
+        <tr className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+          <td className="py-4 px-6">
+            <div className="flex items-center gap-3" style={{ paddingLeft: `${level * 24}px` }}>
               {hasChildren && (
                 <button
                   onClick={() => toggleExpand(categoryId)}
-                  className="text-slate-600 hover:text-blue-600 transition-colors"
+                  className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-all"
                 >
                   {isExpanded ? "▼" : "▶"}
                 </button>
               )}
-              {!hasChildren && <span className="w-4"></span>}
-              <span className="font-medium text-slate-800">{cat.name}</span>
-              {hasChildren && (
-                <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">
-                  {cat.children.length} {cat.children.length === 1 ? "child" : "children"}
-                </span>
-              )}
+              {!hasChildren && <span className="w-6"></span>}
+              <div className="flex flex-col">
+                <span className="font-bold text-slate-800">{cat.name}</span>
+                {hasChildren && (
+                  <span className="text-[10px] uppercase font-black tracking-widest text-blue-500 mt-0.5">
+                    {cat.children.length} Subcategories
+                  </span>
+                )}
+              </div>
             </div>
           </td>
-          <td className="py-3 px-4">
-            <span className="text-xs font-semibold bg-slate-100 px-2 py-1 rounded-md text-slate-600 whitespace-nowrap">
-              {categoryProducts.length} Products
-            </span>
+          <td className="py-4 px-6">
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full border border-slate-200">
+                {categoryProducts.length} Items
+              </span>
+            </div>
           </td>
-          <td className="py-3 px-4">
-            <div
-              className={`relative inline-block text-left ${openMenuId === categoryId ? "z-50" : "z-auto"}`}
-            >
+          <td className="py-4 px-6 text-right">
+            <div className="flex items-center justify-end gap-2">
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenMenuId(openMenuId === categoryId ? null : categoryId);
-                }}
-                className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-1"
+                onClick={() => toggleViewProducts(categoryId)}
+                title="View Products"
+                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
               >
-                Actions
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
-                    fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clipRule="evenodd"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                   />
                 </svg>
               </button>
-
-              {openMenuId === categoryId && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-50 overflow-hidden">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleViewProducts(categoryId);
-                      setOpenMenuId(null);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
-                  >
-                    👁️ View Products
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditClick(cat);
-                      setOpenMenuId(null);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
-                  >
-                    ✏️ Edit Category
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(categoryId);
-                      setOpenMenuId(null);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-slate-100 flex items-center gap-2"
-                  >
-                    🗑 Delete
-                  </button>
-                </div>
-              )}
+              <button
+                onClick={() => handleEditClick(cat)}
+                title="Edit Category"
+                className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={() => handleDelete(categoryId)}
+                title="Delete Category"
+                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
             </div>
           </td>
         </tr>
         {showProducts && categoryProducts.length > 0 && (
-          <tr className="bg-slate-50">
-            <td colSpan="3" className="py-3 px-4">
+          <tr className="bg-slate-50/50">
+            <td colSpan="3" className="py-4 px-6">
               <div
-                className="ml-8 p-4 bg-white rounded-lg border border-slate-200"
+                className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm"
                 style={{ marginLeft: `${(level + 1) * 24}px` }}
               >
-                <h4 className="text-sm font-semibold text-slate-700 mb-2">
-                  Products in {cat.name}:
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                  Linked Products in {cat.name}
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {categoryProducts.map((product) => (
                     <span
                       key={product.id || product._id}
-                      className="px-3 py-1 bg-slate-100 text-slate-700 rounded-md text-sm"
+                      className="px-3 py-1 bg-slate-50 text-slate-700 rounded-lg text-xs font-bold border border-slate-100"
                     >
                       {product.name || product.title}
                     </span>
@@ -357,27 +341,34 @@ const AdminCategories = () => {
   const flattenedCategories = getAllCategoriesFlat(treeData);
 
   return (
-    <div className="p-5">
-      <div className="mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-blue-600">Categories</h1>
-        <p className="text-slate-600 mt-1 text-sm lg:text-base">
-          Organize your products with hierarchical categories.
-        </p>
+    <div className="p-6 space-y-8 bg-slate-50/50 min-h-screen">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Product Categories</h1>
+          <p className="text-slate-500 mt-1 font-medium">
+            Manage your store hierarchy and product organization.
+          </p>
+        </div>
+
+        <button
+          onClick={handleAddClick}
+          className="group relative px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2 overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+          <svg className="w-5 h-5 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          <span className="relative">Create New Category</span>
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <CategoryForm
-          editId={editId}
-          newCategory={newCategory}
-          setNewCategory={setNewCategory}
-          parentId={parentId}
-          setParentId={setParentId}
-          handleSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
-          handleCancelEdit={handleCancelEdit}
-          flattenedCategories={flattenedCategories}
-        />
-
+      <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
         <CategoryTable
           loading={loading}
           treeData={treeData}
@@ -390,6 +381,29 @@ const AdminCategories = () => {
           endIndex={endIndex}
         />
       </div>
+
+      {/* CATEGORY MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={handleCancelEdit}
+          />
+          <div className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-5 duration-300">
+            <CategoryForm
+              editId={editId}
+              newCategory={newCategory}
+              setNewCategory={setNewCategory}
+              parentId={parentId}
+              setParentId={setParentId}
+              handleSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+              handleCancelEdit={handleCancelEdit}
+              flattenedCategories={flattenedCategories}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

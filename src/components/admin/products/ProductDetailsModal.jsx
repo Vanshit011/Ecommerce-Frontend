@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, handleEditClick }) => {
   const [selectedImage, setSelectedImage] = useState("");
   const [prevProductId, setPrevProductId] = useState(null);
+  const modalRef = useRef(null);
 
   const currentId = viewProduct?.id || viewProduct?._id;
   if (viewProduct && currentId !== prevProductId) {
@@ -11,6 +12,21 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
     const mainImage = viewProduct.images?.find((img) => img.is_main);
     setSelectedImage(mainImage?.url || viewProduct.images?.[0]?.url || "");
   }
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setViewProduct(null);
+      }
+    };
+
+    if (viewProduct) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [viewProduct, setViewProduct]);
 
   if (!viewProduct) return null;
 
@@ -25,20 +41,51 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
   const galleryImages = getAllImages();
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[999] backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl p-4 md:p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800">{viewProduct.name}</h2>
-            <p className="text-sm text-slate-500">ID: {viewProduct.id || viewProduct._id}</p>
+    <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[999] backdrop-blur-sm p-4 animate-fade-in">
+      <div
+        ref={modalRef}
+        className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-up custom-scrollbar"
+      >
+        <div className="flex justify-between items-start mb-8 border-b border-slate-100 pb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">
+                {viewProduct.name}
+              </h2>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  ID: {viewProduct.id || viewProduct._id}
+                </span>
+                <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest">
+                  {viewProduct.brand || "GENERIC"}
+                </span>
+              </div>
+            </div>
           </div>
           <button
             onClick={() => setViewProduct(null)}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+            className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all active:scale-95"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
+              className="h-5 w-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -53,38 +100,9 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="flex flex-col-reverse md:flex-row gap-4">
-            {/* Thumbnails */}
-            {galleryImages.length > 1 && (
-              <div className="grid grid-cols-2 gap-2 content-start md:w-36 w-full flex-shrink-0 pr-1 py-1">
-                {galleryImages.map((img, i) => {
-                  const finalUrl = img.url;
-
-                  return (
-                    <div
-                      key={img.id || i}
-                      onMouseEnter={() => setSelectedImage(finalUrl)}
-                      onClick={() => setSelectedImage(finalUrl)}
-                      className={`w-16 h-16 cursor-pointer rounded-xl border-2 transition-all p-0.5 bg-white flex-shrink-0 overflow-hidden ${
-                        selectedImage === finalUrl
-                          ? "border-blue-500 ring-2 ring-blue-100"
-                          : "border-slate-100 hover:border-blue-300"
-                      }`}
-                    >
-                      <img
-                        src={finalUrl}
-                        className="w-full h-full object-cover rounded-lg"
-                        alt=""
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Main Image */}
-            <div className="flex-1 aspect-[4/3] relative group bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden flex items-center justify-center">
+        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-10">
+          <div className="space-y-6">
+            <div className="aspect-square relative group bg-slate-50 rounded-3xl border border-slate-100 overflow-hidden flex items-center justify-center shadow-inner">
               <img
                 src={
                   selectedImage ||
@@ -92,12 +110,12 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
                   "https://placehold.jp/400x400.png?text=No%20Image"
                 }
                 alt={viewProduct.name}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain p-4"
               />
 
               {/* Navigation */}
               {galleryImages.length > 1 && (
-                <>
+                <div className="absolute inset-x-4 bottom-4 flex justify-between gap-2">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -109,7 +127,7 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
                       const prevImg = galleryImages[prevIndex];
                       setSelectedImage(prevImg.url);
                     }}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full shadow-md flex items-center justify-center text-slate-600 hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
+                    className="w-10 h-10 bg-white/90 rounded-xl shadow-lg shadow-black/5 flex items-center justify-center text-slate-600 hover:bg-white hover:scale-110 transition-all"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -117,7 +135,7 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
                       viewBox="0 0 24 24"
                       strokeWidth={2}
                       stroke="currentColor"
-                      className="w-4 h-4"
+                      className="w-5 h-5"
                     >
                       <path
                         strokeLinecap="round"
@@ -137,7 +155,7 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
                       const nextImg = galleryImages[nextIndex];
                       setSelectedImage(nextImg.url);
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full shadow-md flex items-center justify-center text-slate-600 hover:scale-110 transition-all opacity-0 group-hover:opacity-100"
+                    className="w-10 h-10 bg-white/90 rounded-xl shadow-lg shadow-black/5 flex items-center justify-center text-slate-600 hover:bg-white hover:scale-110 transition-all"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -145,7 +163,7 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
                       viewBox="0 0 24 24"
                       strokeWidth={2}
                       stroke="currentColor"
-                      className="w-4 h-4"
+                      className="w-5 h-5"
                     >
                       <path
                         strokeLinecap="round"
@@ -154,182 +172,188 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
                       />
                     </svg>
                   </button>
-                </>
+                </div>
               )}
             </div>
+
+            {galleryImages.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                {galleryImages.map((img, i) => {
+                  const finalUrl = img.url;
+
+                  return (
+                    <div
+                      key={img.id || i}
+                      onClick={() => setSelectedImage(finalUrl)}
+                      className={`w-16 h-16 flex-shrink-0 cursor-pointer rounded-2xl border-2 transition-all p-1 bg-white overflow-hidden ${
+                        selectedImage === finalUrl
+                          ? "border-indigo-600 ring-4 ring-indigo-50"
+                          : "border-slate-100 hover:border-slate-200"
+                      }`}
+                    >
+                      <img
+                        src={finalUrl}
+                        className="w-full h-full object-cover rounded-xl"
+                        alt=""
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Price</p>
-                <p className="text-lg font-bold text-slate-800">
-                  ₹{viewProduct.price || viewProduct.variants?.[0]?.price || 0}
+          <div className="space-y-8">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">
+                  Category
+                </p>
+                <p className="text-sm font-bold text-slate-700">
+                  {viewProduct.category?.name ||
+                    getCategoryPath(viewProduct.category_id || viewProduct.categoryId) ||
+                    "Uncategorized"}
                 </p>
               </div>
-              <div className="bg-green-50 p-3 rounded-xl border border-green-100">
-                <p className="text-[10px] uppercase font-bold text-green-400 mb-1">Sale Price</p>
-                <p className="text-lg font-bold text-green-700">
-                  {viewProduct.sale_price ||
-                  viewProduct.salePrice ||
-                  viewProduct.variants?.[0]?.sale_price
-                    ? `₹${viewProduct.sale_price || viewProduct.salePrice || viewProduct.variants?.[0]?.sale_price}`
-                    : "N/A"}
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">
+                  Availability
                 </p>
-                {(viewProduct.sale_price ||
-                  viewProduct.salePrice ||
-                  viewProduct.variants?.[0]?.sale_price) && (
-                  <p className="text-[10px] font-bold text-emerald-600 mt-1">
-                    You Save: ₹
-                    {(
-                      (viewProduct.price || viewProduct.variants?.[0]?.price || 0) -
-                      (viewProduct.sale_price ||
-                        viewProduct.salePrice ||
-                        viewProduct.variants?.[0]?.sale_price ||
-                        0)
-                    ).toLocaleString()}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
-                <p className="text-[10px] uppercase font-bold text-blue-400 mb-1">SKU</p>
-                <p className="font-semibold text-blue-700">
-                  {viewProduct.sku || viewProduct.variants?.[0]?.sku || "N/A"}
-                </p>
-              </div>
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Stock</p>
-                <p className="font-semibold text-slate-700">
-                  {viewProduct.stock_qty ||
+                <div>
+                  {(viewProduct.stock_qty ||
                     viewProduct.stockQty ||
                     viewProduct.variants?.[0]?.stock_qty ||
-                    0}{" "}
-                  units
-                </p>
+                    0) <= 0 ? (
+                    <span className="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-md border border-red-100 uppercase tracking-wider">
+                      SOLD OUT
+                    </span>
+                  ) : (
+                    <span className="bg-green-50 text-green-600 text-[10px] font-black px-2 py-0.5 rounded-md border border-green-100 uppercase tracking-wider">
+                      IN STOCK
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <p className="text-xs font-bold text-slate-400 uppercase">Category</p>
-              <p className="text-sm font-medium text-slate-600">
-                {viewProduct.category?.name ||
-                  getCategoryPath(viewProduct.category_id || viewProduct.categoryId) ||
-                  "Uncategorized"}
+            <div className="bg-slate-50/50 rounded-3xl p-6 border border-slate-100">
+              <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                Description
+              </h3>
+              <p className="text-slate-600 text-sm leading-relaxed font-medium">
+                {viewProduct.description || "No description available for this product."}
               </p>
             </div>
 
-            <div className="space-y-2">
-              <p className="text-xs font-bold text-slate-400 uppercase">Brand</p>
-              <p className="text-sm font-medium text-slate-600">{viewProduct.brand || "Generic"}</p>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-xs font-bold text-slate-400 uppercase">Availability</p>
-              {(viewProduct.stock_qty ||
-                viewProduct.stockQty ||
-                viewProduct.variants?.[0]?.stock_qty ||
-                0) <= 0 ? (
-                <span className="px-2 py-1 rounded text-xs font-bold bg-red-600 text-white shadow-sm">
-                  SOLD OUT
-                </span>
-              ) : (
-                <span
-                  className={`px-2 py-1 rounded text-xs font-bold ${viewProduct.availability === "INSTOCK" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}
-                >
-                  {viewProduct.availability?.replace("_", " ")}
-                </span>
-              )}
-            </div>
+            {/* VARIANTS SECTION */}
+            {viewProduct.variants && viewProduct.variants.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                  Product Variants ({viewProduct.variants.length})
+                </h3>
+                <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-slate-50/50 border-b border-slate-50">
+                      <tr>
+                        <th className="px-5 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          Variant
+                        </th>
+                        <th className="px-5 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          Price
+                        </th>
+                        <th className="px-5 py-3 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          SKU
+                        </th>
+                        <th className="px-5 py-3 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          Stock
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {viewProduct.variants.map((v, idx) => (
+                        <tr key={v.id || idx} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-5 py-3.5">
+                            <div className="flex flex-wrap gap-1.5">
+                              {v.color && (
+                                <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-black rounded-md uppercase border border-slate-200">
+                                  {v.color}
+                                </span>
+                              )}
+                              {v.size && (
+                                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-md uppercase border border-indigo-100">
+                                  {v.size}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <div className="flex flex-col">
+                              {v.sale_price ? (
+                                <>
+                                  <span className="text-xs font-black text-slate-900">
+                                    ₹{v.sale_price.toLocaleString()}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 line-through">
+                                    ₹{v.price.toLocaleString()}
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-xs font-black text-slate-900">
+                                  ₹{v.price.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5 font-mono text-[10px] font-bold text-slate-400">
+                            {v.sku || "N/A"}
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <span
+                              className={`text-[10px] font-black ${v.stock_qty <= 5 ? "text-red-500" : "text-slate-900"}`}
+                            >
+                              {v.stock_qty} unit{v.stock_qty !== 1 ? "s" : ""}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="mt-8 space-y-6">
-          <div>
-            <h3 className="text-sm font-bold text-slate-800 mb-2 border-l-4 border-blue-500 pl-2">
-              Description
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">{viewProduct.description}</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Specifications</h3>
-              <ul className="text-sm space-y-1 text-slate-600">
-                {viewProduct.weight && <li>Weight: {viewProduct.weight}kg</li>}
-                {viewProduct.dimensions && (
-                  <li>
-                    Dimensions: {viewProduct.dimensions.length}x{viewProduct.dimensions.width}x
-                    {viewProduct.dimensions.height} cm
-                  </li>
-                )}
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Options</h3>
-              <div className="flex flex-wrap gap-1">
-                {viewProduct.sizes?.map((s) => (
-                  <span
-                    key={s}
-                    className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] text-slate-600 font-medium"
-                  >
-                    {s}
-                  </span>
-                ))}
-                {viewProduct.colors?.map((c) => (
-                  <span
-                    key={c}
-                    className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] text-slate-600 font-medium"
-                  >
-                    {c}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">Tags</h3>
-              <div className="flex flex-wrap gap-1">
-                {viewProduct.tags?.map((t) => (
-                  <span
-                    key={t}
-                    className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium"
-                  >
-                    #{t}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {(viewProduct.metaTitle || viewProduct.metaDescription) && (
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-              <h3 className="text-xs font-bold text-slate-400 uppercase mb-2">SEO / Meta Data</h3>
-              {viewProduct.metaTitle && (
-                <p className="text-sm font-bold text-slate-800 mb-1">{viewProduct.metaTitle}</p>
-              )}
-              {viewProduct.metaDescription && (
-                <p className="text-xs text-slate-600">{viewProduct.metaDescription}</p>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="mt-8 flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-100">
+        <div className="mt-10 flex flex-col sm:flex-row justify-end gap-3 pt-8 border-t border-slate-100">
           <button
             onClick={() => setViewProduct(null)}
-            className="w-full sm:w-auto px-6 py-2 rounded-xl bg-slate-100 text-slate-600 font-semibold hover:bg-slate-200 transition-colors order-2 sm:order-1"
+            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-all active:scale-95 order-2 sm:order-1"
           >
-            Close
+            Close Window
           </button>
           <button
             onClick={() => {
               handleEditClick(viewProduct);
               setViewProduct(null);
             }}
-            className="w-full sm:w-auto px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-md order-1 sm:order-2"
+            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95 order-1 sm:order-2 flex items-center justify-center gap-2"
           >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
             Edit Product
           </button>
         </div>

@@ -25,6 +25,7 @@ const Profile = () => {
 
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   /* ADDRESS STATES */
   const [addresses, setAddresses] = useState([]);
@@ -79,6 +80,7 @@ const Profile = () => {
     try {
       const res = await updateProfile({ email, mobile });
       setProfile(res.data.user);
+      setIsEditing(false);
       showToast("Profile updated successfully ✅", "success");
     } catch {
       showToast("Failed to update profile", "error");
@@ -172,76 +174,81 @@ const Profile = () => {
       <div className="max-w-7xl mx-auto px-4 py-10 grid lg:grid-cols-[280px_1fr] gap-8">
         {/* SIDEBAR */}
         <aside className="h-fit sticky top-24 space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl font-bold">
+          <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6">
+            <div className="flex items-center gap-4 mb-8 px-2">
+              <div className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-xl font-black shadow-lg shadow-indigo-200">
                 {(profile?.name?.[0] || "U").toUpperCase()}
               </div>
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hello,</p>
-                <h3 className="font-bold text-slate-800 text-lg leading-tight">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Customer
+                </p>
+                <h3 className="font-black text-slate-900 text-lg leading-tight truncate">
                   {profile?.name || "User"}
                 </h3>
               </div>
             </div>
 
-            <nav className="space-y-1">
-              <button
-                onClick={() => personalRef.current?.scrollIntoView({ behavior: "smooth" })}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 text-blue-700 font-bold transition-all text-sm"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+            <nav className="space-y-2">
+              <button className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-indigo-600 text-white font-bold transition-all text-sm shadow-xl shadow-indigo-200">
+                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
                 Personal Details
               </button>
 
               <button
                 onClick={() => navigate("/my-orders")}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-600 font-bold hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-slate-400 group-hover:text-slate-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-white border border-transparent group-hover:border-slate-100 transition-all">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                    <path
+                      fillRule="evenodd"
+                      d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
                 My Orders
               </button>
 
               <button
                 onClick={() => navigate("/my-payments")}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-slate-600 font-bold hover:bg-slate-50 hover:text-slate-900 transition-all text-sm group"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-slate-400 group-hover:text-slate-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-white border border-transparent group-hover:border-slate-100 transition-all">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                    <path
+                      fillRule="evenodd"
+                      d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
                 My Payments
               </button>
             </nav>
@@ -255,42 +262,120 @@ const Profile = () => {
             ref={personalRef}
             className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8"
           >
-            <h2 className="text-2xl font-bold text-slate-800 mb-6">Personal Information</h2>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800">Personal Information</h2>
+                <p className="text-slate-500 text-sm mt-1">Manage your contact details</p>
+              </div>
+              {!isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-bold hover:bg-indigo-100 transition-all active:scale-95"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                    />
+                  </svg>
+                  Edit Information
+                </button>
+              )}
+            </div>
 
-            <div className="grid md:grid-cols-2 gap-6 max-w-2xl">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <div className="grid md:grid-cols-2 gap-8 max-w-3xl">
+              <div className="space-y-2.5">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
                   Email Address
                 </label>
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium text-slate-800"
-                />
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                    </svg>
+                  </div>
+                  <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={!isEditing}
+                    placeholder="name@example.com"
+                    className={`w-full pl-12 pr-4 py-3.5 rounded-2xl transition-all font-semibold ${
+                      isEditing
+                        ? "bg-white border-2 border-indigo-100 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 text-slate-800"
+                        : "bg-slate-50/50 border-2 border-transparent text-slate-500 cursor-not-allowed"
+                    }`}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <div className="space-y-2.5">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
                   Mobile Number
                 </label>
-                <input
-                  value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium text-slate-800"
-                />
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                    </svg>
+                  </div>
+                  <input
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value)}
+                    disabled={!isEditing}
+                    placeholder="+91 98765 43210"
+                    className={`w-full pl-12 pr-4 py-3.5 rounded-2xl transition-all font-semibold ${
+                      isEditing
+                        ? "bg-white border-2 border-indigo-100 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 text-slate-800"
+                        : "bg-slate-50/50 border-2 border-transparent text-slate-500 cursor-not-allowed"
+                    }`}
+                  />
+                </div>
               </div>
 
-              <div className="md:col-span-2 pt-2">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 active:scale-95 transition-all shadow-lg shadow-slate-200 disabled:opacity-70 disabled:active:scale-100"
-                >
-                  {saving ? "Saving Changes..." : "Save Changes"}
-                </button>
-              </div>
+              {isEditing && (
+                <div className="md:col-span-2 pt-4 flex items-center gap-4 animate-slide-up">
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-indigo-600 text-white px-8 py-3.5 rounded-2xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-xl shadow-indigo-200 disabled:opacity-70 flex items-center gap-2"
+                  >
+                    {saving && (
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    )}
+                    {saving ? "Saving Changes..." : "Save Changes"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEmail(profile.email || "");
+                      setMobile(profile.mobile || "");
+                    }}
+                    disabled={saving}
+                    className="px-8 py-3.5 text-slate-500 font-bold hover:bg-slate-50 rounded-2xl transition-all active:scale-95"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -306,7 +391,7 @@ const Profile = () => {
               </div>
               <button
                 onClick={() => setShowAddressForm(true)}
-                className="bg-blue-50 text-blue-600 px-6 py-2.5 rounded-xl font-bold hover:bg-blue-100 active:scale-95 transition-all flex items-center gap-2"
+                className="bg-indigo-50 text-indigo-600 px-6 py-2.5 rounded-xl font-bold hover:bg-indigo-100 active:scale-95 transition-all flex items-center gap-2"
               >
                 <span className="text-lg leading-none">+</span> Add New Address
               </button>
@@ -322,12 +407,12 @@ const Profile = () => {
                     key={id}
                     className={`relative p-5 rounded-2xl border-2 transition-all ${
                       addr.is_default || addr.isdefault
-                        ? "border-blue-500 bg-blue-50/10 shadow-md shadow-blue-100"
+                        ? "border-indigo-600 bg-indigo-50/10 shadow-md shadow-indigo-100"
                         : "border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-100"
                     }`}
                   >
                     {(addr.is_default || addr.isdefault) && (
-                      <span className="absolute top-4 right-4 bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-md tracking-wide">
+                      <span className="absolute top-4 right-4 bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded-md tracking-wide">
                         DEFAULT
                       </span>
                     )}
@@ -356,7 +441,7 @@ const Profile = () => {
                     <div className="flex items-center gap-3 mt-6 pt-4 border-t border-dashed border-slate-200">
                       <button
                         onClick={() => handleEditAddress(addr)}
-                        className="text-xs font-bold text-slate-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
+                        className="text-xs font-bold text-slate-600 hover:text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
                       >
                         Edit
                       </button>
@@ -369,7 +454,7 @@ const Profile = () => {
                       {!(addr.is_default || addr.isdefault) && (
                         <button
                           onClick={() => handleSetDefault(id)}
-                          className="ml-auto text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                          className="ml-auto text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline"
                         >
                           Set as Default
                         </button>
@@ -445,7 +530,7 @@ const Profile = () => {
                           fullname: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
                     />
                   </div>
 
@@ -462,7 +547,7 @@ const Profile = () => {
                           country: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
                     />
                   </div>
 
@@ -479,7 +564,7 @@ const Profile = () => {
                           addressline1: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
                     />
                   </div>
 
@@ -496,7 +581,7 @@ const Profile = () => {
                           addressline2: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
                     />
                   </div>
 
@@ -508,7 +593,7 @@ const Profile = () => {
                       placeholder="Mumbai"
                       value={addressForm.city}
                       onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
                     />
                   </div>
 
@@ -525,7 +610,7 @@ const Profile = () => {
                           state: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
                     />
                   </div>
 
@@ -542,7 +627,7 @@ const Profile = () => {
                           postalcode: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -550,7 +635,7 @@ const Profile = () => {
                 <div className="mt-8 flex gap-4 pt-4 border-t border-slate-100">
                   <button
                     onClick={handleAddressSubmit}
-                    className="flex-1 bg-slate-900 text-white px-6 py-3.5 rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95"
+                    className="flex-1 bg-indigo-600 text-white px-6 py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
                   >
                     {editingAddress ? "Update Address" : "Save New Address"}
                   </button>
