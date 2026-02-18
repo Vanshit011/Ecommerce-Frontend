@@ -150,25 +150,29 @@ const ProductTable = ({
                   )}
                 </td>
                 <td className="py-3 px-4">
-                  {hasVariants(p) ? (
-                    getTotalStock(p.variants) <= 0 ? (
-                      <span className="bg-red-100 text-red-600 text-[10px] font-bold uppercase px-2 py-1 rounded-full">
-                        SOLD OUT
-                      </span>
-                    ) : (
-                      <span className="bg-green-100 text-green-600 text-[10px] font-bold uppercase px-2 py-1 rounded-full">
-                        IN STOCK
-                      </span>
-                    )
-                  ) : (p.stock_qty || p.stockQty || 0) <= 0 ? (
-                    <span className="bg-red-100 text-red-600 text-[10px] font-bold uppercase px-2 py-1 rounded-full">
-                      SOLD OUT
-                    </span>
-                  ) : (
-                    <span className="bg-green-100 text-green-600 text-[10px] font-bold uppercase px-2 py-1 rounded-full">
-                      IN STOCK
-                    </span>
-                  )}
+                  {(() => {
+                    const status = p.availability || "INSTOCK";
+                    switch (status) {
+                      case "OUTOFSTOCK":
+                        return (
+                          <span className="bg-red-100 text-red-600 text-[10px] font-bold uppercase px-2 py-1 rounded-full whitespace-nowrap">
+                            OUT OF STOCK
+                          </span>
+                        );
+                      case "PREORDER":
+                        return (
+                          <span className="bg-blue-100 text-blue-600 text-[10px] font-bold uppercase px-2 py-1 rounded-full whitespace-nowrap">
+                            PRE-ORDER
+                          </span>
+                        );
+                      default:
+                        return (
+                          <span className="bg-green-100 text-green-600 text-[10px] font-bold uppercase px-2 py-1 rounded-full whitespace-nowrap">
+                            IN STOCK
+                          </span>
+                        );
+                    }
+                  })()}
                 </td>
                 <td className="py-3 px-4 text-center">
                   <div className="relative inline-block">
@@ -206,7 +210,7 @@ const ProductTable = ({
                             setOpenMenuId(null);
                           }}
                         >
-                          👁️ View Details
+                          View Details
                         </button>
                         <button
                           className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
@@ -215,7 +219,7 @@ const ProductTable = ({
                             setOpenMenuId(null);
                           }}
                         >
-                          ✏️ Edit Product
+                          Edit Product
                         </button>
 
                         <button
@@ -225,7 +229,7 @@ const ProductTable = ({
                             setOpenMenuId(null);
                           }}
                         >
-                          🗑 Delete
+                          Delete
                         </button>
                       </div>
                     )}

@@ -62,11 +62,23 @@ export const createProduct = (formData) => {
 
 export const updateProduct = (id, formData) => {
   return API.put(`/products/${id}`, formData, {
-    headers: { "Content-Type": "multipart/form-material" },
+    headers: { "Content-Type": "multipart/form-data" },
   });
 };
 
 export const deleteProduct = (id) => API.delete(`/products/${id}`);
+
+//admin variants
+export const addVariant = (productId, data) => API.post(`/products/${productId}/variants`, data);
+
+export const updateProductVariants = (productId, variantId, data) =>
+  API.put(`/products/${productId}/variants/${variantId}`, data);
+
+export const bulkUpdateVariants = (productId, data) =>
+  API.patch(`/products/${productId}/variants`, data);
+
+export const deleteVariant = (productId, variantId) =>
+  API.delete(`/products/${productId}/variants/${variantId}`);
 
 // User Categories
 // No caching to ensure fresh data every time

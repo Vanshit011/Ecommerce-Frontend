@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { getImageUrl } from "../../../utils/imageUtils";
 
 const ProductModal = ({
   showModal,
@@ -8,6 +9,9 @@ const ProductModal = ({
   setFormData,
   handleChange,
   handleSubmit,
+  handleUpdateVariant,
+  handleDeleteVariant,
+  handleBulkUpdateVariants,
   isSubmitting,
   flattenedCategories,
 }) => {
@@ -103,7 +107,7 @@ const ProductModal = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-10">
+        <form onSubmit={handleSubmit} noValidate className="space-y-10">
           {/* Section 1: Basic Info */}
           <div className="space-y-6">
             <h3 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] flex items-center gap-3">
@@ -159,16 +163,19 @@ const ProductModal = ({
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">
-                  SKU *
+                  Availability *
                 </label>
-                <input
-                  name="sku"
-                  value={formData.sku}
+                <select
+                  name="availability"
+                  value={formData.availability}
                   onChange={handleChange}
                   required
-                  placeholder="PROD-123-ABC"
-                  className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none text-slate-700 font-mono text-sm placeholder:text-slate-300"
-                />
+                  className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none text-slate-700 font-bold bg-white appearance-none cursor-pointer"
+                >
+                  <option value="INSTOCK">In Stock</option>
+                  <option value="OUTOFSTOCK">Out of Stock</option>
+                  <option value="PREORDER">Pre-order</option>
+                </select>
               </div>
             </div>
             <div className="space-y-2">
@@ -253,122 +260,164 @@ const ProductModal = ({
 
           {/* Section 2: Variants */}
           <div className="space-y-6">
-            <h3 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] flex items-center gap-3">
-              <span className="w-8 h-[2px] bg-indigo-100"></span>
-              Inventory & Variants
-            </h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] flex items-center gap-3">
+                <span className="w-8 h-[2px] bg-indigo-100"></span>
+                Inventory & Variants
+              </h3>
+              {isEditingId && (
+                <button
+                  type="button"
+                  onClick={handleBulkUpdateVariants}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-600 transition-all disabled:opacity-50"
+                >
+                  Update All Variants
+                </button>
+              )}
+            </div>
 
             <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
               <div className="overflow-x-auto custom-scrollbar">
                 <table className="w-full text-left">
                   <thead className="bg-slate-50/50 border-b border-slate-50">
                     <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                      <th className="px-6 py-4">Color</th>
-                      <th className="px-6 py-4">Size *</th>
-                      <th className="px-6 py-4">Price *</th>
-                      <th className="px-6 py-4">Stock *</th>
-                      <th className="px-6 py-4">SKU</th>
-                      <th className="px-6 py-4 w-12"></th>
+                      <th className="px-5 py-4">Color</th>
+                      <th className="px-5 py-4">Size *</th>
+                      <th className="px-5 py-4">Price *</th>
+                      <th className="px-5 py-4">Stock *</th>
+                      <th className="px-5 py-4">SKU</th>
+                      <th className="px-5 py-4 w-28 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {formData.variants.map((variant, idx) => (
-                      <tr key={idx} className="group hover:bg-slate-50/30 transition-colors">
-                        <td className="px-5 py-4">
-                          <input
-                            value={variant.color || ""}
-                            onChange={(e) => {
-                              const newVariants = [...formData.variants];
-                              newVariants[idx].color = e.target.value;
-                              setFormData((prev) => ({ ...prev, variants: newVariants }));
-                            }}
-                            placeholder="Red"
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-50 focus:border-indigo-200 outline-none transition-all"
-                          />
-                        </td>
-                        <td className="px-5 py-4">
-                          <input
-                            value={variant.size || ""}
-                            onChange={(e) => {
-                              const newVariants = [...formData.variants];
-                              newVariants[idx].size = e.target.value;
-                              setFormData((prev) => ({ ...prev, variants: newVariants }));
-                            }}
-                            placeholder="XL"
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-50 focus:border-indigo-200 outline-none transition-all"
-                          />
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
-                              ₹
-                            </span>
+                    {formData.variants.map((variant, idx) => {
+                      const variantId = variant.id || variant._id;
+                      return (
+                        <tr key={idx} className="group hover:bg-slate-50/30 transition-colors">
+                          <td className="px-5 py-4">
                             <input
-                              type="number"
-                              value={variant.price || ""}
+                              value={variant.color || ""}
                               onChange={(e) => {
                                 const newVariants = [...formData.variants];
-                                newVariants[idx].price = e.target.value;
+                                newVariants[idx].color = e.target.value;
+                                setFormData((prev) => ({ ...prev, variants: newVariants }));
+                              }}
+                              placeholder="Red"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-50 focus:border-indigo-200 outline-none transition-all"
+                            />
+                          </td>
+                          <td className="px-5 py-4">
+                            <input
+                              value={variant.size || ""}
+                              onChange={(e) => {
+                                const newVariants = [...formData.variants];
+                                newVariants[idx].size = e.target.value;
+                                setFormData((prev) => ({ ...prev, variants: newVariants }));
+                              }}
+                              placeholder="XL"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-50 focus:border-indigo-200 outline-none transition-all"
+                            />
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
+                                ₹
+                              </span>
+                              <input
+                                type="number"
+                                value={variant.price || ""}
+                                onChange={(e) => {
+                                  const newVariants = [...formData.variants];
+                                  newVariants[idx].price = e.target.value;
+                                  setFormData((prev) => ({ ...prev, variants: newVariants }));
+                                }}
+                                required
+                                placeholder="999"
+                                className="w-full bg-white border border-slate-200 rounded-xl pl-6 pr-3 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-50 focus:border-indigo-200 outline-none transition-all"
+                              />
+                            </div>
+                          </td>
+                          <td className="px-5 py-4">
+                            <input
+                              type="number"
+                              value={variant.stock_qty || variant.stockQty || ""}
+                              onChange={(e) => {
+                                const newVariants = [...formData.variants];
+                                newVariants[idx].stock_qty = e.target.value;
                                 setFormData((prev) => ({ ...prev, variants: newVariants }));
                               }}
                               required
-                              placeholder="999"
-                              className="w-full bg-white border border-slate-200 rounded-xl pl-6 pr-3 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-50 focus:border-indigo-200 outline-none transition-all"
+                              placeholder="50"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-50 focus:border-indigo-200 outline-none transition-all"
                             />
-                          </div>
-                        </td>
-                        <td className="px-5 py-4">
-                          <input
-                            type="number"
-                            value={variant.stock_qty || variant.stockQty || ""}
-                            onChange={(e) => {
-                              const newVariants = [...formData.variants];
-                              newVariants[idx].stock_qty = e.target.value;
-                              setFormData((prev) => ({ ...prev, variants: newVariants }));
-                            }}
-                            required
-                            placeholder="50"
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-indigo-50 focus:border-indigo-200 outline-none transition-all"
-                          />
-                        </td>
-                        <td className="px-5 py-4">
-                          <input
-                            value={variant.sku || ""}
-                            onChange={(e) => {
-                              const newVariants = [...formData.variants];
-                              newVariants[idx].sku = e.target.value;
-                              setFormData((prev) => ({ ...prev, variants: newVariants }));
-                            }}
-                            placeholder="V-RED-XL"
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:ring-2 focus:ring-indigo-50 focus:border-indigo-200 outline-none transition-all"
-                          />
-                        </td>
-                        <td className="px-5 py-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newVariants = formData.variants.filter((_, i) => i !== idx);
-                              setFormData((prev) => ({ ...prev, variants: newVariants }));
-                            }}
-                            className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2.5"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="px-5 py-4">
+                            <input
+                              value={variant.sku || ""}
+                              onChange={(e) => {
+                                const newVariants = [...formData.variants];
+                                newVariants[idx].sku = e.target.value;
+                                setFormData((prev) => ({ ...prev, variants: newVariants }));
+                              }}
+                              placeholder="V-RED-XL"
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono font-bold focus:ring-2 focus:ring-indigo-50 focus:border-indigo-200 outline-none transition-all"
+                            />
+                          </td>
+                          <td className="px-5 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {isEditingId && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateVariant(idx, variant)}
+                                  disabled={isSubmitting}
+                                  className={`p-2 rounded-lg transition-all ${
+                                    variantId
+                                      ? "text-emerald-500 hover:bg-emerald-50"
+                                      : "text-indigo-500 hover:bg-indigo-50"
+                                  }`}
+                                  title={variantId ? "Update Variant" : "Add Variant"}
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2.5"
+                                      d={variantId ? "M5 13l4 4L19 7" : "M12 4v16m8-8H4"}
+                                    />
+                                  </svg>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteVariant(idx, variant)}
+                                disabled={isSubmitting}
+                                className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                              >
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2.5"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -396,28 +445,28 @@ const ProductModal = ({
               <span className="w-8 h-[2px] bg-indigo-100"></span>
               Product Media
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Feature Image */}
-              <div className="space-y-4">
+              <div className="md:col-span-1 space-y-4">
                 <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">
-                  Feature Image
+                  Feature / Main Image
                 </label>
-                <div className="bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 p-6 flex flex-col items-center justify-center gap-4 group hover:border-indigo-300 transition-all cursor-pointer relative overflow-hidden h-[240px]">
+                <div className="bg-slate-50/50 rounded-3xl border-2 border-dashed border-indigo-200 p-6 flex flex-col items-center justify-center gap-4 group hover:border-indigo-400 transition-all cursor-pointer relative overflow-hidden h-[300px] shadow-sm">
                   {formData.image || isEditingId ? (
                     <img
                       src={
                         formData.image instanceof File
                           ? URL.createObjectURL(formData.image)
-                          : formData.image || "https://placehold.jp/400x400.png?text=No%20Image"
+                          : getImageUrl(formData.image)
                       }
                       alt="Feature preview"
                       className="absolute inset-0 w-full h-full object-contain p-4"
                     />
                   ) : (
                     <>
-                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors shadow-sm">
+                      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-indigo-400 group-hover:text-indigo-600 transition-colors shadow-sm">
                         <svg
-                          className="w-6 h-6"
+                          className="w-8 h-8"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -431,7 +480,7 @@ const ProductModal = ({
                         </svg>
                       </div>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        Click to upload main image
+                        Upload Primary Image
                       </p>
                     </>
                   )}
@@ -446,29 +495,54 @@ const ProductModal = ({
               </div>
 
               {/* Gallery */}
-              <div className="space-y-4">
+              <div className="md:col-span-2 space-y-4">
                 <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">
-                  Product Gallery
+                  Side Images / Product Gallery
                 </label>
-                <div className="bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 p-6 min-h-[240px] flex flex-col gap-4 group hover:border-indigo-300 transition-all cursor-pointer relative">
-                  {(isEditingId && formData.images?.length > 0) ||
-                  (formData.images && formData.images.length > 0) ? (
-                    <div className="grid grid-cols-4 gap-2">
+                <div className="bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 p-6 min-h-[300px] flex flex-col gap-4 group hover:border-indigo-300 transition-all cursor-pointer relative shadow-sm">
+                  {formData.images?.length > 0 ? (
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
                       {Array.from(formData.images).map((img, idx) => {
-                        const url = img instanceof File ? URL.createObjectURL(img) : img.url || img;
+                        const url =
+                          img instanceof File ? URL.createObjectURL(img) : getImageUrl(img);
                         if (!url || typeof url !== "string") return null;
                         return (
                           <div
                             key={idx}
-                            className="aspect-square rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm relative"
+                            className="aspect-square rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm relative group/item"
                           >
                             <img src={url} className="w-full h-full object-cover" alt="" />
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newImages = Array.from(formData.images).filter(
+                                  (_, i) => i !== idx,
+                                );
+                                setFormData((prev) => ({ ...prev, images: newImages }));
+                              }}
+                              className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity"
+                            >
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="3"
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </button>
                           </div>
                         );
                       })}
-                      <div className="aspect-square rounded-xl border border-indigo-200 bg-indigo-50/30 flex items-center justify-center text-indigo-600">
+                      <div className="aspect-square rounded-2xl border-2 border-dashed border-indigo-200 bg-white flex flex-col items-center justify-center text-indigo-400 hover:text-indigo-600 hover:border-indigo-400 transition-all cursor-pointer">
                         <svg
-                          className="w-5 h-5"
+                          className="w-6 h-6"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -480,13 +554,29 @@ const ProductModal = ({
                             d="M12 4v16m8-8H4"
                           />
                         </svg>
+                        <span className="text-[8px] font-black uppercase tracking-tighter mt-1">
+                          Add
+                        </span>
+                        <input
+                          type="file"
+                          multiple
+                          onChange={(e) => {
+                            const newFiles = Array.from(e.target.files);
+                            setFormData((prev) => ({
+                              ...prev,
+                              images: [...Array.from(prev.images || []), ...newFiles],
+                            }));
+                          }}
+                          accept="image/*"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
                       </div>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center flex-1 gap-4">
-                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors shadow-sm">
+                      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-colors shadow-sm">
                         <svg
-                          className="w-6 h-6"
+                          className="w-8 h-8"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -500,18 +590,23 @@ const ProductModal = ({
                         </svg>
                       </div>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">
-                        Drag and drop gallery images here
+                        Add Secondary Images
                       </p>
+                      <input
+                        type="file"
+                        multiple
+                        onChange={(e) => {
+                          const newFiles = Array.from(e.target.files);
+                          setFormData((prev) => ({
+                            ...prev,
+                            images: [...Array.from(prev.images || []), ...newFiles],
+                          }));
+                        }}
+                        accept="image/*"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
                     </div>
                   )}
-                  <input
-                    type="file"
-                    name="images"
-                    multiple
-                    onChange={(e) => setFormData((prev) => ({ ...prev, images: e.target.files }))}
-                    accept="image/*"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                  />
                 </div>
               </div>
             </div>
@@ -538,7 +633,7 @@ const ProductModal = ({
                 </>
               ) : (
                 <>
-                  {isEditingId ? "Update Product" : "Publish Product"}
+                  {isEditingId ? "Update Product Info" : "Publish Product"}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-4 w-4"

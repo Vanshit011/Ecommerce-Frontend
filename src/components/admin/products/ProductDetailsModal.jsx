@@ -220,18 +220,29 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
                   Availability
                 </p>
                 <div>
-                  {(viewProduct.stock_qty ||
-                    viewProduct.stockQty ||
-                    viewProduct.variants?.[0]?.stock_qty ||
-                    0) <= 0 ? (
-                    <span className="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-md border border-red-100 uppercase tracking-wider">
-                      SOLD OUT
-                    </span>
-                  ) : (
-                    <span className="bg-green-50 text-green-600 text-[10px] font-black px-2 py-0.5 rounded-md border border-green-100 uppercase tracking-wider">
-                      IN STOCK
-                    </span>
-                  )}
+                  {(() => {
+                    const status = viewProduct.availability || "INSTOCK";
+                    switch (status) {
+                      case "OUTOFSTOCK":
+                        return (
+                          <span className="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-md border border-red-100 uppercase tracking-wider">
+                            OUT OF STOCK
+                          </span>
+                        );
+                      case "PREORDER":
+                        return (
+                          <span className="bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-0.5 rounded-md border border-blue-100 uppercase tracking-wider">
+                            PRE-ORDER
+                          </span>
+                        );
+                      default:
+                        return (
+                          <span className="bg-green-50 text-green-600 text-[10px] font-black px-2 py-0.5 rounded-md border border-green-100 uppercase tracking-wider">
+                            IN STOCK
+                          </span>
+                        );
+                    }
+                  })()}
                 </div>
               </div>
             </div>
