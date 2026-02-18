@@ -7,6 +7,10 @@ import {
   updateProduct,
   deleteProduct,
   getCategories,
+  bulkUpdateVariants,
+  updateProductVariants,
+  addVariant,
+  deleteVariant,
 } from "../../services/api";
 import { getImageUrl } from "../../utils/imageUtils";
 
@@ -15,6 +19,21 @@ import ProductTable from "../../components/admin/products/ProductTable";
 import ProductModal from "../../components/admin/products/ProductModal";
 import ProductDetailsModal from "../../components/admin/products/ProductDetailsModal";
 import ImagePreviewModal from "../../components/admin/products/ImagePreviewModal";
+
+const initialForm = {
+  name: "",
+  description: "",
+  brand: "",
+  category: "",
+  image: null,
+  images: [],
+  has_variants: true,
+  variants: [{ color: "", size: "", price: "", stock_qty: "", sku: "" }],
+  specifications: {},
+  isActive: true,
+  mainImageIndex: 0,
+  availability: "INSTOCK",
+};
 
 const AdminProducts = () => {
   const { showToast } = useToast();
@@ -38,21 +57,6 @@ const AdminProducts = () => {
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [meta, setMeta] = useState(null);
 
-  const initialForm = {
-    name: "",
-    description: "",
-    brand: "",
-    category: "",
-    image: null,
-    images: [],
-    has_variants: true,
-    variants: [{ color: "", size: "", price: "", stock_qty: "", sku: "" }],
-    specifications: {},
-    isActive: true,
-    mainImageIndex: 0,
-    sku: "",
-    tags: "",
-  };
   const [formData, setFormData] = useState(initialForm);
 
   /*  DATA FETCHING  */
@@ -99,6 +103,30 @@ const AdminProducts = () => {
   }, [page, limit, debouncedSearch]);
 
   /*  SYNC URL PARAMS  */
+  const handlePageChange = useCallback(
+    (newPage) => {
+      const newParams = new URLSearchParams(searchParams);
+      if (newPage === 1) newParams.delete("page");
+      else newParams.set("page", newPage);
+      setSearchParams(newParams, { replace: true });
+      setPage(newPage);
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const handleLimitChange = useCallback(
+    (newLimit) => {
+      const newParams = new URLSearchParams(searchParams);
+      if (newLimit === 10) newParams.delete("limit");
+      else newParams.set("limit", newLimit);
+      newParams.delete("page"); // Reset to page 1 on limit change
+      setSearchParams(newParams, { replace: true });
+      setLimit(newLimit);
+      setPage(1);
+    },
+    [searchParams, setSearchParams],
+  );
+
   const updateURL = useCallback(
     (params) => {
       const newParams = new URLSearchParams(searchParams);
@@ -124,6 +152,7 @@ const AdminProducts = () => {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
@@ -138,13 +167,30 @@ const AdminProducts = () => {
     const p = Number(searchParams.get("page")) || 1;
     const l = Number(searchParams.get("limit")) || 10;
     const s = searchParams.get("search") || "";
+    const action = searchParams.get("action");
+    const categoryId = searchParams.get("categoryId");
+
+    if (action === "add") {
+      setIsEditingId(null);
+      setFormData({
+        ...initialForm,
+        category: categoryId || "",
+      });
+      setShowModal(true);
+
+      // Clean up the URL to prevent re-opening on refresh
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("action");
+      newParams.delete("categoryId");
+      setSearchParams(newParams, { replace: true });
+    }
 
     // Only update state if values actually changed to avoid unnecessary re-renders
     setPage((prev) => (p !== prev ? p : prev));
     setLimit((prev) => (l !== prev ? l : prev));
     setSearch((prev) => (s !== prev ? s : prev));
     setDebouncedSearch((prev) => (s !== prev ? s : prev));
-  }, [searchParams]); // Only depend on searchParams
+  }, [searchParams, setSearchParams]); // Only depend on searchParams
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -199,14 +245,6 @@ const AdminProducts = () => {
     return result;
   })();
 
-  const handlePageChange = (newPage) => {
-    updateURL({ page: newPage });
-  };
-
-  const handleLimitChange = (newLimit) => {
-    updateURL({ limit: newLimit, page: 1 });
-  };
-
   /*  HANDLERS  */
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -216,11 +254,16 @@ const AdminProducts = () => {
   const handleEditClick = (product) => {
     setFormData({
       ...product,
-      category: product.category_id || product.categoryId || "",
+      category:
+        product.category_id ||
+        product.categoryId ||
+        product.category?.id ||
+        product.category?._id ||
+        "",
       brand: product.brand || "",
       sku: product.sku || "",
-      image: null,
-      images: [],
+      image: product.image || null,
+      images: product.images || [],
       has_variants: true,
       variants:
         product.variants?.length > 0
@@ -228,9 +271,170 @@ const AdminProducts = () => {
           : [{ color: "", size: "", price: "", stock_qty: "", sku: "" }],
       isActive: product.is_active ?? product.isActive ?? true,
       mainImageIndex: product.main_image_index ?? product.mainImageIndex ?? 0,
+      availability: product.availability || "INSTOCK",
     });
     setIsEditingId(product.id || product._id);
     setShowModal(true);
+  };
+
+  const handleUpdateOrCreateVariant = async (variantIndex, variantData) => {
+    if (!isEditingId) return;
+    try {
+      setIsSubmitting(true);
+      const payload = {
+        price: variantData.price,
+        stock_qty: variantData.stock_qty || variantData.stockQty,
+        color: variantData.color,
+        size: variantData.size,
+        sku: variantData.sku,
+      };
+
+      const variantId = variantData.id || variantData._id;
+      let res;
+
+      if (variantId) {
+        res = await updateProductVariants(isEditingId, variantId, payload);
+        showToast("Variant updated successfully");
+      } else {
+        res = await addVariant(isEditingId, payload);
+        showToast("New variant added successfully");
+      }
+
+      // Update local state instantly with server response
+      const serverResponse = res.data?.data || res.data || res;
+      // Handle potential nested structures or direct objects
+      const updatedVariant =
+        serverResponse?.id || serverResponse?._id
+          ? serverResponse
+          : serverResponse?.variant || serverResponse;
+
+      if (updatedVariant && (updatedVariant.id || updatedVariant._id)) {
+        // 1. Update formData for the modal (Saves the new ID so next click is an Update)
+        setFormData((prev) => {
+          const newVariants = [...(prev.variants || [])];
+          newVariants[variantIndex] = { ...newVariants[variantIndex], ...updatedVariant };
+          return { ...prev, variants: newVariants };
+        });
+
+        // 2. Update products list for the background table
+        setProducts((prev) =>
+          prev.map((p) => {
+            if (String(p.id || p._id) === String(isEditingId)) {
+              let variantExists = false;
+              const newVariants = (p.variants || []).map((v) => {
+                if (String(v.id || v._id) === String(variantId)) {
+                  variantExists = true;
+                  return { ...v, ...updatedVariant };
+                }
+                return v;
+              });
+
+              // If it's a brand new variant or wasn't found in current variants list
+              if (!variantId || !variantExists) {
+                // Prevent duplicate addition if already somehow added
+                const alreadyExists = newVariants.find(
+                  (v) => String(v.id || v._id) === String(updatedVariant.id || updatedVariant._id),
+                );
+                if (!alreadyExists) {
+                  newVariants.push(updatedVariant);
+                }
+              }
+
+              return { ...p, variants: newVariants };
+            }
+            return p;
+          }),
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(
+        variantData.id || variantData._id ? "Error updating variant" : "Error adding variant",
+        "error",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBulkUpdateVariantsAction = async () => {
+    if (!isEditingId) return;
+    try {
+      setIsSubmitting(true);
+      const payload = {
+        variants: formData.variants.map((v) => ({
+          id: v.id || v._id,
+          price: v.price,
+          stock_qty: v.stock_qty || v.stockQty,
+        })),
+      };
+      const res = await bulkUpdateVariants(isEditingId, payload);
+      showToast("All variants updated successfully");
+
+      // Update local state instantly with server response
+      const updatedVariants = res.data?.data || res.data || res;
+      if (updatedVariants && Array.isArray(updatedVariants)) {
+        // 1. Update formData for the modal
+        setFormData((prev) => ({ ...prev, variants: updatedVariants }));
+
+        // 2. Update products list for background table
+        setProducts((prev) =>
+          prev.map((p) =>
+            String(p.id || p._id) === String(isEditingId) ? { ...p, variants: updatedVariants } : p,
+          ),
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Error update variants", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteVariant = async (variantIndex, variantData) => {
+    const variantId = variantData.id || variantData._id;
+
+    // Capture current state for potential rollback
+    const previousFormData = { ...formData };
+    const previousProducts = [...products];
+
+    try {
+      // 1. Optimistic local state update (Instant Feedback)
+      setFormData((prev) => ({
+        ...prev,
+        variants: prev.variants.filter((_, i) => i !== variantIndex),
+      }));
+
+      if (variantId) {
+        setProducts((prev) =>
+          prev.map((p) => {
+            if (String(p.id || p._id) === String(isEditingId)) {
+              return {
+                ...p,
+                variants: (p.variants || []).filter(
+                  (v) => String(v.id || v._id) !== String(variantId),
+                ),
+              };
+            }
+            return p;
+          }),
+        );
+
+        // 2. Delete from server
+        setIsSubmitting(true);
+        await deleteVariant(isEditingId, variantId);
+        showToast("Variant deleted successfully");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Error deleting variant", "error");
+      // Rollback on error
+      setFormData(previousFormData);
+      setProducts(previousProducts);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -245,21 +449,21 @@ const AdminProducts = () => {
     append("description", formData.description);
     append("brand", formData.brand);
     append("sku", formData.sku);
-    // Removed price, sale_price, stock_qty, availability as they are now per-variant
+    append("availability", formData.availability);
+    // Removed price, sale_price, stock_qty as they are now per-variant
     // Removed has_variants as per backend validation rules
     append("is_active", formData.isActive);
     append("main_image_index", formData.mainImageIndex);
 
     // Removed specifications as per user request
 
-    if (formData.has_variants && formData.variants?.length > 0) {
+    if (!isEditingId && formData.has_variants && formData.variants?.length > 0) {
       formData.variants.forEach((v, idx) => {
         if (v.color) append(`variants[${idx}][color]`, v.color);
         if (v.size) append(`variants[${idx}][size]`, v.size);
         if (v.price) append(`variants[${idx}][price]`, v.price);
         // Removed sale_price from variants as per backend validation rules
-        if (v.stock_qty || v.stockQty)
-          append(`variants[${idx}][stock_qty]`, v.stock_qty || v.stockQty);
+        if (v.stock_qty) append(`variants[${idx}][stock_qty]`, v.stock_qty);
         if (v.sku) append(`variants[${idx}][sku]`, v.sku);
       });
     }
@@ -267,9 +471,11 @@ const AdminProducts = () => {
     // Removed dimensions and tags as per user request
 
     if (formData.category) data.append("category_id", formData.category);
-    if (formData.image) data.append("images", formData.image);
+    if (formData.image instanceof File) data.append("images", formData.image);
     if (formData.images?.length > 0)
-      Array.from(formData.images).forEach((f) => data.append("images", f));
+      Array.from(formData.images).forEach((f) => {
+        if (f instanceof File) data.append("images", f);
+      });
 
     try {
       let res;
@@ -279,6 +485,7 @@ const AdminProducts = () => {
 
         // Update local state with server response (single source of truth)
         const updated = res.data?.data || res.data || res;
+
         setProducts((prev) =>
           prev.map((p) => (String(p.id || p._id) === String(isEditingId) ? updated : p)),
         );
@@ -370,11 +577,14 @@ const AdminProducts = () => {
         setShowModal={setShowModal}
         isEditingId={isEditingId}
         formData={formData}
+        setFormData={setFormData}
         handleChange={handleChange}
         handleSubmit={handleSubmit}
+        handleUpdateVariant={handleUpdateOrCreateVariant}
+        handleDeleteVariant={handleDeleteVariant}
+        handleBulkUpdateVariants={handleBulkUpdateVariantsAction}
         isSubmitting={isSubmitting}
         flattenedCategories={flattenedForDropdown}
-        setFormData={setFormData}
       />
 
       <ProductDetailsModal

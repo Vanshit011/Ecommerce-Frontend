@@ -26,6 +26,7 @@ const AdminCategories = () => {
   const [expandedCategories, setExpandedCategories] = useState(new Set());
   const [viewProductsFor, setViewProductsFor] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [openMenuId, setOpenMenuId] = useState(null);
   const itemsPerPage = 10;
 
   const [showModal, setShowModal] = useState(false);
@@ -57,6 +58,12 @@ const AdminCategories = () => {
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+
+  useEffect(() => {
+    const closeMenu = () => setOpenMenuId(null);
+    document.addEventListener("click", closeMenu);
+    return () => document.removeEventListener("click", closeMenu);
+  }, []);
 
   /*  HANDLERS  */
   const handleSubmit = async (e) => {
@@ -211,12 +218,18 @@ const AdminCategories = () => {
 
     return (
       <React.Fragment key={categoryId}>
-        <tr className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+        <tr
+          className="border-b border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer"
+          onClick={() => toggleViewProducts(categoryId)}
+        >
           <td className="py-4 px-6">
             <div className="flex items-center gap-3" style={{ paddingLeft: `${level * 24}px` }}>
               {hasChildren && (
                 <button
-                  onClick={() => toggleExpand(categoryId)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleExpand(categoryId);
+                  }}
                   className="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-all"
                 >
                   {isExpanded ? "▼" : "▶"}
@@ -241,55 +254,63 @@ const AdminCategories = () => {
             </div>
           </td>
           <td className="py-4 px-6 text-right">
-            <div className="flex items-center justify-end gap-2">
+            <div className="relative inline-block text-left">
               <button
-                onClick={() => toggleViewProducts(categoryId)}
-                title="View Products"
-                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1 ml-auto"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenMenuId(openMenuId === categoryId ? null : categoryId);
+                }}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                Actions
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
                   <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
                   />
                 </svg>
               </button>
-              <button
-                onClick={() => handleEditClick(cat)}
-                title="Edit Category"
-                className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() => handleDelete(categoryId)}
-                title="Delete Category"
-                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
+
+              {openMenuId === categoryId && (
+                <div
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-10 overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                    onClick={() => {
+                      toggleViewProducts(categoryId);
+                      setOpenMenuId(null);
+                    }}
+                  >
+                    View Products
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                    onClick={() => {
+                      handleEditClick(cat);
+                      setOpenMenuId(null);
+                    }}
+                  >
+                    Edit Category
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-slate-100 flex items-center gap-2"
+                    onClick={() => {
+                      handleDelete(categoryId);
+                      setOpenMenuId(null);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           </td>
         </tr>

@@ -23,7 +23,6 @@ import {
   getRecentOrders,
   getSalesByCategory,
   getPopularFavorites,
-  getMyProducts,
 } from "../../services/api";
 import { getImageUrl } from "../../utils/imageUtils";
 
@@ -159,6 +158,8 @@ const AdminOverview = () => {
     customers: 0,
     revenueChange: 0,
     ordersChange: 0,
+    topCategory: { name: "N/A", sales: 0 },
+    deliveredOrders: 0,
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
@@ -166,7 +167,6 @@ const AdminOverview = () => {
   const [popularFavorites, setPopularFavorites] = useState([]);
   const [revenueMonthly, setRevenueMonthly] = useState([]);
   const [volumeMonthly, setVolumeMonthly] = useState([]);
-  const [lowStockProducts, setLowStockProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
@@ -229,13 +229,31 @@ const AdminOverview = () => {
     const fetchOverviewData = async () => {
       try {
         const params = getParams(overviewFilters);
-        const revenueRes = await getRevenueAnalytics(params);
+        const [revenueRes, categoryRes, statusRes] = await Promise.all([
+          getRevenueAnalytics(params),
+          getSalesByCategory(params),
+          getOrderStatistics(params),
+        ]);
+
+        const revenueData = revenueRes.data;
+        const categoryData = categoryRes.data || [];
+        const statusData = statusRes.data || {};
+
+        // Find top category
+        const sortedCats = [...categoryData].sort((a, b) => b.sales - a.sales);
+        const topCat = sortedCats[0] || { category: "N/A", sales: 0 };
+
         setStats((prev) => ({
           ...prev,
-          revenue: revenueRes.data?.totalRevenue || 0,
-          revenueChange: revenueRes.data?.revenueGrowth || revenueRes.data?.growth || 0,
-          orders: revenueRes.data?.totalOrders || 0,
-          ordersChange: revenueRes.data?.orderGrowth || 0,
+          revenue: revenueData?.totalRevenue || 0,
+          revenueChange: revenueData?.revenueGrowth || revenueData?.growth || 0,
+          orders: revenueData?.totalOrders || 0,
+          ordersChange: revenueData?.orderGrowth || 0,
+          topCategory: {
+            name: topCat.category || topCat.name || "N/A",
+            sales: topCat.sales || 0,
+          },
+          deliveredOrders: statusData.Delivered || 0,
         }));
       } catch (error) {
         console.error("Overview Stats Error:", error);
@@ -301,11 +319,10 @@ const AdminOverview = () => {
   useEffect(() => {
     const fetchStaticData = async () => {
       try {
-        const [overviewRes, topProductsRes, recentOrdersRes, productsRes] = await Promise.all([
+        const [overviewRes, topProductsRes, recentOrdersRes] = await Promise.all([
           getDashboardOverview({ year: new Date().getFullYear() }),
           getTopProducts({ limit: 5 }),
           getRecentOrders({ limit: 5 }),
-          getMyProducts({ limit: 100 }),
         ]);
 
         const overview = overviewRes.data;
@@ -320,15 +337,6 @@ const AdminOverview = () => {
 
         setRecentOrders(recentOrdersData.slice(0, 5));
         setTopProducts(topProdsData.slice(0, 5));
-
-        const productList = productsRes.data?.data || productsRes.data || [];
-        const lowStock = productList
-          .filter((p) => {
-            const stock = p.stock_qty || p.stockQty || 0;
-            return stock > 0 && stock < 10;
-          })
-          .slice(0, 5);
-        setLowStockProducts(lowStock);
       } catch (error) {
         console.error("Static Data Fetch Error:", error);
       } finally {
@@ -372,7 +380,7 @@ const AdminOverview = () => {
       </div>
 
       {/* STATS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatCard
           title="Total Revenue"
           value={formatCurrency(stats.revenue)}
@@ -387,7 +395,7 @@ const AdminOverview = () => {
           color="bg-gradient-to-br from-green-500 to-emerald-600"
         />
         <StatCard
-          title={`Orders`}
+          title="Orders"
           value={stats.orders}
           change={stats.ordersChange}
           icon={
@@ -398,6 +406,19 @@ const AdminOverview = () => {
             />
           }
           color="bg-gradient-to-br from-blue-500 to-indigo-600"
+        />
+        <StatCard
+          title="Top Category"
+          value={stats.topCategory.name}
+          subValue={formatCurrency(stats.topCategory.sales)}
+          icon={
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+            />
+          }
+          color="bg-gradient-to-br from-amber-500 to-orange-600"
         />
       </div>
 
@@ -469,7 +490,6 @@ const AdminOverview = () => {
               setFilters={setCategoryFilters}
               years={years}
               months={months}
-              hideCustom={true}
             />
           </div>
           <div className="relative h-[400px] w-full min-h-[400px]">
@@ -515,7 +535,6 @@ const AdminOverview = () => {
               setFilters={setVolumeFilters}
               years={years}
               months={months}
-              hideCustom={true}
             />
           </div>
           <div className="relative h-[300px] w-full min-h-[300px]">
@@ -631,7 +650,7 @@ const AdminOverview = () => {
           <div className="p-6 border-b border-slate-100 flex justify-between items-center">
             <h2 className="text-xl font-bold text-slate-800">Recent Customer Activity</h2>
             <Link
-              to="/admin/orders"
+              to="/dashboard/orders"
               className="px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all"
             >
               View History
@@ -741,91 +760,11 @@ const AdminOverview = () => {
           </div>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* LOW STOCK ALERT */}
-        <div className="bg-white rounded-2xl border border-rose-100 shadow-sm overflow-hidden flex flex-col ring-4 ring-rose-50/30">
-          <div className="p-6 border-b border-rose-50 bg-rose-50/30 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-rose-800 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
-              Inventory Critical
-            </h2>
-          </div>
-          <div className="p-0">
-            {lowStockProducts.length > 0 ? (
-              <div className="divide-y divide-rose-50">
-                {lowStockProducts.map((product, index) => (
-                  <div
-                    key={product.id || product._id || `low-${index}`}
-                    className="p-5 flex items-center gap-4 hover:bg-rose-50/50 transition-colors group"
-                  >
-                    <div className="w-14 h-14 bg-white rounded-xl overflow-hidden border border-rose-100 shadow-sm group-hover:scale-105 transition-transform">
-                      <img
-                        src={getImageUrl(product)}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = "https://placehold.jp/400x400.png?text=No%20Image";
-                        }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-slate-800 truncate group-hover:text-rose-700">
-                        {product.name}
-                      </h4>
-                      <p className="text-xs text-rose-500 font-medium mt-1">
-                        Stock Level:{" "}
-                        <span className="font-black">
-                          {product.stock_qty || product.stockQty} left
-                        </span>
-                      </p>
-                    </div>
-                    <Link
-                      to={`/admin/products?search=${product.name}`}
-                      className="p-3 bg-white text-rose-400 hover:text-rose-600 border border-slate-100 rounded-xl hover:shadow-md transition-all"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                        className="w-5 h-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-                        />
-                      </svg>
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-16 text-center">
-                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mx-auto mb-4 border border-emerald-100">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="3"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-bold text-slate-800">Inventory Healthy</h3>
-                <p className="text-slate-500 text-sm mt-1">All items are well stocked and ready.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
 
-const StatCard = ({ title, value, icon, color, change }) => (
+const StatCard = ({ title, value, subValue, icon, color, change }) => (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-all group">
     <div
       className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}
@@ -841,10 +780,13 @@ const StatCard = ({ title, value, icon, color, change }) => (
         {icon}
       </svg>
     </div>
-    <div className="flex-1">
-      <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider">{title}</p>
-      <div className="flex items-baseline gap-2">
-        <h3 className="text-2xl font-bold text-slate-800">{value}</h3>
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider truncate">
+        {title}
+      </p>
+      <div className="flex items-baseline gap-2 flex-wrap">
+        <h3 className="text-2xl font-bold text-slate-800 truncate">{value}</h3>
+        {subValue && <span className="text-[10px] font-bold text-slate-500">{subValue}</span>}
         {change !== undefined && (
           <span
             className={`text-xs font-bold ${change >= 0 ? "text-emerald-500" : "text-rose-500"}`}
