@@ -12,7 +12,8 @@ const API = axios.create({
 // ------------------ //
 
 // auth user & admin
-export const registerUser = (data) => API.post("/auth/register", data);
+export const registerAdmin = (data) => API.post("/auth/register/admin", data);
+export const registerUser = (data) => API.post("/auth/register/user", data);
 export const loginUser = (data) => API.post("/auth/login", data);
 
 API.interceptors.request.use(
@@ -160,5 +161,16 @@ export const getRecentOrders = (params) => API.get("/dashboard/orders/recent", {
 export const getSalesByCategory = (params) => API.get("/dashboard/sales/category", { params });
 
 export const getPopularFavorites = () => API.get("/dashboard/favorites/popular");
+
+// Product Reviews
+export const createReview = (productId, data) => API.post(`/reviews/${productId}`, data);
+
+export const getReviewsByProduct = (productId) => API.get(`/reviews/product/${productId}`);
+
+export const getProductStats = (productId) => API.get(`/reviews/product/${productId}/stats`);
+
+export const updateReview = (id, data) => API.patch(`/reviews/${id}`, data);
+
+export const deleteReview = (id) => API.delete(`/reviews/${id}`);
 
 export default API;

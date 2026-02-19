@@ -5,9 +5,12 @@ import {
   getFavorites,
   addToFavorites,
   removeFromFavorites,
+  getProductStats,
 } from "../../../services/api";
 import { useCart } from "../../../context/CartContext";
 import { useToast } from "../../../context/ToastContext";
+import ReviewSection from "../../../components/shop/ReviewSection";
+import StarRating from "../../../components/common/StarRating";
 
 import { getImageUrl } from "../../../utils/imageUtils";
 import { ProductDetailSkeleton } from "../../../components/common/Skeleton";
@@ -30,6 +33,7 @@ const ProductDetails = () => {
   const { addToCart: globalAddToCart } = useCart();
 
   const [product, setProduct] = useState(null);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
@@ -49,13 +53,31 @@ const ProductDetails = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const res = await getProductDetails(id);
-        const data = res.data;
+        const [res, statsRes] = await Promise.all([
+          getProductDetails(id),
+          getProductStats(id).catch(() => ({ data: null })),
+        ]);
+
+        const data = res.data?.data || res.data;
+        const statsData = statsRes.data?.data || statsRes.data;
+
         setProduct(data);
+        if (statsData) {
+          setStats({
+            averageRating:
+              statsData.averageRating || statsData.average_rating || statsData.average || 0,
+            totalReviews:
+              statsData.totalReviews ||
+              statsData.total_reviews ||
+              statsData.count ||
+              statsData.total ||
+              0,
+          });
+        }
 
         // Handle initial image
-        const mainImg = data.images && data.images.length > 0 ? data.images[0] : data.image;
-        setSelectedImage(getImageUrl(mainImg));
+        const mainImg = data?.images && data.images.length > 0 ? data.images[0] : data?.image;
+        if (mainImg) setSelectedImage(getImageUrl(mainImg));
       } catch (err) {
         console.error("Error fetching product details:", err);
         setError("Product not found");
@@ -387,9 +409,29 @@ const ProductDetails = () => {
                   <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight leading-[1.1]">
                     {product?.name}
                   </h1>
-                  <div className="flex items-center gap-2 text-slate-400 font-bold text-sm uppercase tracking-widest">
-                    <span className="w-8 h-[1px] bg-slate-200" />
-                    {product?.brand || "Artist's Edition"}
+
+                  <div className="flex items-center gap-6 mb-4">
+                    <div className="flex items-center gap-2">
+                      <StarRating rating={Math.round(stats?.averageRating || 0)} size="sm" />
+                      <span className="text-sm font-black text-slate-900">
+                        {stats?.averageRating?.toFixed(1) || "0.0"}
+                      </span>
+                    </div>
+                    <div className="w-[1px] h-4 bg-slate-200" />
+                    <button
+                      onClick={() =>
+                        document
+                          .getElementById("reviews-section")
+                          ?.scrollIntoView({ behavior: "smooth" })
+                      }
+                      className="text-indigo-600 font-bold text-xs uppercase tracking-widest hover:text-indigo-700 transition-colors"
+                    >
+                      {stats?.totalReviews || 0} Reviews
+                    </button>
+                    <div className="w-[1px] h-4 bg-slate-200" />
+                    <div className="text-slate-400 font-bold text-sm uppercase tracking-widest flex items-center gap-2">
+                      {product?.brand || "Artist's Edition"}
+                    </div>
                   </div>
                 </div>
 
@@ -680,6 +722,9 @@ const ProductDetails = () => {
               </div>
             </div>
           </div>
+        </div>
+        <div id="reviews-section">
+          <ReviewSection productId={id} />
         </div>
       </div>
     </div>
