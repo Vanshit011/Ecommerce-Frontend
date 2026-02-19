@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getProducts, getCategories } from "../../services/api";
+import { getProducts, getCategories, getProductStats } from "../../services/api";
 import { getImageUrl } from "../../utils/imageUtils";
 import { ProductSkeleton } from "../../components/common/Skeleton";
 import { getLowestPrice, hasVariants, getPriceRange } from "../../utils/variantUtils";
+import StarRating from "../../components/common/StarRating";
 import flashSaleImg from "../../assets/images/flash-sale.jpg";
 
 const Home = () => {
@@ -64,9 +65,46 @@ const Home = () => {
           finalCats = tree[0].children;
         }
 
+        const featuredSlice = products.slice(0, 8);
+        const bestSellersSlice = products.slice(8, 16);
+
+        // Fetch stats for featured products
+        const featuredWithStats = await Promise.all(
+          featuredSlice.map(async (p) => {
+            try {
+              const statsRes = await getProductStats(p.id || p._id);
+              const stats = statsRes.data?.data || statsRes.data;
+              return {
+                ...p,
+                averageRating: stats?.averageRating || stats?.average_rating || stats?.average || 0,
+                reviewCount: stats?.totalReviews || stats?.total_reviews || stats?.count || 0,
+              };
+            } catch {
+              return p;
+            }
+          }),
+        );
+
+        // Fetch stats for best sellers
+        const bestSellersWithStats = await Promise.all(
+          bestSellersSlice.map(async (p) => {
+            try {
+              const statsRes = await getProductStats(p.id || p._id);
+              const stats = statsRes.data?.data || statsRes.data;
+              return {
+                ...p,
+                averageRating: stats?.averageRating || stats?.average_rating || stats?.average || 0,
+                reviewCount: stats?.totalReviews || stats?.total_reviews || stats?.count || 0,
+              };
+            } catch {
+              return p;
+            }
+          }),
+        );
+
         setCategories(finalCats);
-        setFeatured(products.slice(0, 8));
-        setBestSellers(products.slice(8, 16));
+        setFeatured(featuredWithStats);
+        setBestSellers(bestSellersWithStats);
       } finally {
         setLoading(false);
       }
@@ -109,24 +147,33 @@ const Home = () => {
                   <span className="font-bold text-yellow-300">70% OFF</span> on premium brands.
                 </p>
 
-                <button
-                  onClick={() => navigate("/products")}
-                  className="bg-white text-blue-900 px-10 py-4 rounded-2xl font-bold text-lg hover:bg-yellow-400 hover:text-blue-900 transition-all hover:scale-105 shadow-xl shadow-blue-900/30 active:scale-95 flex items-center gap-2 mx-auto md:mx-0"
-                >
-                  Start Shopping
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
+                <div className="flex flex-col sm:flex-row items-center gap-4 mx-auto md:mx-0">
+                  <button
+                    onClick={() => navigate("/products")}
+                    className="w-full sm:w-auto bg-white text-blue-900 px-10 py-4 rounded-2xl font-bold text-lg hover:bg-yellow-400 hover:text-blue-900 transition-all hover:scale-105 shadow-xl shadow-blue-900/30 active:scale-95 flex items-center justify-center gap-2"
                   >
-                    <path
-                      fillRule="evenodd"
-                      d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
+                    Start Shopping
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    onClick={() => navigate("/admin/register")}
+                    className="w-full sm:w-auto bg-transparent border-2 border-white/30 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all hover:border-white shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                  >
+                    Become a Seller
+                  </button>
+                </div>
               </div>
 
               {/* Right Image */}
@@ -266,6 +313,15 @@ const Home = () => {
                       <h4 className="font-bold text-slate-800 text-lg mb-1 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
                         {p.name}
                       </h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <StarRating
+                          rating={Math.round(p.averageRating || p.average_rating || p.average || 0)}
+                          size="sm"
+                        />
+                        <span className="text-[10px] text-slate-400 font-bold">
+                          ({p.reviewCount || p.total_reviews || p.count || 0})
+                        </span>
+                      </div>
 
                       <div className="mt-auto pt-4 flex items-end justify-between border-t border-slate-50">
                         <div>
@@ -358,6 +414,17 @@ const Home = () => {
                           <h4 className="font-bold text-slate-800 text-sm leading-tight truncate group-hover:text-blue-600 transition-colors">
                             {p.name}
                           </h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <StarRating
+                              rating={Math.round(
+                                p.averageRating || p.average_rating || p.average || 0,
+                              )}
+                              size="sm"
+                            />
+                            <span className="text-[9px] text-slate-400 font-bold">
+                              ({p.reviewCount || p.total_reviews || p.count || 0})
+                            </span>
+                          </div>
                         </div>
 
                         <div className="flex items-center justify-between mt-2">

@@ -186,6 +186,12 @@ const Header = () => {
             >
               Shop
             </Link>
+            <Link
+              to="/admin/register"
+              className="ml-2 px-4 py-2 rounded-xl font-bold text-sm text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-all border border-indigo-100 shadow-sm"
+            >
+              Become a Seller
+            </Link>
           </nav>
 
           <div className="h-8 w-[1px] bg-slate-200 hidden md:block mx-1"></div>

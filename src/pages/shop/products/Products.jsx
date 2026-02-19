@@ -5,12 +5,14 @@ import {
   getFavorites,
   addToFavorites,
   removeFromFavorites,
+  getProductStats,
 } from "../../../services/api";
 
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { getImageUrl } from "../../../utils/imageUtils";
 import { ProductSkeleton, CategorySkeleton } from "../../../components/common/Skeleton";
 import { getLowestPrice, getTotalStock, hasVariants } from "../../../utils/variantUtils";
+import StarRating from "../../../components/common/StarRating";
 
 /* ================= CATEGORY TREE NODE ================= */
 
@@ -398,7 +400,28 @@ const Products = () => {
         const res = await getProducts(params);
 
         if (isMounted) {
-          setProducts(res?.data?.data || []);
+          const fetchedProducts = res?.data?.data || [];
+
+          // Fetch stats for each product concurrently
+          const productsWithStats = await Promise.all(
+            fetchedProducts.map(async (p) => {
+              try {
+                const statsRes = await getProductStats(p.id || p._id);
+                const stats = statsRes.data?.data || statsRes.data;
+                return {
+                  ...p,
+                  averageRating:
+                    stats?.averageRating || stats?.average_rating || stats?.average || 0,
+                  reviewCount: stats?.totalReviews || stats?.total_reviews || stats?.count || 0,
+                };
+              } catch (err) {
+                console.error(`Stats fetch failed for product ${p.id || p._id}:`, err);
+                return p;
+              }
+            }),
+          );
+
+          setProducts(productsWithStats);
           setMeta(res?.data?.meta || null);
         }
       } catch (error) {
@@ -744,6 +767,17 @@ const Products = () => {
                       <p className="text-xs text-slate-400 mt-1 line-clamp-1 font-medium italic">
                         {product.brand || "Premium Quality"}
                       </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <StarRating
+                          rating={Math.round(
+                            product.averageRating || product.average_rating || product.average || 0,
+                          )}
+                          size="sm"
+                        />
+                        <span className="text-[10px] text-slate-400 font-bold">
+                          ({product.reviewCount || product.total_reviews || product.count || 0})
+                        </span>
+                      </div>
                     </div>
 
                     <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-50">
