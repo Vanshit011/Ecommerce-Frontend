@@ -189,7 +189,7 @@ const Cart = () => {
             </p>
             <button
               onClick={() => navigate("/products")}
-              className="bg-indigo-600 text-white px-10 py-5 rounded-[2rem] font-bold text-lg hover:bg-indigo-700 shadow-2xl shadow-indigo-200 transition-all active:scale-95 flex items-center gap-3 mx-auto"
+              className="bg-blue-600 text-white px-10 py-5 rounded-[2rem] font-bold text-lg hover:bg-blue-700 shadow-2xl shadow-blue-200 transition-all active:scale-95 flex items-center gap-3 mx-auto"
             >
               Explore Products
               <svg
@@ -214,20 +214,20 @@ const Cart = () => {
             <div className="space-y-4">
               {/* DELIVERY ADDRESS PREVIEW */}
               {defaultAddress && (
-                <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-200 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 group overflow-hidden relative">
+                <div className="bg-blue-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-blue-200 flex flex-col md:flex-row justify-between items-center gap-6 mb-8 group overflow-hidden relative">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
                   <div className="relative z-10 flex items-center gap-6">
                     <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center text-3xl">
                       📍
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-indigo-100 uppercase tracking-widest mb-1">
+                      <p className="text-sm font-bold text-blue-100 uppercase tracking-widest mb-1">
                         Deliver to
                       </p>
                       <p className="text-xl font-bold">
                         {defaultAddress.full_name || defaultAddress.fullname}
                       </p>
-                      <p className="text-sm text-indigo-100/80 font-medium">
+                      <p className="text-sm text-blue-100/80 font-medium">
                         {defaultAddress.address_line_1 || defaultAddress.addressline1},{" "}
                         {defaultAddress.city}, {defaultAddress.state} -{" "}
                         {defaultAddress.postal_code || defaultAddress.postalcode}
@@ -237,7 +237,7 @@ const Cart = () => {
 
                   <button
                     onClick={() => setShowAddressPicker(true)}
-                    className="relative z-10 bg-white/20 backdrop-blur-md border border-white/30 px-6 py-3 rounded-2xl text-sm font-bold hover:bg-white hover:text-indigo-600 transition-all active:scale-95"
+                    className="relative z-10 bg-white/20 backdrop-blur-md border border-white/30 px-6 py-3 rounded-2xl text-sm font-bold hover:bg-white hover:text-blue-600 transition-all active:scale-95"
                   >
                     Change Address
                   </button>
@@ -276,7 +276,7 @@ const Cart = () => {
                               onClick={() =>
                                 navigate(`/product/${item.product?.id || item.product?._id}`)
                               }
-                              className="text-xl font-bold text-slate-800 cursor-pointer hover:text-indigo-600 transition-colors"
+                              className="text-xl font-bold text-slate-800 cursor-pointer hover:text-blue-600 transition-colors"
                             >
                               {item.product?.name}
                             </h3>
@@ -424,7 +424,7 @@ const Cart = () => {
                 className={`w-full py-5 rounded-2xl font-black text-lg transition-all active:scale-95 shadow-2xl flex items-center justify-center gap-3 ${
                   checkoutLoading
                     ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                    : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200"
+                    : "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200"
                 }`}
                 onClick={handleProceedCheckout}
               >
@@ -486,8 +486,8 @@ const Cart = () => {
                       key={id}
                       className={`group border-2 rounded-3xl p-6 cursor-pointer transition-all ${
                         addr.is_default || addr.isdefault
-                          ? "border-indigo-600 bg-indigo-50/50 ring-4 ring-indigo-50"
-                          : "border-slate-100 hover:border-indigo-200 hover:bg-slate-50"
+                          ? "border-blue-600 bg-blue-50/50 ring-4 ring-blue-50"
+                          : "border-slate-100 hover:border-blue-200 hover:bg-slate-50"
                       }`}
                       onClick={async () => {
                         if (!(addr.is_default || addr.isdefault)) {
@@ -503,7 +503,7 @@ const Cart = () => {
                           {addr.full_name || addr.fullname}
                         </p>
                         {(addr.is_default || addr.isdefault) && (
-                          <span className="px-2 py-1 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg">
+                          <span className="px-2 py-1 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg">
                             Active
                           </span>
                         )}
@@ -520,7 +520,7 @@ const Cart = () => {
               <div className="flex flex-col sm:flex-row justify-between items-center mt-8 gap-4">
                 <button
                   onClick={() => navigate("/profile")}
-                  className="text-indigo-600 font-bold hover:underline flex items-center gap-2"
+                  className="text-blue-600 font-bold hover:underline flex items-center gap-2"
                 >
                   <span>+</span> Add New Address
                 </button>

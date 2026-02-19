@@ -24,6 +24,11 @@ const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchCart = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await getCart();

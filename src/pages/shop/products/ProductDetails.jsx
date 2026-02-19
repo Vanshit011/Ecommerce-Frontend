@@ -87,6 +87,8 @@ const ProductDetails = () => {
     };
 
     const checkFavoriteStatus = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
       try {
         const res = await getFavorites();
         const favs = res.data || [];
@@ -124,6 +126,13 @@ const ProductDetails = () => {
   }, [currentColor, currentSize, product]);
 
   const toggleFavorite = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showToast("Please login to add to favorites", "error");
+      navigate("/login");
+      return;
+    }
+
     try {
       if (isFavorite) {
         await removeFromFavorites(id);
@@ -150,6 +159,13 @@ const ProductDetails = () => {
   const handleAddToCart = async () => {
     if (!validateSelection()) return;
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showToast("Please login to add to cart", "error");
+      navigate("/login");
+      return;
+    }
+
     try {
       setAddingToCart(true);
       await globalAddToCart(product.id || product._id, {
@@ -167,6 +183,13 @@ const ProductDetails = () => {
 
   const handleBuyNow = async () => {
     if (!validateSelection()) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showToast("Please login to checkout", "error");
+      navigate("/login");
+      return;
+    }
 
     try {
       setBuyingNow(true);
@@ -196,7 +219,7 @@ const ProductDetails = () => {
       <div className="min-h-screen flex flex-col">
         <div className="flex-1 flex items-center justify-center flex-col">
           <h2 className="text-xl font-semibold mb-3">{error}</h2>
-          <button onClick={() => navigate("/")} className="text-indigo-600 hover:underline">
+          <button onClick={() => navigate("/")} className="text-blue-600 hover:underline">
             Go Home
           </button>
         </div>
@@ -211,14 +234,14 @@ const ProductDetails = () => {
           <nav className="flex items-center gap-2 text-sm text-slate-500 overflow-x-auto whitespace-nowrap pb-2 sm:pb-0">
             <span
               onClick={() => navigate("/home")}
-              className="hover:text-indigo-600 transition-colors cursor-pointer"
+              className="hover:text-blue-600 transition-colors cursor-pointer"
             >
               Home
             </span>
             <span className="text-slate-300">/</span>
             <span
               onClick={() => navigate("/products")}
-              className="hover:text-indigo-600 transition-colors cursor-pointer"
+              className="hover:text-blue-600 transition-colors cursor-pointer"
             >
               Products
             </span>
@@ -274,12 +297,12 @@ const ProductDetails = () => {
                             onClick={() => setSelectedImage(url)}
                             className={`relative w-16 h-16 md:w-full md:h-16 flex-shrink-0 rounded-xl border-2 transition-all cursor-pointer overflow-hidden ${
                               isSelected
-                                ? "border-indigo-600 ring-2 ring-indigo-50"
-                                : "border-slate-100 hover:border-indigo-300"
+                                ? "border-blue-600 ring-2 ring-blue-50"
+                                : "border-slate-100 hover:border-blue-900"
                             }`}
                           >
                             <img src={url} alt="" className="w-full h-full object-cover" />
-                            {isSelected && <div className="absolute inset-0 bg-indigo-600/10" />}
+                            {isSelected && <div className="absolute inset-0 bg-blue-600/10" />}
                           </div>
                         );
                       })}
@@ -379,7 +402,7 @@ const ProductDetails = () => {
             <div className="p-8 md:p-12 lg:p-16 flex flex-col h-full bg-white relative z-10 rounded-b-[2.5rem] lg:rounded-r-[2.5rem] lg:rounded-bl-none">
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3 mb-6">
-                  <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-indigo-100/50">
+                  <span className="px-4 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-blue-100/50">
                     {product?.category?.name || "Premium Collection"}
                   </span>
                   {hasVariants(product) ? (
@@ -424,7 +447,7 @@ const ProductDetails = () => {
                           .getElementById("reviews-section")
                           ?.scrollIntoView({ behavior: "smooth" })
                       }
-                      className="text-indigo-600 font-bold text-xs uppercase tracking-widest hover:text-indigo-700 transition-colors"
+                      className="text-blue-600 font-bold text-xs uppercase tracking-widest hover:text-blue-700 transition-colors"
                     >
                       {stats?.totalReviews || 0} Reviews
                     </button>
@@ -437,7 +460,7 @@ const ProductDetails = () => {
 
                 {/* PRICE SECTION */}
                 <div className="relative mb-10 group/price">
-                  <div className="absolute -inset-2 bg-gradient-to-r from-indigo-600/5 to-purple-600/5 rounded-[2.5rem] blur-xl opacity-0 group-hover/price:opacity-100 transition-opacity duration-700" />
+                  <div className="absolute -inset-2 bg-gradient-to-r from-blue-600/5 to-purple-600/5 rounded-[2.5rem] blur-xl opacity-0 group-hover/price:opacity-100 transition-opacity duration-700" />
                   <div className="relative p-8 bg-slate-50/50 backdrop-blur-sm rounded-[2rem] border border-slate-100 flex items-center justify-between overflow-hidden">
                     <div className="flex flex-col">
                       <div className="flex items-center gap-3 mb-3">
@@ -445,7 +468,7 @@ const ProductDetails = () => {
                           {selectedVariant ? "Price" : "Starting From"}
                         </span>
                         {(selectedVariant?.sku || product?.sku || product?.variants?.[0]?.sku) && (
-                          <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[9px] font-black uppercase tracking-wider rounded">
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-wider rounded">
                             SKU:{" "}
                             {selectedVariant?.sku || product?.sku || product?.variants?.[0]?.sku}
                           </span>
@@ -490,7 +513,7 @@ const ProductDetails = () => {
                         <div className="px-5 py-2.5 bg-slate-900 text-white rounded-2xl text-[10px] font-black tracking-widest shadow-xl shadow-slate-200">
                           LIMITED OFFER
                         </div>
-                        <div className="text-3xl font-black text-indigo-600 tracking-tighter">
+                        <div className="text-3xl font-black text-blue-600 tracking-tighter">
                           {Math.round(
                             ((selectedVariant.price - selectedVariant.sale_price) /
                               selectedVariant.price) *
@@ -527,7 +550,7 @@ const ProductDetails = () => {
                       <div>
                         <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
                           Selection Color
-                          <span className="text-indigo-600 font-bold lowercase tracking-normal">
+                          <span className="text-blue-600 font-bold lowercase tracking-normal">
                             — {currentColor || "Not selected"}
                           </span>
                         </h3>
@@ -538,7 +561,7 @@ const ProductDetails = () => {
                               onClick={() => setCurrentColor(color)}
                               className={`px-6 py-3 rounded-2xl font-bold text-sm transition-all border-2 ${
                                 currentColor === color
-                                  ? "bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-100 scale-105"
+                                  ? "bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-100 scale-105"
                                   : "bg-white border-slate-100 text-slate-600 hover:border-slate-200"
                               }`}
                             >
@@ -554,7 +577,7 @@ const ProductDetails = () => {
                       <div>
                         <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
                           Selection Size
-                          <span className="text-indigo-600 font-bold lowercase tracking-normal">
+                          <span className="text-blue-600 font-bold lowercase tracking-normal">
                             — {currentSize || "Not selected"}
                           </span>
                         </h3>
@@ -565,7 +588,7 @@ const ProductDetails = () => {
                               onClick={() => setCurrentSize(size)}
                               className={`px-6 py-3 rounded-2xl font-bold text-sm transition-all border-2 ${
                                 currentSize === size
-                                  ? "bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-100 scale-105"
+                                  ? "bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-100 scale-105"
                                   : "bg-white border-slate-100 text-slate-600 hover:border-slate-200"
                               }`}
                             >
@@ -622,7 +645,7 @@ const ProductDetails = () => {
                         ? !selectedVariant || !isVariantAvailable(selectedVariant)
                         : (product?.stock_qty || 0) <= 0 || buyingNow
                     }
-                    className={`h-20 flex items-center justify-center gap-4 rounded-[2rem] font-black text-xl transition-all active:scale-95 shadow-2xl shadow-indigo-200/50 ${
+                    className={`h-20 flex items-center justify-center gap-4 rounded-[2rem] font-black text-xl transition-all active:scale-95 shadow-2xl shadow-blue-200/50 ${
                       (
                         hasVariants(product)
                           ? !selectedVariant || !isVariantAvailable(selectedVariant)
@@ -630,8 +653,8 @@ const ProductDetails = () => {
                       )
                         ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
                         : buyingNow
-                          ? "bg-indigo-600/50 text-white/50"
-                          : "bg-indigo-600 text-white hover:bg-indigo-700 hover:-translate-y-1"
+                          ? "bg-blue-600/50 text-white/50"
+                          : "bg-blue-600 text-white hover:bg-blue-700 hover:-translate-y-1"
                     }`}
                   >
                     {buyingNow ? (
@@ -664,7 +687,7 @@ const ProductDetails = () => {
                         ? !selectedVariant || !isVariantAvailable(selectedVariant)
                         : (product?.stock_qty || 0) <= 0 || addingToCart
                     }
-                    className={`h-20 flex items-center justify-center gap-4 rounded-[2rem] font-black text-xl transition-all active:scale-95 bg-white border-2 border-indigo-600 group ${
+                    className={`h-20 flex items-center justify-center gap-4 rounded-[2rem] font-black text-xl transition-all active:scale-95 bg-white border-2 border-blue-600 group ${
                       (
                         hasVariants(product)
                           ? !selectedVariant || !isVariantAvailable(selectedVariant)
@@ -673,7 +696,7 @@ const ProductDetails = () => {
                         ? "border-slate-100 text-slate-300 cursor-not-allowed"
                         : addingToCart
                           ? "bg-slate-50 text-slate-400 border-slate-200"
-                          : "text-indigo-600 hover:bg-indigo-600 hover:text-white"
+                          : "text-blue-600 hover:bg-blue-600 hover:text-white"
                     }`}
                   >
                     {addingToCart ? (

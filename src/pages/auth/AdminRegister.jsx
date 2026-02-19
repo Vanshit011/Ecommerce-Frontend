@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { registerAdmin } from "../../services/api";
 
 const AdminRegister = () => {
@@ -29,88 +29,131 @@ const AdminRegister = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-indigo-200 p-5">
-      <div className="bg-white/80 backdrop-blur-md border border-white/30 shadow-2xl rounded-3xl p-10 w-full max-w-md text-center">
-        <h1 className="text-3xl font-extrabold tracking-tight text-indigo-600 mb-8">
-          ADMIN PORTAL
-        </h1>
+    <div className="min-h-[calc(100-80px)] mt-20 flex items-center justify-center bg-slate-50 ">
+      <div className="bg-white border border-slate-200 shadow-2xl shadow-blue-100/50 rounded-[2.5rem] p-10 w-full max-w-md text-center animate-fade-in relative overflow-hidden">
+        {/* Decorative Background Elements */}
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-50 rounded-full blur-3xl opacity-60"></div>
+        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-50 rounded-full blur-3xl opacity-60"></div>
 
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">Create Admin Account</h2>
-
-        <p className="text-slate-600 text-sm mb-8">Register to manage the store operations.</p>
-
-        <form onSubmit={handleSubmit}>
-          <div className="text-left mb-5">
-            <label className="block text-sm font-semibold text-slate-800 mb-2">Full Name</label>
-            <input
-              name="name"
-              type="text"
-              value={form.name}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3.5 bg-white border border-slate-300 rounded-xl text-base text-slate-800 transition-all outline-none focus:border-indigo-600 focus:ring-4 focus:ring-black/5"
-            />
+        <div className="relative z-10">
+          <div className="inline-block mb-8 group">
+            <h1 className="text-3xl font-black tracking-tight flex items-center justify-center gap-1">
+              <span className="text-slate-900 group-hover:text-blue-600 transition-colors">
+                SASTA
+              </span>
+              <span className="bg-blue-600 text-white px-2 py-0.5 rounded-lg group-hover:bg-blue-700 transition-all group-hover:scale-110">
+                STORE
+              </span>
+            </h1>
           </div>
 
-          <div className="text-left mb-5">
-            <label className="block text-sm font-semibold text-slate-800 mb-2">Email</label>
-            <input
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3.5 bg-white border border-slate-300 rounded-xl text-base text-slate-800 transition-all outline-none focus:border-indigo-600 focus:ring-4 focus:ring-black/5"
-            />
-          </div>
+          <h1 className="text-xs font-black tracking-[0.2em] text-blue-600 mb-2 uppercase">
+            Admin Portal
+          </h1>
+          <h2 className="text-2xl font-bold text-slate-800 mb-1">Become a Seller</h2>
+          <p className="text-slate-500 text-sm mb-8 font-medium">
+            Create your seller account to get started
+          </p>
 
-          <div className="text-left mb-5">
-            <label className="block text-sm font-semibold text-slate-800 mb-2">Phone Number</label>
-            <input
-              name="mobile"
-              type="tel"
-              value={form.mobile}
-              onChange={handleChange}
-              pattern="[6-9]{1}[0-9]{9}"
-              required
-              className="w-full px-4 py-3.5 bg-white border border-slate-300 rounded-xl text-base text-slate-800 transition-all outline-none focus:border-indigo-600 focus:ring-4 focus:ring-black/5"
-            />
-          </div>
-
-          <div className="text-left mb-5">
-            <label className="block text-sm font-semibold text-slate-800 mb-2">Password</label>
-            <input
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3.5 bg-white border border-slate-300 rounded-xl text-base text-slate-800 transition-all outline-none focus:border-indigo-600 focus:ring-4 focus:ring-black/5"
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-50 text-red-600 px-3 py-3 rounded-xl text-sm font-medium mb-5 border border-red-200">
-              {error}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="text-left">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                Full Name
+              </label>
+              <input
+                name="name"
+                type="text"
+                placeholder="Enter your name"
+                value={form.name}
+                onChange={handleChange}
+                required
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-base text-slate-800 transition-all outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50"
+              />
             </div>
-          )}
 
-          <button
-            type="submit"
-            className="w-full px-4 py-3.5 bg-indigo-600 text-white rounded-xl font-semibold text-base border-none cursor-pointer transition-all shadow-lg hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0"
-          >
-            Register Admin
-          </button>
-        </form>
+            <div className="text-left">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                Business Email
+              </label>
+              <input
+                name="email"
+                type="email"
+                placeholder="biz@company.com"
+                value={form.email}
+                onChange={handleChange}
+                required
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-base text-slate-800 transition-all outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50"
+              />
+            </div>
 
-        <div className="mt-6 text-sm text-slate-600">
-          Already have an account?{" "}
-          <span
-            className="text-indigo-600 font-semibold cursor-pointer hover:text-indigo-700"
-            onClick={() => navigate("/login")}
-          >
-            Sign In here
-          </span>
+            <div className="text-left">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                Phone Number
+              </label>
+              <input
+                name="mobile"
+                type="tel"
+                placeholder="Enter 10-digit number"
+                value={form.mobile}
+                onChange={handleChange}
+                pattern="[6-9]{1}[0-9]{9}"
+                required
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-base text-slate-800 transition-all outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50"
+              />
+            </div>
+
+            <div className="text-left">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                Secure Password
+              </label>
+              <input
+                name="password"
+                type="password"
+                placeholder="Choose a strong password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-base text-slate-800 transition-all outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50"
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-2xl text-xs font-bold border border-red-100 flex items-center gap-2 animate-shake">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full px-4 py-4 bg-blue-600 text-white rounded-2xl font-bold text-base transition-all shadow-xl shadow-blue-100 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
+            >
+              Get Started as Seller
+            </button>
+          </form>
+
+          <footer className="mt-8 text-sm text-slate-500 font-medium pt-6 border-t border-slate-100">
+            Already have an account?{" "}
+            <button
+              className="text-blue-600 font-bold hover:text-blue-700 hover:underline"
+              onClick={() => navigate("/login")}
+            >
+              Sign In here
+            </button>
+          </footer>
         </div>
       </div>
     </div>

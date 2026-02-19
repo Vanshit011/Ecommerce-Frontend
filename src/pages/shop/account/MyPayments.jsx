@@ -134,7 +134,7 @@ const MyPayments = () => {
                 My Orders
               </button>
 
-              <button className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-indigo-600 text-white font-bold transition-all text-sm shadow-xl shadow-indigo-200">
+              <button className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-blue-600 text-white font-bold transition-all text-sm shadow-xl shadow-blue-200">
                 <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -174,7 +174,7 @@ const MyPayments = () => {
                     setStatusFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="appearance-none pl-4 pr-10 py-3 bg-white border border-slate-100 rounded-[1.25rem] text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all cursor-pointer"
+                  className="appearance-none pl-4 pr-10 py-3 bg-white border border-slate-100 rounded-[1.25rem] text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-200 transition-all cursor-pointer"
                 >
                   <option value="all">All Payments</option>
                   <option value="succeeded">Succeeded</option>
@@ -201,7 +201,7 @@ const MyPayments = () => {
               </div>
 
               <div className="text-xs font-black text-slate-400 uppercase tracking-widest bg-white px-6 py-3 rounded-[1.25rem] border border-slate-100 shadow-sm flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                 Total: <span className="text-slate-900">{filteredPayments.length} Records</span>
               </div>
             </div>
@@ -322,7 +322,7 @@ const MyPayments = () => {
 
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden lg:block opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-500">
                       <svg
-                        className="w-6 h-6 text-indigo-600"
+                        className="w-6 h-6 text-blue-600"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -347,7 +347,7 @@ const MyPayments = () => {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="group w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-indigo-600 hover:border-indigo-600 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed"
+                className="group w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-blue-600 hover:border-blue-600 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -381,8 +381,8 @@ const MyPayments = () => {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`min-w-[48px] h-12 flex items-center justify-center rounded-2xl font-black text-xs transition-all ${
                           currentPage === pageNum
-                            ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200 scale-110"
-                            : "bg-white text-slate-500 border border-slate-100 hover:border-indigo-400 hover:text-indigo-600"
+                            ? "bg-blue-600 text-white shadow-xl shadow-blue-200 scale-110"
+                            : "bg-white text-slate-500 border border-slate-100 hover:border-blue-400 hover:text-blue-600"
                         }`}
                       >
                         {pageNum}
@@ -407,7 +407,7 @@ const MyPayments = () => {
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="group w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-indigo-600 hover:border-indigo-600 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed"
+                className="group w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-blue-600 hover:border-blue-600 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -528,7 +528,7 @@ const MyPayments = () => {
                       closeModal();
                       navigate(`/my-orders`);
                     }}
-                    className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95"
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95"
                   >
                     View Order
                   </button>

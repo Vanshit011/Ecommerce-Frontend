@@ -117,7 +117,7 @@ const MyOrders = () => {
 
               <button
                 onClick={() => navigate("/my-orders")}
-                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-indigo-600 text-white font-bold transition-all text-sm shadow-xl shadow-indigo-200"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-blue-600 text-white font-bold transition-all text-sm shadow-xl shadow-blue-200"
               >
                 <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
                   <svg
@@ -180,7 +180,7 @@ const MyOrders = () => {
                     setStatusFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="appearance-none pl-4 pr-10 py-3 bg-white border border-slate-100 rounded-[1.25rem] text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all cursor-pointer"
+                  className="appearance-none pl-4 pr-10 py-3 bg-white border border-slate-100 rounded-[1.25rem] text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-200 transition-all cursor-pointer"
                 >
                   <option value="all">All Orders</option>
                   <option value="pending">Pending</option>
@@ -208,7 +208,7 @@ const MyOrders = () => {
               </div>
 
               <div className="text-xs font-black text-slate-400 uppercase tracking-widest bg-white px-6 py-3 rounded-[1.25rem] border border-slate-100 shadow-sm flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                 Total: <span className="text-slate-900">{filteredOrders.length} Orders</span>
               </div>
             </div>
@@ -239,7 +239,7 @@ const MyOrders = () => {
                 </p>
                 <button
                   onClick={() => navigate("/products")}
-                  className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95"
                 >
                   Start Shopping
                 </button>
@@ -260,9 +260,9 @@ const MyOrders = () => {
                     case "PENDING":
                       return "bg-amber-50 text-amber-700 border-amber-100";
                     case "CONFIRMED":
-                      return "bg-indigo-50 text-indigo-700 border-indigo-100";
+                      return "bg-blue-50 text-blue-700 border-blue-100";
                     case "SHIPPED":
-                      return "bg-indigo-50 text-indigo-700 border-indigo-100";
+                      return "bg-blue-50 text-blue-700 border-blue-100";
                     case "DELIVERED":
                       return "bg-emerald-50 text-emerald-700 border-emerald-100";
                     case "CANCELLED":
@@ -284,7 +284,7 @@ const MyOrders = () => {
 
                     <div className="flex flex-col md:flex-row justify-between gap-8 relative z-10">
                       <div className="flex items-start gap-5">
-                        <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-all duration-500">
+                        <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-blue-600 group-hover:border-blue-600 transition-all duration-500">
                           <svg
                             className="w-8 h-8 text-slate-300 group-hover:text-white transition-colors"
                             fill="none"
@@ -341,7 +341,7 @@ const MyOrders = () => {
                             </div>
                           ))}
                           {itemsCount > 3 && (
-                            <div className="w-10 h-10 rounded-xl border-4 border-white bg-indigo-600 flex items-center justify-center text-[10px] font-black text-white shadow-sm">
+                            <div className="w-10 h-10 rounded-xl border-4 border-white bg-blue-600 flex items-center justify-center text-[10px] font-black text-white shadow-sm">
                               +{itemsCount - 3}
                             </div>
                           )}
@@ -366,7 +366,7 @@ const MyOrders = () => {
                         </svg>
                         Secured Delivery
                       </div>
-                      <span className="text-sm font-black text-indigo-600 group-hover:translate-x-1 transition-all flex items-center gap-2">
+                      <span className="text-sm font-black text-blue-600 group-hover:translate-x-1 transition-all flex items-center gap-2">
                         Manage Order
                         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                           <path
@@ -389,7 +389,7 @@ const MyOrders = () => {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="group w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-indigo-600 hover:border-indigo-600 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed"
+                className="group w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-blue-600 hover:border-blue-600 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -422,8 +422,8 @@ const MyOrders = () => {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`min-w-[48px] h-12 flex items-center justify-center rounded-2xl font-black text-xs transition-all ${
                           currentPage === pageNum
-                            ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200 scale-110"
-                            : "bg-white text-slate-500 border border-slate-100 hover:border-indigo-400 hover:text-indigo-600"
+                            ? "bg-blue-600 text-white shadow-xl shadow-blue-200 scale-110"
+                            : "bg-white text-slate-500 border border-slate-100 hover:border-blue-400 hover:text-blue-600"
                         }`}
                       >
                         {String(pageNum).padStart(2, "0")}
@@ -450,7 +450,7 @@ const MyOrders = () => {
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="group w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-indigo-600 hover:border-indigo-600 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed"
+                className="group w-12 h-12 flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-blue-600 hover:border-blue-600 transition-all shadow-sm active:scale-95 disabled:opacity-30 disabled:hover:bg-white disabled:hover:border-slate-200 disabled:cursor-not-allowed"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -518,9 +518,9 @@ const MyOrders = () => {
                     selectedOrder.status === "pending" || selectedOrder.status === "PENDING"
                       ? "bg-amber-50 text-amber-700 border-amber-100"
                       : selectedOrder.status === "confirmed" || selectedOrder.status === "CONFIRMED"
-                        ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                        ? "bg-blue-50 text-blue-700 border-blue-100"
                         : selectedOrder.status === "shipped" || selectedOrder.status === "SHIPPED"
-                          ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                          ? "bg-blue-50 text-blue-700 border-blue-100"
                           : selectedOrder.status === "delivered" ||
                               selectedOrder.status === "DELIVERED"
                             ? "bg-emerald-50 text-emerald-700 border-emerald-100"
@@ -638,7 +638,7 @@ const MyOrders = () => {
                           Qty: {item.quantity}
                         </span>
                         {item.size && (
-                          <span className="text-[10px] bg-indigo-50 text-indigo-600 font-black px-2 py-0.5 rounded-md border border-indigo-100 uppercase tracking-wider">
+                          <span className="text-[10px] bg-blue-50 text-blue-600 font-black px-2 py-0.5 rounded-md border border-blue-100 uppercase tracking-wider">
                             Size: {item.size}
                           </span>
                         )}

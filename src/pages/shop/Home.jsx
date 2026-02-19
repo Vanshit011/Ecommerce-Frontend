@@ -122,7 +122,7 @@ const Home = () => {
         <div className="absolute top-1/2 -left-24 w-72 h-72 bg-purple-100 rounded-full blur-3xl opacity-50"></div>
 
         <div className="max-w-7xl mx-auto px-4 pt-8 md:pt-12 relative z-10">
-          <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl shadow-blue-200 overflow-hidden relative group">
+          <div className="bg-gradient-to-r from-blue-900 to-blue-600 rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl shadow-blue-200 overflow-hidden relative group">
             {/* Background Pattern */}
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
 
@@ -285,7 +285,11 @@ const Home = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          // Add to wishlist logic if needed
+                          const token = localStorage.getItem("token");
+                          if (!token) {
+                            // alert("Please login to add to favorites");
+                            navigate("/login");
+                          }
                         }}
                         className="w-10 h-10 bg-white rounded-full shadow-lg text-slate-400 hover:text-red-500 flex items-center justify-center hover:scale-110 transition-transform"
                       >
