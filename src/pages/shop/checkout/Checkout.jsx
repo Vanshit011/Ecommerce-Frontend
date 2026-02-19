@@ -92,7 +92,7 @@ const CheckoutForm = ({ order }) => {
         className={`w-full py-4 rounded-xl font-black text-lg transition-all active:scale-95 shadow-xl flex items-center justify-center gap-3 ${
           loading || !stripe
             ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
-            : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200"
+            : "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200"
         }`}
       >
         {loading ? (
@@ -270,7 +270,7 @@ const Checkout = () => {
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -280,11 +280,11 @@ const Checkout = () => {
     <div className="bg-slate-50 min-h-screen">
       <div className="max-w-xl mx-auto px-4 py-12">
         <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
           <div className="relative">
             <div className="text-center mb-10">
-              <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm rotate-3">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm rotate-3">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-8 w-8"
@@ -352,7 +352,7 @@ const Checkout = () => {
         <p className="text-center mt-8 text-sm text-slate-400 font-medium">
           Problems with checkout?{" "}
           <span
-            className="text-indigo-600 cursor-pointer hover:underline"
+            className="text-blue-600 cursor-pointer hover:underline"
             onClick={() => navigate("/cart")}
           >
             Return to Cart

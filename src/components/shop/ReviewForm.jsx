@@ -92,7 +92,7 @@ const ReviewForm = ({ productId, existingReview, onSuccess, onCancel }) => {
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="What did you like or dislike? How was the quality?"
-                className="w-full h-40 px-6 py-5 bg-slate-50 rounded-3xl border border-slate-100 focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 outline-none transition-all resize-none text-slate-700 font-medium leading-relaxed"
+                className="w-full h-40 px-6 py-5 bg-slate-50 rounded-3xl border border-slate-100 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500 outline-none transition-all resize-none text-slate-700 font-medium leading-relaxed"
                 required
               />
             </div>
@@ -101,7 +101,7 @@ const ReviewForm = ({ productId, existingReview, onSuccess, onCancel }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 h-16 bg-indigo-600 text-white rounded-2xl font-black text-lg hover:bg-indigo-700 hover:-translate-y-1 transition-all flex items-center justify-center shadow-xl shadow-indigo-100 disabled:bg-indigo-300 disabled:transform-none"
+                className="flex-1 h-16 bg-blue-600 text-white rounded-2xl font-black text-lg hover:bg-blue-700 hover:-translate-y-1 transition-all flex items-center justify-center shadow-xl shadow-blue-100 disabled:bg-blue-300 disabled:transform-none"
               >
                 {loading ? (
                   <div className="w-6 h-6 border-3 border-white/20 border-t-white rounded-full animate-spin" />

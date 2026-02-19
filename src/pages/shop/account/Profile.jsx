@@ -43,6 +43,11 @@ const Profile = () => {
   });
 
   const loadProfile = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
       const res = await getProfile();
       const user = res.data.user || res.data;
@@ -58,6 +63,8 @@ const Profile = () => {
   }, [showToast]);
 
   const loadAddresses = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
     try {
       const res = await getAddresses();
       setAddresses(res.data || []);
@@ -176,7 +183,7 @@ const Profile = () => {
         <aside className="h-fit sticky top-24 space-y-6">
           <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6">
             <div className="flex items-center gap-4 mb-8 px-2">
-              <div className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-xl font-black shadow-lg shadow-indigo-200">
+              <div className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-xl font-black shadow-lg shadow-blue-200">
                 {(profile?.name?.[0] || "U").toUpperCase()}
               </div>
               <div className="min-w-0">
@@ -190,7 +197,7 @@ const Profile = () => {
             </div>
 
             <nav className="space-y-2">
-              <button className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-indigo-600 text-white font-bold transition-all text-sm shadow-xl shadow-indigo-200">
+              <button className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-blue-600 text-white font-bold transition-all text-sm shadow-xl shadow-blue-200">
                 <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -270,7 +277,7 @@ const Profile = () => {
               {!isEditing && (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-bold hover:bg-indigo-100 transition-all active:scale-95"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 transition-all active:scale-95"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -297,7 +304,7 @@ const Profile = () => {
                   Email Address
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5"
@@ -315,7 +322,7 @@ const Profile = () => {
                     placeholder="name@example.com"
                     className={`w-full pl-12 pr-4 py-3.5 rounded-2xl transition-all font-semibold ${
                       isEditing
-                        ? "bg-white border-2 border-indigo-100 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 text-slate-800"
+                        ? "bg-white border-2 border-blue-100 focus:border-blue-600 focus:ring-4 focus:ring-blue-50 text-slate-800"
                         : "bg-slate-50/50 border-2 border-transparent text-slate-500 cursor-not-allowed"
                     }`}
                   />
@@ -327,7 +334,7 @@ const Profile = () => {
                   Mobile Number
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5"
@@ -344,7 +351,7 @@ const Profile = () => {
                     placeholder="+91 98765 43210"
                     className={`w-full pl-12 pr-4 py-3.5 rounded-2xl transition-all font-semibold ${
                       isEditing
-                        ? "bg-white border-2 border-indigo-100 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 text-slate-800"
+                        ? "bg-white border-2 border-blue-100 focus:border-blue-600 focus:ring-4 focus:ring-blue-50 text-slate-800"
                         : "bg-slate-50/50 border-2 border-transparent text-slate-500 cursor-not-allowed"
                     }`}
                   />
@@ -356,7 +363,7 @@ const Profile = () => {
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="bg-indigo-600 text-white px-8 py-3.5 rounded-2xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-xl shadow-indigo-200 disabled:opacity-70 flex items-center gap-2"
+                    className="bg-blue-600 text-white px-8 py-3.5 rounded-2xl font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-200 disabled:opacity-70 flex items-center gap-2"
                   >
                     {saving && (
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -391,7 +398,7 @@ const Profile = () => {
               </div>
               <button
                 onClick={() => setShowAddressForm(true)}
-                className="bg-indigo-50 text-indigo-600 px-6 py-2.5 rounded-xl font-bold hover:bg-indigo-100 active:scale-95 transition-all flex items-center gap-2"
+                className="bg-blue-50 text-blue-600 px-6 py-2.5 rounded-xl font-bold hover:bg-blue-100 active:scale-95 transition-all flex items-center gap-2"
               >
                 <span className="text-lg leading-none">+</span> Add New Address
               </button>
@@ -407,12 +414,12 @@ const Profile = () => {
                     key={id}
                     className={`relative p-5 rounded-2xl border-2 transition-all ${
                       addr.is_default || addr.isdefault
-                        ? "border-indigo-600 bg-indigo-50/10 shadow-md shadow-indigo-100"
+                        ? "border-blue-600 bg-blue-50/10 shadow-md shadow-blue-100"
                         : "border-slate-100 hover:border-slate-200 hover:shadow-lg hover:shadow-slate-100"
                     }`}
                   >
                     {(addr.is_default || addr.isdefault) && (
-                      <span className="absolute top-4 right-4 bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-1 rounded-md tracking-wide">
+                      <span className="absolute top-4 right-4 bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-md tracking-wide">
                         DEFAULT
                       </span>
                     )}
@@ -441,7 +448,7 @@ const Profile = () => {
                     <div className="flex items-center gap-3 mt-6 pt-4 border-t border-dashed border-slate-200">
                       <button
                         onClick={() => handleEditAddress(addr)}
-                        className="text-xs font-bold text-slate-600 hover:text-indigo-600 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
+                        className="text-xs font-bold text-slate-600 hover:text-blue-600 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
                       >
                         Edit
                       </button>
@@ -454,7 +461,7 @@ const Profile = () => {
                       {!(addr.is_default || addr.isdefault) && (
                         <button
                           onClick={() => handleSetDefault(id)}
-                          className="ml-auto text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline"
+                          className="ml-auto text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
                         >
                           Set as Default
                         </button>
@@ -530,7 +537,7 @@ const Profile = () => {
                           fullname: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
 
@@ -547,7 +554,7 @@ const Profile = () => {
                           country: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
 
@@ -564,7 +571,7 @@ const Profile = () => {
                           addressline1: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
 
@@ -581,7 +588,7 @@ const Profile = () => {
                           addressline2: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
 
@@ -593,7 +600,7 @@ const Profile = () => {
                       placeholder="Mumbai"
                       value={addressForm.city}
                       onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
 
@@ -610,7 +617,7 @@ const Profile = () => {
                           state: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
 
@@ -627,7 +634,7 @@ const Profile = () => {
                           postalcode: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 transition-all font-medium"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all font-medium"
                     />
                   </div>
                 </div>
@@ -635,7 +642,7 @@ const Profile = () => {
                 <div className="mt-8 flex gap-4 pt-4 border-t border-slate-100">
                   <button
                     onClick={handleAddressSubmit}
-                    className="flex-1 bg-indigo-600 text-white px-6 py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
+                    className="flex-1 bg-blue-600 text-white px-6 py-3.5 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95"
                   >
                     {editingAddress ? "Update Address" : "Save New Address"}
                   </button>

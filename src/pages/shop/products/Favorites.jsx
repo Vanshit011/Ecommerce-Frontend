@@ -18,14 +18,17 @@ const Favorites = () => {
   // Load Favorites
   useEffect(() => {
     const load = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       try {
         const res = await getFavorites();
-
         const items = (res.data || []).map((f) => f.product || f);
-
         setFavorites(items);
-      } catch (err) {
-        console.error("Load favorites failed:", err);
+      } catch {
+        // Silently skip if error
       } finally {
         setLoading(false);
       }
@@ -145,7 +148,7 @@ const Favorites = () => {
                           ₹{(product.price || product.variants?.[0]?.price || 0).toLocaleString()}
                         </span>
                       )}
-                      <span className="text-lg font-black text-indigo-600 leading-none mt-0.5">
+                      <span className="text-lg font-black text-blue-600 leading-none mt-0.5">
                         ₹
                         {(
                           product.salePrice ||

@@ -40,7 +40,7 @@ const ReviewList = ({ reviews, currentUserId, onEdit, onDelete }) => {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center border border-indigo-100 text-indigo-600 font-black text-sm">
+                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center border border-blue-100 text-blue-600 font-black text-sm">
                   {review.user?.firstName?.charAt(0) || "U"}
                 </div>
                 <div>
@@ -71,7 +71,7 @@ const ReviewList = ({ reviews, currentUserId, onEdit, onDelete }) => {
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => onEdit(review)}
-                    className="p-2 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-indigo-600 transition-all"
+                    className="p-2 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-blue-600 transition-all"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

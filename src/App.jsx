@@ -40,14 +40,7 @@ function App() {
       <CartProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/admin/register" element={<AdminRegister />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/verify-otp" element={<VerifyOtp />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/" element={<Navigate to="/home" replace />} />
 
             {/* Admin Routes with Layout */}
             <Route
@@ -67,31 +60,19 @@ function App() {
 
             {/* Shop Routes with Layout */}
             <Route element={<ShopLayout />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/admin/register" element={<AdminRegister />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/verify-otp" element={<VerifyOtp />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+
               {/* Public Routes */}
-              <Route
-                path="/home"
-                element={
-                  <ProtectedRoute>
-                    <Home />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/products"
-                element={
-                  <ProtectedRoute>
-                    <Products />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/product/:id"
-                element={
-                  <ProtectedRoute>
-                    <ProductDetails />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/home" element={<Home />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/product/:id" element={<ProductDetails />} />
+
+              {/* Protected Shop Routes */}
               <Route
                 path="/cart"
                 element={
