@@ -147,6 +147,23 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               <span className="text-base">Customers</span>
             </NavLink>
           </li>
+          {/* COUPONS */}
+          <li>
+            <NavLink
+              to="/dashboard/coupons"
+              onClick={() => setIsOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3.5 px-4 py-3 rounded-xl text-slate-600 font-medium transition-all ${
+                  isActive
+                    ? "bg-blue-50 text-blue-700 font-semibold"
+                    : "hover:bg-slate-100 hover:text-blue-600"
+                }`
+              }
+            >
+              <span className="flex items-center justify-center text-base">🏷️</span>
+              <span className="text-base">Coupons</span>
+            </NavLink>
+          </li>
         </ul>
       </nav>
 

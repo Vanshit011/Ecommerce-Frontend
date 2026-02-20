@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAddresses, setDefaultAddress, createOrder } from "../../../services/api";
+import {
+  getAddresses,
+  setDefaultAddress,
+  createOrder,
+  applyCouponToCart,
+  removeCouponFromCart,
+} from "../../../services/api";
 import { useCart } from "../../../context/CartContext";
 import { useToast } from "../../../context/ToastContext";
 
@@ -20,8 +26,14 @@ const Cart = () => {
   } = useCart();
   const [addresses, setAddresses] = useState([]);
   const [showAddressPicker, setShowAddressPicker] = useState(false);
-
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discount_type, discount_value }
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [finalTotal, setFinalTotal] = useState(null);
 
   /* ================= CART ================= */
 
@@ -34,6 +46,18 @@ const Cart = () => {
       showToast("Failed to load addresses", "error");
     }
   }, [showToast]);
+
+  // Sync coupon info from backend cart response
+  useEffect(() => {
+    if (cart) {
+      setAppliedCoupon(cart.appliedCoupon || null);
+      setDiscountAmount(Number(cart.discountAmount) || 0);
+      setFinalTotal(cart.finalTotal != null ? Number(cart.finalTotal) : null);
+      if (cart.appliedCoupon?.code) {
+        setCouponCode(cart.appliedCoupon.code);
+      }
+    }
+  }, [cart]);
 
   useEffect(() => {
     refreshCart();
@@ -86,6 +110,42 @@ const Cart = () => {
       showToast("Cart cleared", "success");
     } catch {
       showToast("Failed to clear cart", "error");
+    }
+  };
+
+  /* ================= COUPON ================= */
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      showToast("Please enter a coupon code", "warning");
+      return;
+    }
+    try {
+      setCouponLoading(true);
+      await applyCouponToCart({ code: couponCode.trim().toUpperCase() });
+      await refreshCart();
+      showToast("Coupon applied!", "success");
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Invalid coupon code", "error");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = async () => {
+    try {
+      setCouponLoading(true);
+      await removeCouponFromCart();
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
+      setFinalTotal(null);
+      setCouponCode("");
+      await refreshCart();
+      showToast("Coupon removed", "success");
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Failed to remove coupon", "error");
+    } finally {
+      setCouponLoading(false);
     }
   };
 
@@ -160,6 +220,9 @@ const Cart = () => {
       (item.product.salePrice > 0 ? item.product.salePrice : item.product.price);
     return acc + price * item.quantity;
   }, 0);
+
+  // Use backend-calculated finalTotal when coupon is applied, otherwise use local subtotal
+  const displayTotal = finalTotal != null ? finalTotal : subtotal;
 
   return (
     <div className="bg-slate-50 min-h-screen animate-fade-in">
@@ -390,6 +453,49 @@ const Cart = () => {
                 Order Summary
               </h2>
 
+              {/* COUPON INPUT */}
+              <div className="mb-6">
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3">
+                    <div>
+                      <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-0.5">
+                        Coupon Applied 🎉
+                      </p>
+                      <p className="font-black text-emerald-800 text-sm">{appliedCoupon.code}</p>
+                    </div>
+                    <button
+                      onClick={handleRemoveCoupon}
+                      disabled={couponLoading}
+                      className="text-xs font-bold text-red-500 hover:text-red-600 transition-colors hover:bg-red-50 px-3 py-1.5 rounded-xl"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                      placeholder="Coupon code"
+                      className="flex-1 px-4 py-3 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all placeholder:text-slate-300 uppercase tracking-widest"
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="px-5 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-100 min-w-[80px] flex items-center justify-center"
+                    >
+                      {couponLoading ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        "Apply"
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between items-center text-slate-500 font-medium">
                   <span>Subtotal</span>
@@ -397,6 +503,16 @@ const Cart = () => {
                     ₹{subtotal.toLocaleString()}
                   </span>
                 </div>
+
+                {discountAmount > 0 && (
+                  <div className="flex justify-between items-center text-emerald-600 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <span>🏷️</span>
+                      Discount ({appliedCoupon?.code})
+                    </span>
+                    <span>- ₹{discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
 
                 <div className="flex justify-between items-center text-slate-500 font-medium">
                   <span>Shipping</span>
@@ -413,8 +529,13 @@ const Cart = () => {
                       Total Amount
                     </p>
                     <p className="text-3xl font-black text-slate-900 tracking-tighter">
-                      ₹{subtotal.toLocaleString()}
+                      ₹{displayTotal.toLocaleString()}
                     </p>
+                    {discountAmount > 0 && (
+                      <p className="text-xs text-emerald-600 font-bold mt-1">
+                        You save ₹{discountAmount.toLocaleString()}!
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
