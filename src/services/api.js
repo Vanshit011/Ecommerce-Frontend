@@ -173,4 +173,24 @@ export const updateReview = (id, data) => API.patch(`/reviews/${id}`, data);
 
 export const deleteReview = (id) => API.delete(`/reviews/${id}`);
 
+// ------------------ //
+// COUPONS
+// ------------------ //
+
+// User - validate a coupon code against a cart total
+export const validateCoupon = (code, cartTotal) =>
+  API.post("/coupons/validate", { code, cartTotal });
+
+// User - apply a coupon to the current cart
+export const applyCouponToCart = (data) => API.post("/cart/apply-coupon", data);
+
+// User - remove the applied coupon from the current cart
+export const removeCouponFromCart = () => API.patch("/cart/remove-coupon");
+
+// Admin - create a new coupon
+export const createCoupon = (data) => API.post("/coupons", data);
+
+// Admin - list all coupons
+export const getAllCoupons = () => API.get("/coupons");
+
 export default API;
