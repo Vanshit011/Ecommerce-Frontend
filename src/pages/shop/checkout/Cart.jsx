@@ -12,6 +12,7 @@ import { useToast } from "../../../context/ToastContext";
 
 import { getImageUrl } from "../../../utils/imageUtils";
 import { CartSkeleton } from "../../../components/common/Skeleton";
+import CouponListModal from "../../../components/shop/CouponListModal";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ const Cart = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discount_type, discount_value }
   const [discountAmount, setDiscountAmount] = useState(0);
   const [finalTotal, setFinalTotal] = useState(null);
+  const [showCouponsModal, setShowCouponsModal] = useState(false);
 
   /* ================= CART ================= */
 
@@ -132,6 +134,21 @@ const Cart = () => {
     }
   };
 
+  const handleApplyCouponFromList = async (code) => {
+    setCouponCode(code);
+    setShowCouponsModal(false);
+    try {
+      setCouponLoading(true);
+      await applyCouponToCart({ code });
+      await refreshCart();
+      showToast("Coupon applied!", "success");
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Invalid coupon code", "error");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
   const handleRemoveCoupon = async () => {
     try {
       setCouponLoading(true);
@@ -199,7 +216,7 @@ const Cart = () => {
 
   /* ================= UI ================= */
 
-  if (loading)
+  if (loading && !cart)
     return (
       <div className="min-h-screen flex flex-col bg-slate-50">
         <div className="max-w-6xl mx-auto px-4 py-12 w-full">
@@ -472,25 +489,36 @@ const Cart = () => {
                     </button>
                   </div>
                 ) : (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
-                      placeholder="Coupon code"
-                      className="flex-1 px-4 py-3 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all placeholder:text-slate-300 uppercase tracking-widest"
-                    />
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                        placeholder="Coupon code"
+                        className="flex-1 px-4 py-3 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all placeholder:text-slate-300 uppercase tracking-widest"
+                      />
+                      <button
+                        onClick={handleApplyCoupon}
+                        disabled={couponLoading || !couponCode.trim()}
+                        className="px-5 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-100 min-w-[80px] flex items-center justify-center"
+                      >
+                        {couponLoading ? (
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          "Apply"
+                        )}
+                      </button>
+                    </div>
                     <button
-                      onClick={handleApplyCoupon}
-                      disabled={couponLoading || !couponCode.trim()}
-                      className="px-5 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-100 min-w-[80px] flex items-center justify-center"
+                      onClick={() => setShowCouponsModal(true)}
+                      className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 flex items-center gap-1.5 transition-all group"
                     >
-                      {couponLoading ? (
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : (
-                        "Apply"
-                      )}
+                      <span className="w-5 h-5 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                        🏷️
+                      </span>
+                      View Available Coupons
                     </button>
                   </div>
                 )}
@@ -657,6 +685,13 @@ const Cart = () => {
           </div>
         )}
       </div>
+      <CouponListModal
+        isOpen={showCouponsModal}
+        onClose={() => setShowCouponsModal(false)}
+        onApply={handleApplyCouponFromList}
+        currentTotal={subtotal}
+        cartItems={activeItems}
+      />
     </div>
   );
 };

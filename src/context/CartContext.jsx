@@ -23,14 +23,14 @@ const CartProvider = ({ children }) => {
   const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchCart = useCallback(async () => {
+  const fetchCart = useCallback(async (showLoading = true) => {
     const token = localStorage.getItem("token");
     if (!token) {
       setLoading(false);
       return;
     }
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await getCart();
       const cartData = res.data;
       setCart(cartData);
@@ -40,9 +40,8 @@ const CartProvider = ({ children }) => {
       setCartCount(count);
     } catch (error) {
       console.error("Error fetching cart:", error);
-      // Don't show toast on every mount if not logged in
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }, []);
 
@@ -62,7 +61,7 @@ const CartProvider = ({ children }) => {
     async (productId, data) => {
       try {
         await apiAddToCart(productId, data);
-        await fetchCart(); // Always refresh to get the full updated state
+        await fetchCart(false); // Background refresh for smooth UI
       } catch (error) {
         console.error("Add to cart error:", error);
         throw error;
@@ -75,7 +74,7 @@ const CartProvider = ({ children }) => {
     async (productId, qty, variantId) => {
       try {
         await apiUpdateCartQty(productId, qty, variantId);
-        await fetchCart(); // Always refresh to get the full updated state
+        await fetchCart(false); // Background refresh
       } catch (error) {
         console.error("Update qty error:", error);
         throw error;
@@ -130,7 +129,7 @@ const CartProvider = ({ children }) => {
     }
   }, []);
 
-  const refreshCart = useCallback(() => fetchCart(), [fetchCart]);
+  const refreshCart = useCallback((showLoading = false) => fetchCart(showLoading), [fetchCart]);
 
   const value = React.useMemo(
     () => ({

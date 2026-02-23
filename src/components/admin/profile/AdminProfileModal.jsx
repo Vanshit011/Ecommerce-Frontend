@@ -117,12 +117,12 @@ const AdminProfileModal = ({ onClose }) => {
           )}
 
           <div className="w-24 h-24 bg-white/20 backdrop-blur-xl rounded-full mx-auto mb-4 flex items-center justify-center text-white ring-4 ring-white/10 shadow-2xl overflow-hidden">
-            <span className="font-black text-4xl drop-shadow-md">
+            <span className="font-bold text-4xl drop-shadow-md">
               {admin?.name?.charAt(0).toUpperCase() || "A"}
             </span>
           </div>
 
-          <h2 className="text-2xl font-black tracking-tight">{admin?.name || "Admin"}</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{admin?.name || "Admin"}</h2>
           <p className="text-indigo-100 text-xs font-bold uppercase tracking-widest mt-2">
             {admin?.email || "admin@example.com"}
           </p>
@@ -137,7 +137,7 @@ const AdminProfileModal = ({ onClose }) => {
                 📧
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                   Email Address
                 </p>
                 {isEditing ? (
@@ -161,7 +161,7 @@ const AdminProfileModal = ({ onClose }) => {
                 📱
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                   Mobile Number
                 </p>
                 {isEditing ? (
@@ -184,10 +184,10 @@ const AdminProfileModal = ({ onClose }) => {
                 🛡️
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                   Account Privilege
                 </p>
-                <p className="text-slate-700 font-black text-sm mt-0.5">System Admin</p>
+                <p className="text-slate-700 font-bold text-sm mt-0.5">System Admin</p>
               </div>
             </div>
           </div>
@@ -213,7 +213,7 @@ const AdminProfileModal = ({ onClose }) => {
           ) : (
             <button
               onClick={handleLogout}
-              className="w-full py-4 rounded-2xl bg-red-50 text-red-600 font-black uppercase tracking-widest hover:bg-red-100 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 active:scale-95 text-xs"
+              className="w-full py-4 rounded-2xl bg-red-50 text-red-600 font-bold uppercase tracking-widest hover:bg-red-100 hover:scale-[1.02] transition-all flex items-center justify-center gap-3 active:scale-95 text-xs"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

@@ -190,7 +190,13 @@ export const removeCouponFromCart = () => API.patch("/cart/remove-coupon");
 // Admin - create a new coupon
 export const createCoupon = (data) => API.post("/coupons", data);
 
-// Admin - list all coupons
+// Admin & User - list all coupons
 export const getAllCoupons = () => API.get("/coupons");
+
+// Admin - update a coupon
+export const updateCoupon = (id, data) => API.patch(`/coupons/${id}`, data);
+
+// Admin - delete a coupon
+export const deleteCoupon = (id) => API.delete(`/coupons/${id}`);
 
 export default API;

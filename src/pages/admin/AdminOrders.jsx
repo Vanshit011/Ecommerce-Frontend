@@ -99,20 +99,26 @@ const AdminOrders = () => {
   };
 
   return (
-    <div>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div className="p-4 sm:p-8 pb-12">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10 px-2 sm:px-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Orders Management</h1>
-          <p className="text-slate-500 text-sm mt-1">View and manage customer orders.</p>
+          <h1 className="text-3xl lg:text-4xl font-bold text-slate-800 tracking-tight">
+            Orders Management
+          </h1>
+          <p className="text-slate-400 mt-1 text-sm lg:text-base font-bold uppercase tracking-widest">
+            View and manage customer orders.
+          </p>
         </div>
 
         {/* Status Filter */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-slate-600">Status:</label>
+        <div className="flex items-center gap-3">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            Filter:
+          </label>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-white border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+            className="bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-2xl focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-300 transition-all p-3 shadow-sm min-w-[150px]"
           >
             <option value="ALL">All Status</option>
             <option value="PENDING">Pending</option>
@@ -126,17 +132,30 @@ const AdminOrders = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6">
-        <OrderTable
-          orders={filteredOrders}
-          loading={loading}
-          setViewOrder={setViewOrder}
-          meta={meta}
-          page={page}
-          setPage={setPage}
-          limit={limit}
-          setLimit={setLimit}
-        />
+      <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-100/50 overflow-hidden flex flex-col min-h-[650px] transition-all scrollbar-hide">
+        <div className="flex items-center justify-between px-6 sm:px-10 py-6 sm:py-8 border-b border-slate-100 bg-slate-50/30">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">
+              Order Pipeline
+            </h2>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
+              Live transaction monitoring
+            </p>
+          </div>
+        </div>
+
+        <div className="p-0 flex-1 flex flex-col min-h-0">
+          <OrderTable
+            orders={filteredOrders}
+            loading={loading}
+            setViewOrder={setViewOrder}
+            meta={meta}
+            page={page}
+            setPage={setPage}
+            limit={limit}
+            setLimit={setLimit}
+          />
+        </div>
       </div>
 
       <OrderDetailsModal
