@@ -532,11 +532,13 @@ const AdminProducts = () => {
   };
 
   return (
-    <div className="p-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div className="p-4 sm:p-8 pb-12">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 px-2 sm:px-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-indigo-600">Inventory</h1>
-          <p className="text-slate-600 mt-1 text-sm lg:text-base">
+          <h1 className="text-3xl lg:text-4xl font-bold text-slate-800 tracking-tight">
+            Inventory
+          </h1>
+          <p className="text-slate-400 mt-1 text-sm lg:text-base font-bold uppercase tracking-widest">
             Manage your product catalog and stock levels.
           </p>
         </div>
@@ -546,30 +548,43 @@ const AdminProducts = () => {
             setFormData(initialForm);
             setShowModal(true);
           }}
-          className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors shadow-md flex items-center justify-center gap-2"
+          className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-[1.25rem] font-bold uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center justify-center gap-3 active:scale-95"
         >
           <span className="text-xl">+</span> Add Product
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 overflow-visible">
-        <ProductTable
-          products={products}
-          loading={loading}
-          getImageUrl={getImageUrl}
-          getCategoryPath={getCategoryPath}
-          setPreviewImage={setPreviewImage}
-          setOpenMenuId={setOpenMenuId}
-          openMenuId={openMenuId}
-          setViewProduct={setViewProduct}
-          handleEditClick={handleEditClick}
-          handleDelete={handleDelete}
-          meta={meta}
-          page={page}
-          setPage={handlePageChange}
-          limit={limit}
-          setLimit={handleLimitChange}
-        />
+      <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-100/50 overflow-hidden flex flex-col min-h-[650px] transition-all scrollbar-hide">
+        <div className="flex items-center justify-between px-6 sm:px-10 py-6 sm:py-8 border-b border-slate-100 bg-slate-50/30">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">
+              Product Catalog
+            </h2>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
+              Live inventory and variants
+            </p>
+          </div>
+        </div>
+
+        <div className="p-0 flex-1 flex flex-col min-h-0">
+          <ProductTable
+            products={products}
+            loading={loading}
+            getImageUrl={getImageUrl}
+            getCategoryPath={getCategoryPath}
+            setPreviewImage={setPreviewImage}
+            setOpenMenuId={setOpenMenuId}
+            openMenuId={openMenuId}
+            setViewProduct={setViewProduct}
+            handleEditClick={handleEditClick}
+            handleDelete={handleDelete}
+            meta={meta}
+            page={page}
+            setPage={handlePageChange}
+            limit={limit}
+            setLimit={handleLimitChange}
+          />
+        </div>
       </div>
 
       <ProductModal

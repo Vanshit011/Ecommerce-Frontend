@@ -18,7 +18,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             setIsOpen(false);
           }}
         >
-          <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-xl flex items-center justify-center font-black text-lg">
+          <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-xl flex items-center justify-center font-bold text-lg">
             S
           </div>
           <h1 className="text-lg font-bold text-slate-800 tracking-tight">Sasta Store</h1>
@@ -45,7 +45,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       </div>
 
       {/* NAV */}
-      <nav className="flex-1 px-3 py-4">
+      <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-hide">
         <ul className="flex flex-col gap-1.5">
           {/* OVERVIEW */}
           <li>

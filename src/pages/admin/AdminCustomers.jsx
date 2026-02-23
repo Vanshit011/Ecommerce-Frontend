@@ -100,18 +100,20 @@ const AdminCustomers = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-8 pb-12">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 px-2 sm:px-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Customers</h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <h1 className="text-3xl lg:text-4xl font-bold text-slate-800 tracking-tight">
+            Customers
+          </h1>
+          <p className="text-slate-400 mt-1 text-sm lg:text-base font-bold uppercase tracking-widest">
             Found {customers.length} unique customers from order history.
           </p>
         </div>
 
         {/* Search */}
-        <div className="relative">
+        <div className="relative group w-full md:w-80">
           <input
             type="text"
             placeholder="Search customers..."
@@ -120,15 +122,15 @@ const AdminCustomers = () => {
               setSearchTerm(e.target.value);
               setPage(1);
             }}
-            className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 outline-none w-full md:w-64"
+            className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-[1.25rem] text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-300 transition-all shadow-sm"
           />
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
-            strokeWidth={1.5}
+            strokeWidth={2.5}
             stroke="currentColor"
-            className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"
+            className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 transition-colors group-focus-within:text-indigo-600"
           >
             <path
               strokeLinecap="round"
@@ -139,21 +141,32 @@ const AdminCustomers = () => {
         </div>
       </div>
 
-      {/* TABLE */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Contact</th>
-                <th className="px-6 py-4">Location</th>
-                <th className="px-6 py-4 text-center">Orders</th>
-                <th className="px-6 py-4 text-right">Total Spent</th>
-                <th className="px-6 py-4 text-right">Last Active</th>
+      {/* TABLE SECTION */}
+      <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-100/50 overflow-hidden flex flex-col min-h-[650px] transition-all scrollbar-hide">
+        <div className="flex items-center justify-between px-6 sm:px-10 py-6 sm:py-8 border-b border-slate-100 bg-slate-50/30">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">
+              Customer Network
+            </h2>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
+              Aggregated profiles and activity
+            </p>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-x-auto scrollbar-hide pb-44">
+          <table className="w-full text-left min-w-[1000px]">
+            <thead>
+              <tr className="bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">
+                <th className="px-10 py-5">Customer</th>
+                <th className="px-10 py-5">Contact</th>
+                <th className="px-10 py-5">Location</th>
+                <th className="px-10 py-5 text-center">Orders</th>
+                <th className="px-10 py-5 text-right">Total Spent</th>
+                <th className="px-10 py-5 text-right">Last Active</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-slate-500">
@@ -165,40 +178,58 @@ const AdminCustomers = () => {
                   <tr
                     key={customer.id}
                     onClick={() => setSelectedCustomer(customer)}
-                    className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                    className="hover:bg-slate-50/50 transition-colors cursor-pointer group/row"
                   >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm group-hover:bg-blue-200 transition-colors">
+                    <td className="px-10 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-[1.25rem] bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-base group-hover/row:scale-110 transition-transform shadow-sm">
                           {customer.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-semibold text-slate-800 group-hover:text-blue-700 transition-colors">
+                          <div className="font-bold text-slate-800 group-hover/row:text-indigo-600 transition-colors flex items-center gap-2">
                             {customer.name}
+                            {customer.totalSpent > 5000 && (
+                              <span className="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md border border-amber-100 uppercase tracking-widest">
+                                VIP
+                              </span>
+                            )}
                           </div>
-                          <div className="text-xs text-slate-400">
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                             ID: {customer.id.slice(0, 6)}...
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
-                      <div className="flex flex-col">
-                        <span>{customer.email}</span>
-                        <span className="text-xs text-slate-400">{customer.mobile}</span>
+                    <td className="px-10 py-6">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-bold text-slate-600 text-sm tracking-tight">
+                          {customer.email}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          {customer.mobile}
+                        </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{customer.location}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                    <td className="px-10 py-6 text-sm font-bold text-slate-600 tracking-tight">
+                      {customer.location}
+                    </td>
+                    <td className="px-10 py-6 text-center">
+                      <span className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-700 border border-slate-100 shadow-sm transition-transform group-hover/row:scale-110">
                         {customer.totalOrders}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right font-bold text-slate-700">
+                    <td className="px-10 py-6 text-right font-bold text-slate-800 text-base tracking-tight">
                       {formatCurrency(customer.totalSpent)}
                     </td>
-                    <td className="px-6 py-4 text-right text-sm text-slate-500">
-                      {formatDate(customer.lastActive)}
+                    <td className="px-10 py-6 text-right">
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span className="text-sm font-bold text-slate-600 tracking-tight">
+                          {formatDate(customer.lastActive)}
+                        </span>
+                        <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">
+                          Recent Activity
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -213,74 +244,82 @@ const AdminCustomers = () => {
           </table>
         </div>
 
-        {/* PAGINATION */}
-        {/* PAGINATION */}
-        <div className="px-6 py-4 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* Rows Per Page */}
-          <div className="flex items-center gap-2 text-sm text-slate-600">
-            <span>Rows per page:</span>
-            <select
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
-                setPage(1);
-              }}
-              className="bg-white border border-slate-300 rounded px-2 py-1 outline-none focus:border-blue-500"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
+        {/* Pagination Section */}
+        <div className="mt-auto px-10 py-8 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 bg-slate-50/20">
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                Rows:
+              </span>
+              <select
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all shadow-sm"
+              >
+                {[5, 10, 20, 50].map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              Showing <span className="text-slate-800">{(page - 1) * limit + 1}</span>-
+              <span className="text-slate-800">{Math.min(page * limit, customers.length)}</span> of{" "}
+              <span className="text-slate-800">{customers.length}</span>
+            </p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-600">
-              Page {page} of {totalPages || 1}
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="p-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="w-4 h-4"
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="w-10 h-10 flex items-center justify-center rounded-xl border-2 border-slate-100 bg-white text-slate-400 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="3"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+
+            <div className="flex items-center gap-1">
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setPage(i + 1)}
+                  className={`w-10 h-10 flex items-center justify-center rounded-xl border-2 font-bold text-xs transition-all ${
+                    page === i + 1
+                      ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100"
+                      : "bg-white border-slate-100 text-slate-400 hover:border-indigo-200 hover:text-indigo-600 hover:bg-slate-50"
+                  }`}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.75 19.5L8.25 12l7.5-7.5"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages || totalPages === 0}
-                className="p-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="w-4 h-4"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                  />
-                </svg>
-              </button>
+                  {String(i + 1).padStart(2, "0")}
+                </button>
+              ))}
             </div>
+
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || totalPages === 0}
+              className="w-10 h-10 flex items-center justify-center rounded-xl border-2 border-slate-100 bg-white text-slate-400 hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="3"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       </div>

@@ -239,7 +239,7 @@ const AdminCategories = () => {
               <div className="flex flex-col">
                 <span className="font-bold text-slate-800">{cat.name}</span>
                 {hasChildren && (
-                  <span className="text-[10px] uppercase font-black tracking-widest text-blue-500 mt-0.5">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-blue-500 mt-0.5">
                     {cat.children.length} Subcategories
                   </span>
                 )}
@@ -253,10 +253,10 @@ const AdminCategories = () => {
               </span>
             </div>
           </td>
-          <td className="py-4 px-6 text-right">
+          <td className="py-4 px-6 text-center">
             <div className="relative inline-block text-left">
               <button
-                className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1 ml-auto"
+                className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1 mx-auto"
                 onClick={(e) => {
                   e.stopPropagation();
                   setOpenMenuId(openMenuId === categoryId ? null : categoryId);
@@ -321,7 +321,7 @@ const AdminCategories = () => {
                 className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm"
                 style={{ marginLeft: `${(level + 1) * 24}px` }}
               >
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
                   Linked Products in {cat.name}
                 </h4>
                 <div className="flex flex-wrap gap-2">
@@ -362,26 +362,27 @@ const AdminCategories = () => {
   const flattenedCategories = getAllCategoriesFlat(treeData);
 
   return (
-    <div className="p-6 space-y-8 bg-slate-50/50 min-h-screen">
+    <div className="p-4 sm:p-8 pb-12">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 px-2 sm:px-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Product Categories</h1>
-          <p className="text-slate-500 mt-1 font-medium">
+          <h1 className="text-3xl lg:text-4xl font-bold text-slate-800 tracking-tight">
+            Product Categories
+          </h1>
+          <p className="text-slate-400 mt-1 text-sm lg:text-base font-bold uppercase tracking-widest">
             Manage your store hierarchy and product organization.
           </p>
         </div>
 
         <button
           onClick={handleAddClick}
-          className="group relative px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2 overflow-hidden"
+          className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-[1.25rem] font-bold uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center justify-center gap-3 active:scale-95"
         >
-          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
           <svg className="w-5 h-5 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth="2"
+              strokeWidth="3"
               d="M12 6v6m0 0v6m0-6h6m-6 0H6"
             />
           </svg>
@@ -389,18 +390,31 @@ const AdminCategories = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-        <CategoryTable
-          loading={loading}
-          treeData={treeData}
-          paginatedTreeData={paginatedTreeData}
-          renderCategoryRow={renderCategoryRow}
-          totalPages={totalPages}
-          currentPage={currentPage}
-          handlePageChange={handlePageChange}
-          startIndex={startIndex}
-          endIndex={endIndex}
-        />
+      <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-100/50 overflow-hidden flex flex-col min-h-[650px] transition-all scrollbar-hide">
+        <div className="flex items-center justify-between px-6 sm:px-10 py-6 sm:py-8 border-b border-slate-100 bg-slate-50/30">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">
+              Store Hierarchy
+            </h2>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
+              Nested classification system
+            </p>
+          </div>
+        </div>
+
+        <div className="p-0 flex-1 overflow-x-auto scrollbar-hide pb-44">
+          <CategoryTable
+            loading={loading}
+            treeData={treeData}
+            paginatedTreeData={paginatedTreeData}
+            renderCategoryRow={renderCategoryRow}
+            totalPages={totalPages}
+            currentPage={currentPage}
+            handlePageChange={handlePageChange}
+            startIndex={startIndex}
+            endIndex={endIndex}
+          />
+        </div>
       </div>
 
       {/* CATEGORY MODAL */}

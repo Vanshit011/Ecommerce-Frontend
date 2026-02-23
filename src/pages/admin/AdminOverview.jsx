@@ -41,7 +41,7 @@ const AdvancedSectionFilter = ({ filters, setFilters, years, months, hideCustom 
               setViewMode("standard");
               setFilters({ ...filters, startDate: "", endDate: "" });
             }}
-            className={`flex-1 sm:px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-tight transition-all ${
+            className={`flex-1 sm:px-3 py-1.5 rounded-md text-[9px] font-bold uppercase tracking-tight transition-all ${
               viewMode === "standard"
                 ? "bg-blue-600 text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-600"
@@ -51,7 +51,7 @@ const AdvancedSectionFilter = ({ filters, setFilters, years, months, hideCustom 
           </button>
           <button
             onClick={() => setViewMode("custom")}
-            className={`flex-1 sm:px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-tight transition-all ${
+            className={`flex-1 sm:px-3 py-1.5 rounded-md text-[9px] font-bold uppercase tracking-tight transition-all ${
               viewMode === "custom"
                 ? "bg-blue-600 text-white shadow-sm"
                 : "text-slate-400 hover:text-slate-600"
