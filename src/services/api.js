@@ -173,6 +173,11 @@ export const updateReview = (id, data) => API.patch(`/reviews/${id}`, data);
 
 export const deleteReview = (id) => API.delete(`/reviews/${id}`);
 
+// AI Features
+export const generateMetadata = (data) => API.post("/products/generate-metadata", data);
+
+export const getProductRecommendations = (id) => API.get(`/products/${id}/recommendations`);
+
 // ------------------ //
 // COUPONS
 // ------------------ //
