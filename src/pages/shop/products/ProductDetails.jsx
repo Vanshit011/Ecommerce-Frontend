@@ -6,7 +6,9 @@ import {
   addToFavorites,
   removeFromFavorites,
   getProductStats,
+  getProductRecommendations,
 } from "../../../services/api";
+import RecommendedProducts from "../../../components/shop/RecommendedProducts";
 import { useCart } from "../../../context/CartContext";
 import { useToast } from "../../../context/ToastContext";
 import ReviewSection from "../../../components/shop/ReviewSection";
@@ -40,6 +42,7 @@ const ProductDetails = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [buyingNow, setBuyingNow] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
 
   // Variant Selection State
   const [selectedVariant, setSelectedVariant] = useState(null);
@@ -101,8 +104,20 @@ const ProductDetails = () => {
       }
     };
 
+    const fetchRecommendations = async () => {
+      try {
+        const res = await getProductRecommendations(id);
+        const data = res.data?.data || res.data || [];
+        setRecommendations(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching recommendations:", err);
+        setRecommendations([]);
+      }
+    };
+
     fetchProduct();
     checkFavoriteStatus();
+    fetchRecommendations();
   }, [id]);
 
   // Initialize selected variant when product loads
@@ -749,6 +764,8 @@ const ProductDetails = () => {
         <div id="reviews-section">
           <ReviewSection productId={id} />
         </div>
+
+        <RecommendedProducts products={recommendations} />
       </div>
     </div>
   );

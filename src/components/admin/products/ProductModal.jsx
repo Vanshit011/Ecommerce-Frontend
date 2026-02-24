@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { getImageUrl } from "../../../utils/imageUtils";
+import { generateMetadata } from "../../../services/api";
 
 const ProductModal = ({
   showModal,
@@ -16,6 +17,41 @@ const ProductModal = ({
   flattenedCategories,
 }) => {
   const modalRef = useRef(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateAI = async () => {
+    if (!formData.name) {
+      alert("Please enter a product name first to generate a description.");
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+      const categoryName =
+        flattenedCategories.find((c) => String(c.id || c._id) === String(formData.category))
+          ?.name || "";
+
+      const res = await generateMetadata({
+        name: formData.name,
+        brand: formData.brand,
+        category: categoryName,
+        base_description: formData.description,
+      });
+
+      const data = res.data?.data || res.data;
+      if (data?.enhanced_description || data?.description) {
+        setFormData((prev) => ({
+          ...prev,
+          description: data.enhanced_description || data.description,
+        }));
+      }
+    } catch (err) {
+      console.error("AI Generation Error:", err);
+      alert("Failed to generate AI description. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -179,9 +215,36 @@ const ProductModal = ({
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">
-                Description *
-              </label>
+              <div className="flex justify-between items-center ml-1">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">
+                  Description *
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGenerateAI}
+                  disabled={isGenerating}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all disabled:opacity-50 group"
+                >
+                  {isGenerating ? (
+                    <div className="w-3 h-3 border-2 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin" />
+                  ) : (
+                    <svg
+                      className="w-3 h-3 group-hover:rotate-12 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="3"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                  )}
+                  {isGenerating ? "Generating..." : "Magic Generate"}
+                </button>
+              </div>
               <textarea
                 name="description"
                 value={formData.description}
