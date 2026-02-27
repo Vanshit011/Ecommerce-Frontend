@@ -51,11 +51,15 @@ const ReviewList: React.FC<ReviewListProps> = ({ reviews, currentUserId, onEdit,
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center border border-blue-100 text-blue-600 font-black text-sm">
-                  {userObj?.firstName?.charAt(0) || "U"}
+                  {userObj?.firstName?.charAt(0) || userObj?.name?.charAt(0) || "U"}
                 </div>
                 <div>
                   <h4 className="font-bold text-slate-900">
-                    {userObj ? `${userObj.firstName} ${userObj.lastName}` : "User"}
+                    {userObj
+                      ? userObj.firstName
+                        ? `${userObj.firstName} ${userObj.lastName || ""}`.trim()
+                        : userObj.name || "User"
+                      : "User"}
                   </h4>
                   <div className="flex items-center gap-3">
                     <StarRating rating={review.rating} size="sm" />

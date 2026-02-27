@@ -1,4 +1,5 @@
 export interface Variant {
+  id: string;
   _id?: string;
   color?: string;
   size?: string;
@@ -16,8 +17,8 @@ export interface Category {
 }
 
 export interface Product {
-  _id: string;
-  id?: string;
+  id: string;
+  _id?: string;
   name: string;
   description: string;
   brand: string;
@@ -77,6 +78,7 @@ export interface Review {
 export interface CartItem {
   product: Product;
   variant?: Variant;
+  variant_id?: string;
   quantity: number;
   price: number;
 }
@@ -113,7 +115,8 @@ export interface Coupon {
 }
 
 export interface Address {
-  _id: string;
+  id: string;
+  _id?: string;
   user: string;
   addressLine1: string;
   address_line_1?: string;
@@ -135,8 +138,8 @@ export interface Address {
 }
 
 export interface Order {
-  _id: string;
-  id?: string;
+  id: string;
+  _id?: string;
   user: string | User;
   items: CartItem[];
   totalAmount: number;

@@ -133,7 +133,7 @@ export const getProfile = () => API.get<ApiResponse<User>>("/profile");
 export const updateProfile = (data: any) => API.put<ApiResponse<User>>("/profile", data);
 
 // User Cart
-export const addToCart = (productId: string, data: { variantId?: string; quantity: number }) =>
+export const addToCart = (productId: string, data: { variant_id?: string; quantity: number }) =>
   API.post<ApiResponse<any>>(`/cart/${productId}`, data);
 
 export const getCart = () => API.get<ApiResponse<CartData>>("/cart");

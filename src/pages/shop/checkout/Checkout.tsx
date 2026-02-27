@@ -8,7 +8,8 @@ import { payOrder, getOrderById } from "../../../services/api";
 import { useToast } from "../../../context/ToastContext";
 import { Order } from "../../../types";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
+const STRIPE_KEY = (import.meta as any).env.VITE_STRIPE_PUBLISHABLE_KEY || "";
+const stripePromise = loadStripe(STRIPE_KEY);
 
 // =======================
 // CHECKOUT FORM

@@ -412,7 +412,12 @@ const Cart: React.FC = () => {
                           </div>
 
                           <button
-                            onClick={() => handleRemoveItem(item.product?._id || "", item)}
+                            onClick={() =>
+                              handleRemoveItem(
+                                item.product?.id || (item.product as any)?._id || "",
+                                item,
+                              )
+                            }
                             className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
                             title="Remove item"
                           >
@@ -631,7 +636,7 @@ const Cart: React.FC = () => {
 
               <div className="space-y-4 max-h-[50vh] overflow-y-auto px-1 scrollbar-hide">
                 {addresses.map((addr) => {
-                  const id = addr._id;
+                  const id = addr.id || (addr as any)._id;
 
                   return (
                     <div
