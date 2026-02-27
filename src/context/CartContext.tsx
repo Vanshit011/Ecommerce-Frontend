@@ -19,7 +19,7 @@ interface CartContextType {
   cart: CartData | null;
   cartCount: number;
   loading: boolean;
-  addToCart: (productId: string, data: { variantId?: string; quantity: number }) => Promise<void>;
+  addToCart: (productId: string, data: { variant_id?: string; quantity: number }) => Promise<void>;
   updateQty: (productId: string, qty: number, variantId?: string) => Promise<void>;
   removeFromCart: (productId: string, item: any) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -56,7 +56,8 @@ const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     try {
       if (showLoading) setLoading(true);
       const res = await getCart();
-      const cartData = res.data.data; // Note: getCart returns ApiResponse<{ items: CartItem[]; ... }>
+      // Handle both wrapped and direct response structures
+      const cartData = (res.data as any).data || res.data;
       setCart(cartData);
 
       // Calculate total quantity
@@ -82,7 +83,7 @@ const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   }, [fetchCart]);
 
   const addToCart = useCallback(
-    async (productId: string, data: { variantId?: string; quantity: number }) => {
+    async (productId: string, data: { variant_id?: string; quantity: number }) => {
       try {
         await apiAddToCart(productId, data);
         await fetchCart(false); // Background refresh for smooth UI
@@ -109,15 +110,20 @@ const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   const removeFromCart = useCallback(
     async (productId: string, item: any) => {
+      if (!productId) {
+        console.error("Cannot remove item: productId is missing");
+        return;
+      }
+
       // Optimistic Update
       const previousCart = cart;
-      const variantId = item.variant_id || item.variant?._id || item.variant?.id;
+      const variantId = item.variant_id || item.variant?.id || (item.variant as any)?._id;
 
       setCart((prev) => {
         if (!prev || !prev.items) return prev;
         const updatedItems = prev.items.filter((i) => {
-          const pId = (i.product as any)?._id || (i.product as any)?.id;
-          const vId = (i as any).variant_id || i.variant?._id || (i.variant as any)?.id;
+          const pId = i.product?.id || (i.product as any)?._id;
+          const vId = i.variant_id || i.variant?.id || (i.variant as any)?._id;
           return !(pId === productId && vId === variantId);
         });
         return { ...prev, items: updatedItems };

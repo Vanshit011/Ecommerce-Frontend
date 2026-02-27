@@ -196,7 +196,7 @@ const ProductDetails: React.FC = () => {
       setAddingToCart(true);
       const pid = (product as any).id || product._id || id;
       await globalAddToCart(pid, {
-        variantId: (selectedVariant as any)?._id || (selectedVariant as any)?.id,
+        variant_id: (selectedVariant as any)?._id || (selectedVariant as any)?.id,
         quantity: quantity,
       });
       showToast("Product added to cart!", "success");
@@ -222,7 +222,7 @@ const ProductDetails: React.FC = () => {
       setBuyingNow(true);
       const pid = (product as any).id || product._id || id;
       await globalAddToCart(pid, {
-        variantId: (selectedVariant as any)?._id || (selectedVariant as any)?.id,
+        variant_id: (selectedVariant as any)?._id || (selectedVariant as any)?.id,
         quantity: quantity,
       });
       showToast("Added to bag! Redirecting...", "success");

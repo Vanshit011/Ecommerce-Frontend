@@ -679,6 +679,14 @@ const MyOrders: React.FC = () => {
                 >
                   Close
                 </button>
+                {selectedOrder.status?.toUpperCase() === "PENDING" && (
+                  <button
+                    onClick={() => navigate(`/checkout/${selectedOrder.id || selectedOrder._id}`)}
+                    className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all active:scale-95"
+                  >
+                    Pay Now
+                  </button>
+                )}
                 {(selectedOrder.status?.toUpperCase() === "CONFIRMED" ||
                   selectedOrder.status?.toUpperCase() === "PENDING") && (
                   <button
