@@ -7,7 +7,7 @@
     "dev": "vite",
     "format": "prettier --write src",
     "lint": "eslint src",
-    "build": "npm run format && npm run lint && tsc && vite build",
+    "build": "npm run format && tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

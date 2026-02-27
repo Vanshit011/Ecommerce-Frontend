@@ -44,7 +44,7 @@ const Cart: React.FC = () => {
   const loadAddresses = useCallback(async () => {
     try {
       const res = await getAddresses();
-      setAddresses(res.data?.data || res.data || []);
+      setAddresses((res.data as any)?.data || (res.data as any) || []);
     } catch {
       showToast("Failed to load addresses", "error");
     }

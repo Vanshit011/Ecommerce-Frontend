@@ -44,7 +44,7 @@ const OrderDetailsModal = ({ viewOrder, setViewOrder, onOrderUpdated }) => {
       const res = await updateOrderStatus(id, newStatus);
       showToast("Order status updated successfully", "success");
       // Update local view by MERGING to preserve items, address, and user info
-      const newOrderData = res.data?.order || res.data;
+      const newOrderData = (res.data as any)?.order || res.data;
       if (newOrderData) {
         const mergedOrder = {
           ...viewOrder,

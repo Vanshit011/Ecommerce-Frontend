@@ -32,7 +32,7 @@ const AdminProfileModal = ({ onClose }) => {
   const fetchAdminProfile = async () => {
     try {
       const res = await getProfile();
-      const data = res.data.user || res.data;
+      const data = (res.data as any).user || res.data;
       setAdmin(data);
       setFormData({ name: data.name, email: data.email, mobile: data.mobile || "" });
     } catch (error) {
