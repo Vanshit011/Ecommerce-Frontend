@@ -41,7 +41,7 @@ const AdminCoupons = () => {
     try {
       setLoading(true);
       const res = await getAllCoupons();
-      setCoupons(res.data || []);
+      setCoupons((res.data as any)?.data || res.data || []);
     } catch (err) {
       showToast(err?.response?.data?.message || "Failed to load coupons", "error");
     } finally {
@@ -57,7 +57,7 @@ const AdminCoupons = () => {
     const fetchProducts = async () => {
       try {
         const res = await getMyProducts({ limit: 200 });
-        setAllProducts(res.data?.data || res.data || []);
+        setAllProducts((res.data as any)?.data || res.data || []);
       } catch (err) {
         console.error("Failed to fetch products", err);
       }

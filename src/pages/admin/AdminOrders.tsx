@@ -29,8 +29,8 @@ const AdminOrders = () => {
 
       if (rawData?.data && Array.isArray(rawData.data)) {
         orderList = rawData.data;
-      } else if (rawData?.orders && Array.isArray(rawData.orders)) {
-        orderList = rawData.orders;
+      } else if ((rawData as any)?.orders && Array.isArray((rawData as any).orders)) {
+        orderList = (rawData as any).orders;
       } else if (Array.isArray(rawData)) {
         orderList = rawData;
       }
