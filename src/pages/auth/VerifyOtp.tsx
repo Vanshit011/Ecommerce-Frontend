@@ -1,16 +1,15 @@
-// @ts-nocheck
-import { useState } from "react";
+import React, { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { verifyForgotOtp } from "../../services/api";
 
 export default function VerifyOtp() {
   const navigate = useNavigate();
 
-  const [otp, setOtp] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [otp, setOtp] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const submit = async (e) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -26,7 +25,7 @@ export default function VerifyOtp() {
 
       // ✅ OTP valid → go reset password screen
       navigate("/reset-password");
-    } catch (err) {
+    } catch (err: any) {
       setError(err.response?.data?.message || "OTP verification failed");
     } finally {
       setLoading(false);
@@ -45,7 +44,7 @@ export default function VerifyOtp() {
         <form onSubmit={submit}>
           <input
             type="text"
-            maxLength="6"
+            maxLength={6}
             placeholder="Enter OTP"
             value={otp}
             onChange={(e) => setOtp(e.target.value.trim())}

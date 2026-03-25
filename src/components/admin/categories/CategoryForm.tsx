@@ -1,6 +1,18 @@
 import React from "react";
 
-const CategoryForm = ({
+interface CategoryFormProps {
+  editId: string | null;
+  newCategory: string;
+  setNewCategory: (val: string) => void;
+  parentId: string;
+  setParentId: (val: string) => void;
+  handleSubmit: (e: React.FormEvent) => void;
+  isSubmitting: boolean;
+  handleCancelEdit: () => void;
+  flattenedCategories: any[];
+}
+
+const CategoryForm: React.FC<CategoryFormProps> = ({
   editId,
   newCategory,
   setNewCategory,

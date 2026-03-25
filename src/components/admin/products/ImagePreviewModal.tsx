@@ -1,11 +1,16 @@
 import React, { useEffect, useRef } from "react";
 
-const ImagePreviewModal = ({ previewImage, setPreviewImage }) => {
-  const modalRef = useRef(null);
+interface ImagePreviewModalProps {
+  previewImage: string | null;
+  setPreviewImage: (url: string | null) => void;
+}
+
+const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ previewImage, setPreviewImage }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         setPreviewImage(null);
       }
     };

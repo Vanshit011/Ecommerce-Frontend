@@ -1,7 +1,6 @@
-// @ts-nocheck
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, ChangeEvent, FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useToast } from "../../context/ToastContext.jsx";
+import { useToast } from "../../context/ToastContext";
 import {
   getMyProducts,
   createProduct,
@@ -14,6 +13,15 @@ import {
   deleteVariant,
 } from "../../services/api";
 import { getImageUrl } from "../../utils/imageUtils";
+import {
+  Product,
+  CategoryTree,
+  Order,
+  User,
+  ApiResponse,
+  ProductFormData,
+  VariantFormData,
+} from "../../types";
 
 // Modular Components
 import ProductTable from "../../components/admin/products/ProductTable";
@@ -21,7 +29,7 @@ import ProductModal from "../../components/admin/products/ProductModal";
 import ProductDetailsModal from "../../components/admin/products/ProductDetailsModal";
 import ImagePreviewModal from "../../components/admin/products/ImagePreviewModal";
 
-const initialForm = {
+const initialForm: ProductFormData = {
   name: "",
   description: "",
   brand: "",
@@ -36,36 +44,38 @@ const initialForm = {
   availability: "INSTOCK",
 };
 
-const AdminProducts = () => {
+const AdminProducts: React.FC = () => {
   const { showToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // State Management
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [isEditingId, setIsEditingId] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [openMenuId, setOpenMenuId] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
-  const [viewProduct, setViewProduct] = useState(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [isEditingId, setIsEditingId] = useState<string | null>(null);
+  const [categories, setCategories] = useState<CategoryTree[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [viewProduct, setViewProduct] = useState<Product | null>(null);
 
   // Pagination & Search State
-  const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
-  const [limit, setLimit] = useState(Number(searchParams.get("limit")) || 10);
-  const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
-  const [meta, setMeta] = useState(null);
+  const [page, setPage] = useState<number>(Number(searchParams.get("page")) || 1);
+  const [limit, setLimit] = useState<number>(Number(searchParams.get("limit")) || 10);
+  const [search, setSearch] = useState<string>(searchParams.get("search") || "");
+  const [debouncedSearch, setDebouncedSearch] = useState<string>(search);
+  const [meta, setMeta] = useState<any>(null);
 
-  const [formData, setFormData] = useState(initialForm);
+  const [formData, setFormData] = useState<ProductFormData>(initialForm);
 
   /*  DATA FETCHING  */
   const fetchCategories = useCallback(async () => {
     try {
       const res = await getCategories();
       const data =
-        res?.data?.data || res?.data?.categories || (Array.isArray(res?.data) ? res.data : []);
+        res?.data?.data ||
+        res?.data?.categories ||
+        (Array.isArray(res?.data) ? (res.data as any) : []);
       setCategories(data);
     } catch (err) {
       console.error("Fetch Categories Error:", err);
@@ -79,8 +89,8 @@ const AdminProducts = () => {
       const res = await getMyProducts(params);
 
       const rawData = res.data;
-      let productList = [];
-      let metadata = null;
+      let productList: Product[] = [];
+      let metadata: any = null;
 
       if (Array.isArray(rawData)) {
         productList = rawData;
@@ -105,10 +115,10 @@ const AdminProducts = () => {
 
   /*  SYNC URL PARAMS  */
   const handlePageChange = useCallback(
-    (newPage) => {
+    (newPage: number) => {
       const newParams = new URLSearchParams(searchParams);
       if (newPage === 1) newParams.delete("page");
-      else newParams.set("page", newPage);
+      else newParams.set("page", String(newPage));
       setSearchParams(newParams, { replace: true });
       setPage(newPage);
     },
@@ -116,10 +126,10 @@ const AdminProducts = () => {
   );
 
   const handleLimitChange = useCallback(
-    (newLimit) => {
+    (newLimit: number) => {
       const newParams = new URLSearchParams(searchParams);
       if (newLimit === 10) newParams.delete("limit");
-      else newParams.set("limit", newLimit);
+      else newParams.set("limit", String(newLimit));
       newParams.delete("page"); // Reset to page 1 on limit change
       setSearchParams(newParams, { replace: true });
       setLimit(newLimit);
@@ -129,7 +139,7 @@ const AdminProducts = () => {
   );
 
   const updateURL = useCallback(
-    (params) => {
+    (params: Record<string, any>) => {
       const newParams = new URLSearchParams(searchParams);
       Object.entries(params).forEach(([key, value]) => {
         if (
@@ -141,7 +151,7 @@ const AdminProducts = () => {
         ) {
           newParams.delete(key);
         } else {
-          newParams.set(key, value);
+          newParams.set(key, String(value));
         }
       });
       setSearchParams(newParams, { replace: true });
@@ -205,10 +215,10 @@ const AdminProducts = () => {
   }, [search, updateURL, debouncedSearch]);
 
   /*  HELPERS  */
-  const getCategoryPath = (categoryId) => {
+  const getCategoryPath = (categoryId: string) => {
     if (!categoryId) return "Uncategorized";
-    const flatten = (cats) => {
-      let res = [];
+    const flatten = (cats: CategoryTree[]): CategoryTree[] => {
+      let res: CategoryTree[] = [];
       cats.forEach((c) => {
         res.push(c);
         if (c.children) res.push(...flatten(c.children));
@@ -216,50 +226,55 @@ const AdminProducts = () => {
       return res;
     };
     const all = flatten(categories);
-    const find = (id) => all.find((c) => String(c.id || c._id) === String(id));
-    const build = (id, path = []) => {
+    const find = (id: string) => all.find((c) => String(c._id || (c as any).id) === String(id));
+    const build = (id: string, path: string[] = []): string[] => {
       const c = find(id);
       if (!c) return path;
       path.unshift(c.name);
-      const pId = c.parentId || c.parent?.id || c.parent?._id;
-      return pId ? build(pId, path) : path;
+      const parentId = c.parent ? (typeof c.parent === "string" ? c.parent : c.parent._id) : null;
+      const pId = (c as any).parentId || parentId;
+      return pId ? build(String(pId), path) : path;
     };
     const path = build(categoryId);
     return path.length > 0 ? path.join(" > ") : "Uncategorized";
   };
 
   const flattenedForDropdown = (() => {
-    const result = [];
-    const traverse = (cats, level = 0) => {
+    const result: any[] = [];
+    const traverse = (cats: CategoryTree[], level = 0) => {
       cats.forEach((c) => {
-        const hasChildren = c.children?.length > 0;
+        const hasChildren = (c.children?.length ?? 0) > 0;
         const indent = "  ".repeat(level);
         const prefix = level === 0 ? (hasChildren ? "▼ " : "• ") : hasChildren ? "└─▼ " : "└─• ";
         result.push({ ...c, displayName: indent + prefix + c.name });
-        if (hasChildren) traverse(c.children, level + 1);
+        if (c.children && hasChildren) traverse(c.children, level + 1);
       });
     };
-    const roots = categories.filter(
-      (c) => !c.parentId && (!c.parent || (!c.parent.id && !c.parent._id)),
-    );
+    const roots = categories.filter((c) => {
+      const parentId = c.parent ? (typeof c.parent === "string" ? c.parent : c.parent._id) : null;
+      const pId = (c as any).parentId || parentId;
+      return !pId;
+    });
     traverse(roots);
     return result;
   })();
 
   /*  HANDLERS  */
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    const files = (e.target as HTMLInputElement).files;
     setFormData((prev) => ({ ...prev, [name]: files ? files[0] : value }));
   };
 
-  const handleEditClick = (product) => {
+  const handleEditClick = (product: Product) => {
     setFormData({
       ...product,
       category:
-        product.category_id ||
-        product.categoryId ||
-        product.category?.id ||
-        product.category?._id ||
+        (product as any).category_id ||
+        (product as any).categoryId ||
+        (typeof product.category === "string" ? product.category : product.category._id) ||
         "",
       brand: product.brand || "",
       sku: product.sku || "",
@@ -268,17 +283,23 @@ const AdminProducts = () => {
       has_variants: true,
       variants:
         product.variants?.length > 0
-          ? product.variants
+          ? product.variants.map((v) => ({
+              ...v,
+              stock_qty: v.stock_qty ?? (v as any).stockQty,
+            }))
           : [{ color: "", size: "", price: "", stock_qty: "", sku: "" }],
-      isActive: product.is_active ?? product.isActive ?? true,
-      mainImageIndex: product.main_image_index ?? product.mainImageIndex ?? 0,
+      isActive: product.isActive ?? (product as any).is_active ?? true,
+      mainImageIndex: product.mainImageIndex ?? (product as any).main_image_index ?? 0,
       availability: product.availability || "INSTOCK",
     });
-    setIsEditingId(product.id || product._id);
+    setIsEditingId(product.id || (product as any)._id);
     setShowModal(true);
   };
 
-  const handleUpdateOrCreateVariant = async (variantIndex, variantData) => {
+  const handleUpdateOrCreateVariant = async (
+    variantIndex: number,
+    variantData: VariantFormData,
+  ) => {
     if (!isEditingId) return;
     try {
       setIsSubmitting(true);
@@ -291,7 +312,7 @@ const AdminProducts = () => {
       };
 
       const variantId = variantData.id || variantData._id;
-      let res;
+      let res: ApiResponse<Product> | any;
 
       if (variantId) {
         res = await updateProductVariants(isEditingId, variantId, payload);
@@ -320,10 +341,10 @@ const AdminProducts = () => {
         // 2. Update products list for the background table
         setProducts((prev) =>
           prev.map((p) => {
-            if (String(p.id || p._id) === String(isEditingId)) {
+            if (String(p.id || (p as any)._id) === String(isEditingId)) {
               let variantExists = false;
               const newVariants = (p.variants || []).map((v) => {
-                if (String(v.id || v._id) === String(variantId)) {
+                if (String(v.id || (v as any)._id) === String(variantId)) {
                   variantExists = true;
                   return { ...v, ...updatedVariant };
                 }
@@ -334,7 +355,9 @@ const AdminProducts = () => {
               if (!variantId || !variantExists) {
                 // Prevent duplicate addition if already somehow added
                 const alreadyExists = newVariants.find(
-                  (v) => String(v.id || v._id) === String(updatedVariant.id || updatedVariant._id),
+                  (v) =>
+                    String(v.id || (v as any)._id) ===
+                    String(updatedVariant.id || updatedVariant._id),
                 );
                 if (!alreadyExists) {
                   newVariants.push(updatedVariant);
@@ -381,7 +404,9 @@ const AdminProducts = () => {
         // 2. Update products list for background table
         setProducts((prev) =>
           prev.map((p) =>
-            String(p.id || p._id) === String(isEditingId) ? { ...p, variants: updatedVariants } : p,
+            String(p.id || (p as any)._id) === String(isEditingId)
+              ? { ...p, variants: updatedVariants }
+              : p,
           ),
         );
       }
@@ -393,7 +418,7 @@ const AdminProducts = () => {
     }
   };
 
-  const handleDeleteVariant = async (variantIndex, variantData) => {
+  const handleDeleteVariant = async (variantIndex: number, variantData: VariantFormData) => {
     const variantId = variantData.id || variantData._id;
 
     // Capture current state for potential rollback
@@ -410,11 +435,11 @@ const AdminProducts = () => {
       if (variantId) {
         setProducts((prev) =>
           prev.map((p) => {
-            if (String(p.id || p._id) === String(isEditingId)) {
+            if (String(p.id || (p as any)._id) === String(isEditingId)) {
               return {
                 ...p,
                 variants: (p.variants || []).filter(
-                  (v) => String(v.id || v._id) !== String(variantId),
+                  (v) => String(v.id || (v as any)._id) !== String(variantId),
                 ),
               };
             }
@@ -438,11 +463,11 @@ const AdminProducts = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     const data = new FormData();
-    const append = (k, v) => {
+    const append = (k: string, v: any) => {
       if (v !== undefined && v !== null && v !== "") data.append(k, v);
     };
 
@@ -453,8 +478,8 @@ const AdminProducts = () => {
     append("availability", formData.availability);
     // Removed price, sale_price, stock_qty as they are now per-variant
     // Removed has_variants as per backend validation rules
-    append("is_active", formData.isActive);
-    append("main_image_index", formData.mainImageIndex);
+    append("is_active", String(formData.isActive));
+    append("main_image_index", String(formData.mainImageIndex));
 
     // Removed specifications as per user request
 
@@ -462,9 +487,9 @@ const AdminProducts = () => {
       formData.variants.forEach((v, idx) => {
         if (v.color) append(`variants[${idx}][color]`, v.color);
         if (v.size) append(`variants[${idx}][size]`, v.size);
-        if (v.price) append(`variants[${idx}][price]`, v.price);
+        if (v.price) append(`variants[${idx}][price]`, String(v.price));
         // Removed sale_price from variants as per backend validation rules
-        if (v.stock_qty) append(`variants[${idx}][stock_qty]`, v.stock_qty);
+        if (v.stock_qty) append(`variants[${idx}][stock_qty]`, String(v.stock_qty));
         if (v.sku) append(`variants[${idx}][sku]`, v.sku);
       });
     }
@@ -479,7 +504,7 @@ const AdminProducts = () => {
       });
 
     try {
-      let res;
+      let res: ApiResponse<Product> | any;
       if (isEditingId) {
         res = await updateProduct(isEditingId, data);
         showToast("Product updated successfully");
@@ -488,7 +513,7 @@ const AdminProducts = () => {
         const updated = res.data?.data || res.data || res;
 
         setProducts((prev) =>
-          prev.map((p) => (String(p.id || p._id) === String(isEditingId) ? updated : p)),
+          prev.map((p) => (String(p.id || (p as any)._id) === String(isEditingId) ? updated : p)),
         );
       } else {
         res = await createProduct(data);
@@ -516,10 +541,10 @@ const AdminProducts = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       // Optimistic update: Remove immediately from UI
-      setProducts((prev) => prev.filter((p) => (p.id || p._id) !== id));
+      setProducts((prev) => prev.filter((p) => (p.id || (p as any)._id) !== id));
 
       try {
         await deleteProduct(id);

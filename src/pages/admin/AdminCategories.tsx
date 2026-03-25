@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useCallback } from "react";
 import { useToast } from "../../context/ToastContext";
 import {
@@ -8,47 +7,48 @@ import {
   deleteCategory,
   getMyProducts,
 } from "../../services/api";
+import { Category, CategoryTree, Product, ApiResponse } from "../../types";
 
 // Modular Components
 import CategoryForm from "../../components/admin/categories/CategoryForm";
 import CategoryTable from "../../components/admin/categories/CategoryTable";
 
-const AdminCategories = () => {
+const AdminCategories: React.FC = () => {
   const { showToast } = useToast();
 
   // State Management
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [newCategory, setNewCategory] = useState("");
-  const [parentId, setParentId] = useState("");
-  const [editId, setEditId] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState(new Set());
-  const [viewProductsFor, setViewProductsFor] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [openMenuId, setOpenMenuId] = useState(null);
+  const [categories, setCategories] = useState<CategoryTree[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [newCategory, setNewCategory] = useState<string>("");
+  const [parentId, setParentId] = useState<string>("");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [viewProductsFor, setViewProductsFor] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const itemsPerPage = 10;
 
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
 
   const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
       const [catRes, prodRes] = await Promise.all([getCategories(), getMyProducts()]);
-      // ... existing fetch logic ...
+
       const rawCats =
-        catRes?.data?.data ||
-        catRes?.data?.categories ||
+        (catRes?.data as any)?.data ||
+        (catRes?.data as any)?.categories ||
         (Array.isArray(catRes?.data) ? catRes.data : []);
 
-      const sortedCategories = rawCats.sort((a, b) => {
-        const dateA = new Date(a.created_at || a._id);
-        const dateB = new Date(b.created_at || b._id);
+      const sortedCategories = rawCats.sort((a: any, b: any) => {
+        const dateA = new Date(a.created_at || a._id).getTime();
+        const dateB = new Date(b.created_at || b._id).getTime();
         return dateB - dateA;
       });
       setCategories(sortedCategories);
-      setProducts(prodRes.data?.data || prodRes.data || []);
+      setProducts((prodRes.data as any)?.data || prodRes.data || []);
     } catch {
       showToast("Failed to load categories", "error");
     } finally {
@@ -67,13 +67,13 @@ const AdminCategories = () => {
   }, []);
 
   /*  HANDLERS  */
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategory.trim()) return;
 
     setIsSubmitting(true);
     try {
-      const payload = { name: newCategory };
+      const payload: any = { name: newCategory };
       if (parentId) payload.parentId = parentId;
 
       if (editId) {
@@ -97,11 +97,13 @@ const AdminCategories = () => {
     }
   };
 
-  const handleEditClick = (cat) => {
-    setEditId(cat.id || cat._id);
+  const handleEditClick = (cat: CategoryTree) => {
+    setEditId(cat._id);
     setNewCategory(cat.name);
     setParentId(
-      cat.parentId || (typeof cat.parent === "object" ? cat.parent.id || cat.parent._id : "") || "",
+      (cat as any).parentId ||
+        (typeof cat.parent === "object" ? (cat.parent as any).id || (cat.parent as any)._id : "") ||
+        "",
     );
     setShowModal(true);
   };
@@ -119,10 +121,11 @@ const AdminCategories = () => {
     setParentId("");
     setShowModal(false);
   };
-  // ... rest of handlers ...
-  const handleDelete = async (id) => {
+
+  const handleDelete = async (id: string) => {
     const hasChildren = categories.some(
-      (cat) => (cat.parentId || cat.parent?._id || cat.parent?.id) === id,
+      (cat) =>
+        ((cat as any).parentId || (cat.parent as any)?._id || (cat.parent as any)?.id) === id,
     );
 
     if (hasChildren) {
@@ -146,14 +149,14 @@ const AdminCategories = () => {
     }
   };
 
-  const toggleExpand = (categoryId) => {
+  const toggleExpand = (categoryId: string) => {
     const newExpanded = new Set(expandedCategories);
     if (newExpanded.has(categoryId)) newExpanded.delete(categoryId);
     else newExpanded.add(categoryId);
     setExpandedCategories(newExpanded);
   };
 
-  const toggleViewProducts = (categoryId) => {
+  const toggleViewProducts = (categoryId: string) => {
     setViewProductsFor(viewProductsFor === categoryId ? null : categoryId);
   };
 
@@ -161,8 +164,9 @@ const AdminCategories = () => {
   const buildTree = () => {
     return categories.filter((cat) => {
       const hasNoParent =
-        !cat.parentId &&
-        (!cat.parent || (typeof cat.parent === "object" && !cat.parent.id && !cat.parent._id));
+        !(cat as any).parentId &&
+        (!cat.parent ||
+          (typeof cat.parent === "object" && !(cat.parent as any).id && !(cat.parent as any)._id));
       return hasNoParent;
     });
   };
@@ -173,45 +177,51 @@ const AdminCategories = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedTreeData = treeData.slice(startIndex, endIndex);
 
-  const handlePageChange = (page) => {
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
     setExpandedCategories(new Set());
   };
 
-  const getProductsForCategory = (categoryId, includeChildren = true) => {
+  const getProductsForCategory = (categoryId: string, includeChildren = true): Product[] => {
     const directProducts = products.filter(
-      (p) => (p.categoryId || p.category?.id || p.category?._id || p.category) === categoryId,
+      (p) =>
+        ((p as any).categoryId ||
+          (p.category as any)?.id ||
+          (p.category as any)?._id ||
+          p.category) === categoryId,
     );
 
     if (!includeChildren) return directProducts;
 
-    const categoryMap = new Map();
-    const flattenCategories = (cats) => {
+    const categoryMap = new Map<string, CategoryTree>();
+    const flattenCategories = (cats: CategoryTree[]) => {
       cats.forEach((cat) => {
-        const catId = cat.id || cat._id;
+        const catId = cat._id;
         categoryMap.set(catId, cat);
-        if (cat.children?.length > 0) flattenCategories(cat.children);
+        if (cat.children && cat.children.length > 0) flattenCategories(cat.children);
       });
     };
     flattenCategories(categories);
 
-    const getAllCategoryIds = (catId) => {
+    const getAllCategoryIds = (catId: string): string[] => {
       const ids = [catId];
       const category = categoryMap.get(catId);
-      if (category?.children?.length > 0) {
-        category.children.forEach((child) => ids.push(...getAllCategoryIds(child.id || child._id)));
+      if (category?.children && category.children.length > 0) {
+        category.children.forEach((child) => ids.push(...getAllCategoryIds(child._id)));
       }
       return ids;
     };
 
     const allCategoryIds = getAllCategoryIds(categoryId);
     return products.filter((p) =>
-      allCategoryIds.includes(p.categoryId || p.category?.id || p.category?._id || p.category),
+      allCategoryIds.includes(
+        (p as any).categoryId || (p.category as any)?.id || (p.category as any)?._id || p.category,
+      ),
     );
   };
 
-  const renderCategoryRow = (cat, level = 0) => {
-    const categoryId = cat.id || cat._id;
+  const renderCategoryRow = (cat: CategoryTree, level = 0) => {
+    const categoryId = cat._id;
     const hasChildren = cat.children && cat.children.length > 0;
     const isExpanded = expandedCategories.has(categoryId);
     const categoryProducts = getProductsForCategory(categoryId);
@@ -241,7 +251,7 @@ const AdminCategories = () => {
                 <span className="font-bold text-slate-800">{cat.name}</span>
                 {hasChildren && (
                   <span className="text-[10px] uppercase font-bold tracking-widest text-blue-500 mt-0.5">
-                    {cat.children.length} Subcategories
+                    {cat.children!.length} Subcategories
                   </span>
                 )}
               </div>
@@ -317,7 +327,7 @@ const AdminCategories = () => {
         </tr>
         {showProducts && categoryProducts.length > 0 && (
           <tr className="bg-slate-50/50">
-            <td colSpan="3" className="py-4 px-6">
+            <td colSpan={3} className="py-4 px-6">
               <div
                 className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm"
                 style={{ marginLeft: `${(level + 1) * 24}px` }}
@@ -328,10 +338,10 @@ const AdminCategories = () => {
                 <div className="flex flex-wrap gap-2">
                   {categoryProducts.map((product) => (
                     <span
-                      key={product.id || product._id}
+                      key={product.id || (product as any)._id}
                       className="px-3 py-1 bg-slate-50 text-slate-700 rounded-lg text-xs font-bold border border-slate-100"
                     >
-                      {product.name || product.title}
+                      {product.name || (product as any).title}
                     </span>
                   ))}
                 </div>
@@ -341,26 +351,26 @@ const AdminCategories = () => {
         )}
         {isExpanded &&
           hasChildren &&
-          cat.children.map((child) => renderCategoryRow(child, level + 1))}
+          cat.children!.map((child) => renderCategoryRow(child, level + 1))}
       </React.Fragment>
     );
   };
 
-  const getAllCategoriesFlat = (cats = categories, level = 0, result = []) => {
+  const getAllCategoriesFlat = (cats = treeData, level = 0, result: any[] = []): any[] => {
     cats.forEach((cat) => {
-      const catId = cat.id || cat._id;
+      const catId = cat._id;
       if (catId !== editId) {
-        const hasChildren = cat.children?.length > 0;
+        const hasChildren = cat.children && cat.children.length > 0;
         const indent = "  ".repeat(level);
         const prefix = level === 0 ? (hasChildren ? "▼ " : "• ") : hasChildren ? "└─▼ " : "└─• ";
         result.push({ ...cat, displayName: indent + prefix + cat.name });
-        if (hasChildren) getAllCategoriesFlat(cat.children, level + 1, result);
+        if (hasChildren) getAllCategoriesFlat(cat.children!, level + 1, result);
       }
     });
     return result;
   };
 
-  const flattenedCategories = getAllCategoriesFlat(treeData);
+  const flattenedCategories = getAllCategoriesFlat();
 
   return (
     <div className="p-4 sm:p-8 pb-12">

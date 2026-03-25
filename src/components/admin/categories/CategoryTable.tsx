@@ -1,6 +1,19 @@
 import React from "react";
+import { CategoryTree } from "../../../types";
 
-const CategoryTable = ({
+interface CategoryTableProps {
+  loading: boolean;
+  treeData: CategoryTree[];
+  paginatedTreeData: CategoryTree[];
+  renderCategoryRow: (cat: CategoryTree) => React.ReactElement;
+  totalPages: number;
+  currentPage: number;
+  handlePageChange: (page: number) => void;
+  startIndex: number;
+  endIndex: number;
+}
+
+const CategoryTable: React.FC<CategoryTableProps> = ({
   loading,
   treeData,
   paginatedTreeData,
