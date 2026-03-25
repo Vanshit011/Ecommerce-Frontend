@@ -15,6 +15,13 @@ export interface Category {
   parentId?: string | Category;
   slug?: string;
 }
+export interface ProductImage {
+  id?: string;
+  _id?: string;
+  url: string;
+  is_main?: boolean;
+  public_id?: string;
+}
 
 export interface Product {
   id: string;
@@ -24,7 +31,7 @@ export interface Product {
   brand: string;
   category: string | Category;
   image: string;
-  images: string[];
+  images: ProductImage[] | string[];
   has_variants: boolean;
   variants: Variant[];
   price?: number;
@@ -36,7 +43,15 @@ export interface Product {
   salePrice?: number;
   isActive: boolean;
   mainImageIndex: number;
-  availability: "in-stock" | "out-of-stock" | "INSTOCK" | "OUTSTOCK";
+  availability:
+    | "in-stock"
+    | "out-of-stock"
+    | "INSTOCK"
+    | "OUTSTOCK"
+    | "OUTOFSTOCK"
+    | "PREORDER"
+    | "available"
+    | "unavailable";
   average_rating?: number;
   total_reviews?: number;
   averageRating?: number;
@@ -140,19 +155,32 @@ export interface Address {
 export interface Order {
   id: string;
   _id?: string;
-  user: string | User;
+  user?: string | User;
+  userId?: string | User;
   items: CartItem[];
   totalAmount: number;
   total_amount?: number;
   totalPrice?: number;
   status: string;
+  orderStatus?: string;
   order_status?: string;
   paymentStatus?: string;
+  payment_status?: string;
+  isPaid?: boolean;
   shippingAddress: Address | string;
   address?: Address;
   coupon?: string | Coupon;
+  payments?: any[];
+  payment?: any;
   createdAt: string;
   created_at?: string;
+}
+
+export interface OrderMeta {
+  total: number;
+  totalPages: number;
+  page: number;
+  limit: number;
 }
 
 export interface Payment {
@@ -176,6 +204,38 @@ export interface ApiResponse<T> {
     totalPages: number;
     currentPage: number;
     limit: number;
+    totalItems?: number;
+    pageCount?: number;
+    count?: number;
   };
+  pagination?: any;
   categories?: any[];
+  products?: any[];
+}
+
+export interface VariantFormData {
+  id?: string;
+  _id?: string;
+  color?: string;
+  size?: string;
+  price: string | number;
+  stock_qty: string | number;
+  sku: string;
+  stockQty?: string | number;
+}
+
+export interface ProductFormData {
+  name: string;
+  description: string;
+  brand: string;
+  category: string;
+  image: File | string | null;
+  images: (File | string | ProductImage)[];
+  has_variants: boolean;
+  variants: VariantFormData[];
+  specifications?: Record<string, string>;
+  isActive: boolean;
+  mainImageIndex: number;
+  availability: string;
+  [key: string]: any;
 }

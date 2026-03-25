@@ -1,21 +1,39 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Product, ProductImage } from "../../../types";
 
-const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, handleEditClick }) => {
-  const [selectedImage, setSelectedImage] = useState("");
-  const [prevProductId, setPrevProductId] = useState(null);
-  const modalRef = useRef(null);
+interface ProductDetailsModalProps {
+  viewProduct: Product | null;
+  setViewProduct: (p: Product | null) => void;
+  getCategoryPath: (categoryId: string) => string;
+  handleEditClick: (p: Product) => void;
+}
 
-  const currentId = viewProduct?.id || viewProduct?._id;
+const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
+  viewProduct,
+  setViewProduct,
+  getCategoryPath,
+  handleEditClick,
+}) => {
+  const [selectedImage, setSelectedImage] = useState<string>("");
+  const [prevProductId, setPrevProductId] = useState<string | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const getUrl = (img: ProductImage | string): string => (typeof img === "string" ? img : img.url);
+
+  const currentId = viewProduct?.id || (viewProduct as any)?._id;
   if (viewProduct && currentId !== prevProductId) {
     setPrevProductId(currentId);
-    // Set the main image from the images array
-    const mainImage = viewProduct.images?.find((img) => img.is_main);
-    setSelectedImage(mainImage?.url || viewProduct.images?.[0]?.url || "");
+    if (Array.isArray(viewProduct.images)) {
+      const mainImage = (viewProduct.images as any[]).find((img) => img && img.is_main);
+      setSelectedImage(mainImage?.url || getUrl(viewProduct.images[0]) || "");
+    } else {
+      setSelectedImage("");
+    }
   }
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         setViewProduct(null);
       }
     };
@@ -30,15 +48,10 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
 
   if (!viewProduct) return null;
 
-  // Helper to get all images from the images array
-  const getAllImages = () => {
-    if (viewProduct.images && Array.isArray(viewProduct.images)) {
-      return viewProduct.images;
-    }
-    return [];
-  };
-
-  const galleryImages = getAllImages();
+  const galleryImages = (Array.isArray(viewProduct.images) ? viewProduct.images : []) as (
+    | ProductImage
+    | string
+  )[];
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-[999] backdrop-blur-sm p-4 animate-fade-in">
@@ -70,7 +83,7 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
               </h2>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  ID: {viewProduct.id || viewProduct._id}
+                  ID: {viewProduct.id || (viewProduct as any)._id}
                 </span>
                 <span className="w-1 h-1 rounded-full bg-slate-300"></span>
                 <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest">
@@ -104,11 +117,7 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
           <div className="space-y-6">
             <div className="aspect-square relative group bg-slate-50 rounded-3xl border border-slate-100 overflow-hidden flex items-center justify-center shadow-inner">
               <img
-                src={
-                  selectedImage ||
-                  galleryImages[0]?.url ||
-                  "https://placehold.jp/400x400.png?text=No%20Image"
-                }
+                src={selectedImage || "https://placehold.jp/400x400.png?text=No%20Image"}
                 alt={viewProduct.name}
                 className="w-full h-full object-contain p-4"
               />
@@ -120,12 +129,12 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
                     onClick={(e) => {
                       e.stopPropagation();
                       const currentIndex = galleryImages.findIndex(
-                        (img) => img.url === selectedImage,
+                        (img) => getUrl(img) === selectedImage,
                       );
                       const prevIndex =
                         currentIndex > 0 ? currentIndex - 1 : galleryImages.length - 1;
                       const prevImg = galleryImages[prevIndex];
-                      setSelectedImage(prevImg.url);
+                      setSelectedImage(getUrl(prevImg));
                     }}
                     className="w-10 h-10 bg-white/90 rounded-xl shadow-lg shadow-black/5 flex items-center justify-center text-slate-600 hover:bg-white hover:scale-110 transition-all"
                   >
@@ -148,12 +157,12 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
                     onClick={(e) => {
                       e.stopPropagation();
                       const currentIndex = galleryImages.findIndex(
-                        (img) => img.url === selectedImage,
+                        (img) => getUrl(img) === selectedImage,
                       );
                       const nextIndex =
                         currentIndex < galleryImages.length - 1 ? currentIndex + 1 : 0;
                       const nextImg = galleryImages[nextIndex];
-                      setSelectedImage(nextImg.url);
+                      setSelectedImage(getUrl(nextImg));
                     }}
                     className="w-10 h-10 bg-white/90 rounded-xl shadow-lg shadow-black/5 flex items-center justify-center text-slate-600 hover:bg-white hover:scale-110 transition-all"
                   >
@@ -179,11 +188,11 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
             {galleryImages.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
                 {galleryImages.map((img, i) => {
-                  const finalUrl = img.url;
+                  const finalUrl = getUrl(img);
 
                   return (
                     <div
-                      key={img.id || i}
+                      key={(img as ProductImage).id || (img as ProductImage)._id || i}
                       onClick={() => setSelectedImage(finalUrl)}
                       className={`w-16 h-16 flex-shrink-0 cursor-pointer rounded-2xl border-2 transition-all p-1 bg-white overflow-hidden ${
                         selectedImage === finalUrl
@@ -193,7 +202,7 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
                     >
                       <img
                         src={finalUrl}
-                        className="w-full h-full object-cover rounded-xl"
+                        className="w-full h-full object-contain rounded-xl"
                         alt=""
                       />
                     </div>
@@ -210,9 +219,13 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
                   Category
                 </p>
                 <p className="text-sm font-bold text-slate-700">
-                  {viewProduct.category?.name ||
-                    getCategoryPath(viewProduct.category_id || viewProduct.categoryId) ||
-                    "Uncategorized"}
+                  {typeof viewProduct.category === "string"
+                    ? getCategoryPath(viewProduct.category)
+                    : viewProduct.category?.name ||
+                      getCategoryPath(
+                        (viewProduct as any).category_id || (viewProduct as any).categoryId,
+                      ) ||
+                      "Uncategorized"}
                 </p>
               </div>
               <div className="space-y-1">
@@ -284,7 +297,10 @@ const ProductDetailsModal = ({ viewProduct, setViewProduct, getCategoryPath, han
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {viewProduct.variants.map((v, idx) => (
-                        <tr key={v.id || idx} className="hover:bg-slate-50/50 transition-colors">
+                        <tr
+                          key={v.id || (v as any)._id || idx}
+                          className="hover:bg-slate-50/50 transition-colors"
+                        >
                           <td className="px-5 py-3.5">
                             <div className="flex flex-wrap gap-1.5">
                               {v.color && (

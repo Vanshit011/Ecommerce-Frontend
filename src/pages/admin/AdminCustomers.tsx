@@ -1,15 +1,26 @@
-// @ts-nocheck
 import React, { useState, useEffect, useMemo } from "react";
 import { getAdminOrders } from "../../services/api";
 import CustomerDetailsModal from "../../components/admin/customers/CustomerDetailsModal";
 
+interface CustomerData {
+  id: string;
+  name: string;
+  email: string;
+  mobile: string;
+  location: string;
+  totalOrders: number;
+  totalSpent: number;
+  lastActive: Date;
+  orders: any[];
+}
+
 const AdminCustomers = () => {
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customers, setCustomers] = useState<CustomerData[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null);
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -18,14 +29,14 @@ const AdminCustomers = () => {
         // Fetch a large batch of orders to aggregate customer data
         const res = await getAdminOrders({ page: 1, limit: 2000 });
 
-        let orderList = [];
-        const rawData = res.data;
+        let orderList: any[] = [];
+        const rawData = res.data.data as any;
         if (rawData?.data && Array.isArray(rawData.data)) orderList = rawData.data;
         else if (rawData?.orders && Array.isArray(rawData.orders)) orderList = rawData.orders;
         else if (Array.isArray(rawData)) orderList = rawData;
 
         // Group by User ID and Aggregate
-        const customerMap = new Map();
+        const customerMap = new Map<string, CustomerData>();
 
         orderList.forEach((order) => {
           // Identify user (handle guest or registered)
@@ -49,7 +60,7 @@ const AdminCustomers = () => {
             });
           }
 
-          const customer = customerMap.get(userId);
+          const customer = customerMap.get(userId)!;
           customer.totalOrders += 1;
           customer.totalSpent += Number(order.total_amount || order.totalAmount || 0);
           customer.orders.push(order); // Add full order object
@@ -87,7 +98,7 @@ const AdminCustomers = () => {
 
   const totalPages = Math.ceil(filteredCustomers.length / limit);
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
@@ -95,9 +106,13 @@ const AdminCustomers = () => {
     }).format(amount);
   };
 
-  const formatDate = (date) => {
+  const formatDate = (date: Date) => {
     if (!date || date.getTime() === 0) return "N/A";
-    return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
@@ -170,7 +185,7 @@ const AdminCustomers = () => {
             <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="p-8 text-center text-slate-500">
+                  <td colSpan={6} className="p-8 text-center text-slate-500">
                     Loading customers...
                   </td>
                 </tr>
@@ -236,7 +251,7 @@ const AdminCustomers = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="p-8 text-center text-slate-500">
+                  <td colSpan={6} className="p-8 text-center text-slate-500">
                     No customers found matching your search.
                   </td>
                 </tr>

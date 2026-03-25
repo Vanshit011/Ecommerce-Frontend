@@ -3,6 +3,7 @@ import { getFavorites, removeFromFavorites, prefetchProductDetails } from "../..
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../context/ToastContext";
 import { getLowestPrice } from "../../../utils/variantUtils";
+import { Button } from "antd";
 
 import { getImageUrl } from "../../../utils/imageUtils";
 import { ProductSkeleton } from "../../../components/common/Skeleton";
@@ -25,7 +26,8 @@ const Favorites = () => {
       }
       try {
         const res = await getFavorites();
-        const items = (res.data || []).map((f) => f.product || f);
+        const data = (res.data as any)?.data || res.data || [];
+        const items = Array.isArray(data) ? data.map((f: any) => f.product || f) : [];
         setFavorites(items);
       } catch {
         // Silently skip if error
@@ -33,7 +35,6 @@ const Favorites = () => {
         setLoading(false);
       }
     };
-
     load();
   }, []);
 
@@ -73,12 +74,13 @@ const Favorites = () => {
             <p className="mb-8 text-slate-500 font-medium">
               Looks like you haven't added anything to your favorites yet.
             </p>
-            <button
+            <Button
+              type="primary"
               onClick={() => navigate("/products")}
-              className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-bold hover:bg-slate-800 shadow-xl shadow-slate-200 transition-all active:scale-95"
+              className="bg-slate-900 text-white px-10 h-14 rounded-2xl font-bold hover:bg-slate-800 hover:text-white shadow-xl shadow-slate-200 transition-all active:scale-95 border-none text-base"
             >
               Start Shopping
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-6 animate-fade-in">
@@ -143,15 +145,23 @@ const Favorites = () => {
 
                   <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-50">
                     <div className="flex flex-col">
-                      {(product.salePrice || product.variants?.[0]?.sale_price) > 0 && (
+                      {(product.salePrice ||
+                        product.sale_price ||
+                        (product.variants?.[0] as any)?.sale_price) > 0 && (
                         <span className="text-[10px] text-slate-400 line-through font-bold">
-                          ₹{(product.price || product.variants?.[0]?.price || 0).toLocaleString()}
+                          ₹
+                          {(
+                            product.price ||
+                            (product.variants?.[0] as any)?.price ||
+                            0
+                          ).toLocaleString()}
                         </span>
                       )}
                       <span className="text-lg font-black text-blue-600 leading-none mt-0.5">
                         ₹
                         {(
                           product.salePrice ||
+                          product.sale_price ||
                           product.price ||
                           getLowestPrice(product.variants) ||
                           0

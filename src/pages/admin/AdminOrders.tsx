@@ -3,19 +3,20 @@ import OrderTable from "../../components/admin/orders/OrderTable";
 import OrderDetailsModal from "../../components/admin/orders/OrderDetailsModal";
 import { getAdminOrders } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
+import { Order, OrderMeta } from "../../types";
 
-const AdminOrders = () => {
-  const [allOrders, setAllOrders] = useState([]); // Store ALL fetched orders
-  const [filteredOrders, setFilteredOrders] = useState([]); // Orders to display (paginated)
-  const [loading, setLoading] = useState(true);
-  const [viewOrder, setViewOrder] = useState(null);
+const AdminOrders: React.FC = () => {
+  const [allOrders, setAllOrders] = useState<Order[]>([]); // Store ALL fetched orders
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]); // Orders to display (paginated)
+  const [loading, setLoading] = useState<boolean>(true);
+  const [viewOrder, setViewOrder] = useState<Order | null>(null);
   const { showToast } = useToast();
 
   // Pagination & Filter State
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [statusFilter, setStatusFilter] = useState("ALL");
-  const [meta, setMeta] = useState(null);
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [meta, setMeta] = useState<OrderMeta | null>(null);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -25,14 +26,14 @@ const AdminOrders = () => {
 
       // Handle different response structures gracefully
       const rawData = res.data;
-      let orderList = [];
+      let orderList: Order[] = [];
 
       if (rawData?.data && Array.isArray(rawData.data)) {
         orderList = rawData.data;
       } else if ((rawData as any)?.orders && Array.isArray((rawData as any).orders)) {
         orderList = (rawData as any).orders;
       } else if (Array.isArray(rawData)) {
-        orderList = rawData;
+        orderList = rawData as Order[];
       }
 
       setAllOrders(orderList);
@@ -51,7 +52,9 @@ const AdminOrders = () => {
     // 1. Filter
     if (statusFilter !== "ALL") {
       result = result.filter(
-        (o) => (o.status || o.orderStatus || "PENDING").toUpperCase() === statusFilter,
+        (o) =>
+          (o.status || o.orderStatus || (o as any).order_status || "PENDING").toUpperCase() ===
+          statusFilter,
       );
     }
 
@@ -81,7 +84,7 @@ const AdminOrders = () => {
   }, [fetchOrders]);
 
   // Refresh list when an order is updated
-  const handleOrderUpdated = (updatedOrder) => {
+  const handleOrderUpdated = (updatedOrder: Order | null) => {
     if (updatedOrder) {
       // "Silent" update: Patch the local state directly to avoid a full re-fetch loading spinner
       setAllOrders((prev) =>

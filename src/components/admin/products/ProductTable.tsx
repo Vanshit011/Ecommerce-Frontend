@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from "react";
 import {
   getLowestPrice,
@@ -6,8 +5,27 @@ import {
   getTotalStock,
   hasVariants,
 } from "../../../utils/variantUtils";
+import { Product } from "../../../types";
 
-const ProductTable = ({
+interface ProductTableProps {
+  products: Product[];
+  loading: boolean;
+  getImageUrl: (p: Product) => string;
+  getCategoryPath: (categoryId: string) => string;
+  setPreviewImage: (url: string | null) => void;
+  setOpenMenuId: (id: string | null) => void;
+  openMenuId: string | null;
+  setViewProduct: (p: Product | null) => void;
+  handleEditClick: (p: Product) => void;
+  handleDelete: (id: string) => void;
+  meta: any;
+  page: number;
+  setPage: (page: number) => void;
+  limit: number;
+  setLimit: (limit: number) => void;
+}
+
+const ProductTable: React.FC<ProductTableProps> = ({
   products,
   loading,
   getImageUrl,
@@ -65,14 +83,14 @@ const ProductTable = ({
           <tbody>
             {products.length === 0 ? (
               <tr>
-                <td colSpan="7" className="text-center py-8 text-slate-500">
+                <td colSpan={7} className="text-center py-8 text-slate-500">
                   No products found.
                 </td>
               </tr>
             ) : (
               products.map((p, index) => (
                 <tr
-                  key={p.id || p._id || `prod-${index}`}
+                  key={p.id || (p as any)._id || `prod-${index}`}
                   className="border-b border-slate-200 hover:bg-slate-50 cursor-pointer"
                   onClick={() => setViewProduct(p)}
                 >
@@ -87,7 +105,8 @@ const ProductTable = ({
                           setPreviewImage(getImageUrl(p));
                         }}
                         onError={(e) => {
-                          e.target.src = "https://placehold.jp/400x400.png?text=No%20Image";
+                          (e.target as HTMLImageElement).src =
+                            "https://placehold.jp/400x400.png?text=No%20Image";
                         }}
                       />
                       <div className="flex flex-col">
@@ -101,14 +120,16 @@ const ProductTable = ({
                   <td className="hidden md:table-cell py-3 px-4">
                     <span className="text-xs font-semibold bg-slate-100 px-2 py-1 rounded-md text-slate-600 whitespace-nowrap">
                       {getCategoryPath(
-                        p.category_id || p.categoryId || p.category?.id || p.category?._id,
+                        (p as any).category_id ||
+                          (p as any).categoryId ||
+                          (typeof p.category === "string" ? p.category : p.category?._id),
                       )}
                     </span>
                   </td>
                   <td className="py-3 px-4">
                     {hasVariants(p) ? (
                       <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
-                        {p.variants.length} variant{p.variants.length > 1 ? "s" : ""}
+                        {p.variants?.length} variant{(p.variants?.length ?? 0) > 1 ? "s" : ""}
                       </span>
                     ) : (
                       <span className="text-slate-400 text-xs">No variants</span>
@@ -117,14 +138,14 @@ const ProductTable = ({
                   <td className="py-3 px-4">
                     {hasVariants(p) ? (
                       <div className="flex flex-col">
-                        {p.variants.length > 1 ? (
+                        {(p.variants?.length ?? 0) > 1 ? (
                           <span className="text-sm font-semibold text-slate-800">
-                            ₹{getLowestPrice(p.variants).toLocaleString()} - ₹
-                            {getHighestPrice(p.variants).toLocaleString()}
+                            ₹{getLowestPrice(p.variants!).toLocaleString()} - ₹
+                            {getHighestPrice(p.variants!).toLocaleString()}
                           </span>
                         ) : (
                           <span className="text-sm font-semibold text-slate-800">
-                            ₹{getLowestPrice(p.variants).toLocaleString()}
+                            ₹{getLowestPrice(p.variants!).toLocaleString()}
                           </span>
                         )}
                       </div>
@@ -139,15 +160,15 @@ const ProductTable = ({
                   <td className="py-3 px-4">
                     {hasVariants(p) ? (
                       <span
-                        className={`text-sm font-medium ${getTotalStock(p.variants) < 10 ? "text-red-600" : "text-slate-700"}`}
+                        className={`text-sm font-medium ${getTotalStock(p.variants!) < 10 ? "text-red-600" : "text-slate-700"}`}
                       >
-                        {getTotalStock(p.variants)}
+                        {getTotalStock(p.variants!)}
                       </span>
                     ) : (
                       <span
-                        className={`text-sm font-medium ${(p.stock_qty || p.stockQty || 0) < 10 ? "text-red-600" : "text-slate-700"}`}
+                        className={`text-sm font-medium ${(p.stock_qty || (p as any).stockQty || 0) < 10 ? "text-red-600" : "text-slate-700"}`}
                       >
-                        {p.stock_qty || p.stockQty || 0}
+                        {p.stock_qty || (p as any).stockQty || 0}
                       </span>
                     )}
                   </td>
@@ -182,7 +203,8 @@ const ProductTable = ({
                         className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setOpenMenuId(openMenuId === (p.id || p._id) ? null : p.id || p._id);
+                          const id = p.id || (p as any)._id;
+                          setOpenMenuId(openMenuId === id ? null : id);
                         }}
                       >
                         Actions
@@ -200,7 +222,7 @@ const ProductTable = ({
                         </svg>
                       </button>
 
-                      {openMenuId === (p.id || p._id) && (
+                      {openMenuId === (p.id || (p as any)._id) && (
                         <div
                           className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-slate-200 py-1 z-10 overflow-hidden"
                           onClick={(e) => e.stopPropagation()}
@@ -227,7 +249,7 @@ const ProductTable = ({
                           <button
                             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-slate-100 flex items-center gap-2"
                             onClick={() => {
-                              handleDelete(p.id || p._id);
+                              handleDelete(p.id || (p as any)._id);
                               setOpenMenuId(null);
                             }}
                           >

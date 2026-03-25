@@ -1,9 +1,26 @@
-// @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
 import { getImageUrl } from "../../../utils/imageUtils";
 import { generateMetadata } from "../../../services/api";
+import { ProductFormData, VariantFormData } from "../../../types";
 
-const ProductModal = ({
+interface ProductModalProps {
+  showModal: boolean;
+  setShowModal: (show: boolean) => void;
+  isEditingId: string | null;
+  formData: ProductFormData;
+  setFormData: React.Dispatch<React.SetStateAction<ProductFormData>>;
+  handleChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => void;
+  handleSubmit: (e: React.FormEvent) => void;
+  handleUpdateVariant: (index: number, variant: VariantFormData) => void;
+  handleDeleteVariant: (index: number, variant: VariantFormData) => void;
+  handleBulkUpdateVariants: () => void;
+  isSubmitting: boolean;
+  flattenedCategories: any[];
+}
+
+const ProductModal: React.FC<ProductModalProps> = ({
   showModal,
   setShowModal,
   isEditingId,
@@ -17,7 +34,7 @@ const ProductModal = ({
   isSubmitting,
   flattenedCategories,
 }) => {
-  const modalRef = useRef(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerateAI = async () => {
@@ -55,8 +72,8 @@ const ProductModal = ({
   };
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         setShowModal(false);
       }
     };
@@ -251,7 +268,7 @@ const ProductModal = ({
                 value={formData.description}
                 onChange={handleChange}
                 required
-                rows="4"
+                rows={4}
                 placeholder="Detailed description of the product..."
                 className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none text-slate-700 font-medium resize-none placeholder:text-slate-300"
               />

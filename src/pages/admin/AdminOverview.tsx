@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   AreaChart,
@@ -27,7 +26,81 @@ import {
 } from "../../services/api";
 import { getImageUrl } from "../../utils/imageUtils";
 
-const AdvancedSectionFilter = ({ filters, setFilters, years, months, hideCustom = false }) => {
+interface DashboardFilters {
+  year: number;
+  month: string | number;
+  startDate: string;
+  endDate: string;
+}
+
+interface AdvancedSectionFilterProps {
+  filters: DashboardFilters;
+  setFilters: React.Dispatch<React.SetStateAction<DashboardFilters>>;
+  years: number[];
+  months: { value: string | number; label: string }[];
+  hideCustom?: boolean;
+}
+
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  subValue?: string;
+  icon: React.ReactNode;
+  color: string;
+  change?: number;
+}
+
+interface StatusBadgeProps {
+  status?: string;
+}
+
+interface StatsState {
+  revenue: number;
+  orders: number;
+  products: number;
+  categories: number;
+  customers: number;
+  revenueChange: number;
+  ordersChange: number;
+  topCategory: { name: string; sales: number };
+  deliveredOrders: number;
+}
+
+interface RevenueMonthlyData {
+  month: string;
+  revenue: number;
+}
+
+interface VolumeMonthlyData {
+  month: string;
+  orders: number;
+}
+
+interface CategorySalesData {
+  category?: string;
+  name?: string;
+  sales: number;
+}
+
+interface OrderStatusDataItem {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface PopularFavoriteItem {
+  productId: string;
+  productName: string;
+  favoritesCount: number;
+}
+
+const AdvancedSectionFilter = ({
+  filters,
+  setFilters,
+  years,
+  months,
+  hideCustom = false,
+}: AdvancedSectionFilterProps) => {
   const [viewMode, setViewMode] = useState(
     !hideCustom && (filters.startDate || filters.endDate) ? "custom" : "standard",
   );
@@ -119,39 +192,39 @@ const AdvancedSectionFilter = ({ filters, setFilters, years, months, hideCustom 
 };
 
 const AdminOverview = () => {
-  const [overviewFilters, setOverviewFilters] = useState({
+  const [overviewFilters, setOverviewFilters] = useState<DashboardFilters>({
     year: new Date().getFullYear(),
     month: "",
     startDate: "",
     endDate: "",
   });
-  const [revenueFilters, setRevenueFilters] = useState({
+  const [revenueFilters, setRevenueFilters] = useState<DashboardFilters>({
     year: new Date().getFullYear(),
     month: "",
     startDate: "",
     endDate: "",
   });
-  const [statusFilters, setStatusFilters] = useState({
+  const [statusFilters, setStatusFilters] = useState<DashboardFilters>({
     year: new Date().getFullYear(),
     month: "",
     startDate: "",
     endDate: "",
   });
-  const [volumeFilters, setVolumeFilters] = useState({
+  const [volumeFilters, setVolumeFilters] = useState<DashboardFilters>({
     year: new Date().getFullYear(),
     month: "",
     startDate: "",
     endDate: "",
   });
-  const [categoryFilters, setCategoryFilters] = useState({
+  const [categoryFilters, setCategoryFilters] = useState<DashboardFilters>({
     year: new Date().getFullYear(),
     month: "",
     startDate: "",
     endDate: "",
   });
 
-  const [orderStatusData, setOrderStatusData] = useState([]);
-  const [stats, setStats] = useState({
+  const [orderStatusData, setOrderStatusData] = useState<OrderStatusDataItem[]>([]);
+  const [stats, setStats] = useState<StatsState>({
     revenue: 0,
     orders: 0,
     products: 0,
@@ -162,13 +235,13 @@ const AdminOverview = () => {
     topCategory: { name: "N/A", sales: 0 },
     deliveredOrders: 0,
   });
-  const [recentOrders, setRecentOrders] = useState([]);
-  const [topProducts, setTopProducts] = useState([]);
-  const [salesByCategory, setSalesByCategory] = useState([]);
-  const [popularFavorites, setPopularFavorites] = useState([]);
-  const [revenueMonthly, setRevenueMonthly] = useState([]);
-  const [volumeMonthly, setVolumeMonthly] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [salesByCategory, setSalesByCategory] = useState<CategorySalesData[]>([]);
+  const [popularFavorites, setPopularFavorites] = useState<PopularFavoriteItem[]>([]);
+  const [revenueMonthly, setRevenueMonthly] = useState<RevenueMonthlyData[]>([]);
+  const [volumeMonthly, setVolumeMonthly] = useState<VolumeMonthlyData[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
   const months = [
@@ -187,7 +260,7 @@ const AdminOverview = () => {
     { value: 12, label: "Dec" },
   ];
 
-  const getParams = (filters) => {
+  const getParams = (filters: DashboardFilters) => {
     const isCustomMode = !!(filters.startDate || filters.endDate);
     return {
       year: isCustomMode ? undefined : filters.year,
@@ -203,7 +276,8 @@ const AdminOverview = () => {
       try {
         const params = getParams(revenueFilters);
         const revenueRes = await getRevenueAnalytics(params);
-        setRevenueMonthly(revenueRes.data?.monthlyData || []);
+        const revenueData = revenueRes.data.data;
+        setRevenueMonthly(revenueData?.monthlyData || []);
       } catch (error) {
         console.error("Revenue Fetch Error:", error);
       }
@@ -217,7 +291,7 @@ const AdminOverview = () => {
       try {
         const params = getParams(categoryFilters);
         const categoryRes = await getSalesByCategory(params);
-        setSalesByCategory(categoryRes.data || []);
+        setSalesByCategory(categoryRes.data.data || []);
       } catch (error) {
         console.error("Category Fetch Error:", error);
       }
@@ -236,9 +310,9 @@ const AdminOverview = () => {
           getOrderStatistics(params),
         ]);
 
-        const revenueData = revenueRes.data;
-        const categoryData = categoryRes.data || [];
-        const statusData = statusRes.data || {};
+        const revenueData = revenueRes.data.data;
+        const categoryData = categoryRes.data.data || [];
+        const statusData = statusRes.data.data || ({} as any);
 
         // Find top category
         const sortedCats = [...categoryData].sort((a, b) => b.sales - a.sales);
@@ -254,7 +328,7 @@ const AdminOverview = () => {
             name: topCat.category || topCat.name || "N/A",
             sales: topCat.sales || 0,
           },
-          deliveredOrders: statusData.Delivered || 0,
+          deliveredOrders: statusData.Delivered || statusData.delivered || 0,
         }));
       } catch (error) {
         console.error("Overview Stats Error:", error);
@@ -269,7 +343,7 @@ const AdminOverview = () => {
       try {
         const params = getParams(volumeFilters);
         const revenueRes = await getRevenueAnalytics(params);
-        setVolumeMonthly(revenueRes.data?.monthlyData || []);
+        setVolumeMonthly(revenueRes.data.data?.monthlyData || []);
       } catch (error) {
         console.error("Volume Fetch Error:", error);
       }
@@ -283,7 +357,7 @@ const AdminOverview = () => {
       try {
         const params = getParams(statusFilters);
         const ordersStatsRes = await getOrderStatistics(params);
-        const ordersData = ordersStatsRes.data;
+        const ordersData = ordersStatsRes.data.data;
 
         if (ordersData) {
           setOrderStatusData(
@@ -307,8 +381,8 @@ const AdminOverview = () => {
   useEffect(() => {
     const fetchFavoritesData = async () => {
       try {
-        const favoritesRes = await getPopularFavorites({});
-        setPopularFavorites(favoritesRes.data || []);
+        const favoritesRes = await getPopularFavorites();
+        setPopularFavorites(favoritesRes.data.data || []);
       } catch (error) {
         console.error("Favorites Fetch Error:", error);
       }
@@ -326,9 +400,9 @@ const AdminOverview = () => {
           getRecentOrders({ limit: 5 }),
         ]);
 
-        const overview = overviewRes.data;
-        const topProdsData = topProductsRes.data || [];
-        const recentOrdersData = recentOrdersRes.data || [];
+        const overview = overviewRes.data.data;
+        const topProdsResData = topProductsRes.data.data || [];
+        const recentOrdersResData = recentOrdersRes.data.data || [];
         setStats((prev) => ({
           ...prev,
           products: overview?.totalProducts || 0,
@@ -336,8 +410,8 @@ const AdminOverview = () => {
           customers: overview?.totalCustomers || 0,
         }));
 
-        setRecentOrders(recentOrdersData.slice(0, 5));
-        setTopProducts(topProdsData.slice(0, 5));
+        setRecentOrders(recentOrdersResData.slice(0, 5));
+        setTopProducts(topProdsResData.slice(0, 5));
       } catch (error) {
         console.error("Static Data Fetch Error:", error);
       } finally {
@@ -347,7 +421,7 @@ const AdminOverview = () => {
     fetchStaticData();
   }, []);
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
@@ -696,7 +770,7 @@ const AdminOverview = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="px-6 py-12 text-center text-slate-500 text-sm">
+                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500 text-sm">
                       No recent activity.
                     </td>
                   </tr>
@@ -727,7 +801,8 @@ const AdminOverview = () => {
                       alt={product.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.target.src = "https://placehold.jp/400x400.png?text=No%20Image";
+                        (e.target as HTMLImageElement).src =
+                          "https://placehold.jp/400x400.png?text=No%20Image";
                       }}
                     />
                     {index === 0 && (
@@ -765,7 +840,7 @@ const AdminOverview = () => {
   );
 };
 
-const StatCard = ({ title, value, subValue, icon, color, change }) => (
+const StatCard = ({ title, value, subValue, icon, color, change }: StatCardProps) => (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-all group">
     <div
       className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}
@@ -801,7 +876,7 @@ const StatCard = ({ title, value, subValue, icon, color, change }) => (
   </div>
 );
 
-const StatusBadge = ({ status }) => {
+const StatusBadge = ({ status }: StatusBadgeProps) => {
   const s = String(status || "").toUpperCase();
   const styles = {
     PENDING: "bg-amber-100 text-amber-700 border-amber-200",
